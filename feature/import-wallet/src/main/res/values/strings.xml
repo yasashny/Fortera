@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="import_wallet_title">Import wallet</string>
+    <string name="import_wallet_back_cd">Back</string>
+    <string name="import_wallet_name_placeholder">Name</string>
+    <string name="import_wallet_seed_phrase_placeholder">Secret phrase</string>
+    <string name="import_wallet_paste_cd">Paste</string>
+    <string name="import_wallet_import_button">Import</string>
+</resources>

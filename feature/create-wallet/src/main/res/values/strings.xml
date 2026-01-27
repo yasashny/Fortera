@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="create_wallet_title">Create new wallet</string>
+    <string name="create_wallet_back_cd">Back</string>
+    <string name="create_wallet_phrase_warning">Keep your secret phrase in a safe place. \n If you lose it, you will no longer have \n access to your wallet.</string>
+    <string name="create_wallet_clipboard_label">Seed Phrase</string>
+    <string name="create_wallet_copy">Copy</string>
+    <string name="create_wallet_copy_cd">Copy seed phrase</string>
+    <string name="create_wallet_create_button">Create</string>
+    <string name="create_wallet_name_template">Wallet №%d</string>
+</resources>
