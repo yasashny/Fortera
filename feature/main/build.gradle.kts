@@ -9,7 +9,7 @@ android {
 dependencies {
     implementation(projects.core.domainWallet)
     implementation(projects.feature.mainApi)
-    implementation(projects.feature.createWalletApi)
-    implementation(projects.feature.importWalletApi)
+    implementation(projects.feature.settingsApi)
+    implementation(projects.feature.startupApi)
     implementation(projects.feature.walletSelector)
 }

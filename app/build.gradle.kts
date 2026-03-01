@@ -44,6 +44,8 @@ dependencies {
     implementation(projects.feature.main)
     implementation(projects.feature.walletSelectorApi)
     implementation(projects.feature.walletSelector)
+    implementation(projects.feature.settingsApi)
+    implementation(projects.feature.settings)
 
     // Compose
     implementation(libs.androidx.activity.compose)

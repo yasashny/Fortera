@@ -51,3 +51,6 @@ include(":feature:main")
 
 include(":feature:wallet-selector-api")
 include(":feature:wallet-selector")
+
+include(":feature:settings-api")
+include(":feature:settings")
