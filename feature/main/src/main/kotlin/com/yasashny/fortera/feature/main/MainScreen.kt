@@ -7,6 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.yasashny.fortera.core.mvi.MviContainer
 import com.yasashny.fortera.core.navigation.LocalAppNavigator
+import com.yasashny.fortera.feature.managetokens.ManageTokens
 import com.yasashny.fortera.feature.settings.Settings
 import com.yasashny.fortera.feature.startup.Startup
 import com.yasashny.fortera.feature.walletselector.main.ui.WalletSelectorSheet
@@ -24,13 +25,16 @@ fun MainScreen(
         onEffect = { effect ->
             when (effect) {
                 MainContract.Effect.NavigateToStartup -> navigator.clearAndNavigate(Startup)
+                MainContract.Effect.NavigateToManageTokens -> navigator.navigate(ManageTokens)
+                MainContract.Effect.NavigateToSettings -> navigator.navigate(Settings)
             }
         },
-    ) { state, _ ->
+    ) { state, sendIntent ->
         MainLayout(
             state = state,
             onWalletSelectorClick = { showWalletSelector = true },
-            onSettingsClick = { navigator.navigate(Settings) },
+            onSettingsClick = { sendIntent(MainContract.Intent.OpenSettings) },
+            onManageTokensClick = { sendIntent(MainContract.Intent.OpenManageTokens) },
         )
     }
 

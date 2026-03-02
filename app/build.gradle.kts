@@ -25,6 +25,7 @@ android {
 
 dependencies {
     // Core modules
+    implementation(projects.core.cryptoApi)
     implementation(projects.core.database)
     implementation(projects.core.domainWallet)
     implementation(projects.core.designsystem)
@@ -46,6 +47,8 @@ dependencies {
     implementation(projects.feature.walletSelector)
     implementation(projects.feature.settingsApi)
     implementation(projects.feature.settings)
+    implementation(projects.feature.manageTokensApi)
+    implementation(projects.feature.manageTokens)
 
     // DataStore
     implementation(libs.androidx.datastore.preferences)

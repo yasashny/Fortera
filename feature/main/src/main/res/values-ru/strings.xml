@@ -2,4 +2,7 @@
 <resources>
     <string name="main_my_wallets">Мои кошельки</string>
     <string name="main_settings_cd">Настройки</string>
+    <string name="main_send">Отправить</string>
+    <string name="main_receive">Получить</string>
+    <string name="main_manage_tokens">Управление токенами</string>
 </resources>
