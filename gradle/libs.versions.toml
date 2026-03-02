@@ -22,6 +22,8 @@ roomGradlePluginVersion = "2.8.4"
 datastoreVersion = "1.1.4"
 securityCryptoVersion = "1.1.0-alpha06"
 material3 = "1.5.0-alpha15"
+appcompat = "1.7.0"
+biometric = "1.1.0"
 
 
 [libraries]
@@ -43,6 +45,7 @@ androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-
 androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-compose-material3 = { module = "androidx.compose.material3:material3", version.ref =  "material3" }
 androidx-compose-material-icons = { group = "androidx.compose.material", name = "material-icons-core" }
+androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 
 # Navigation 3
 navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
@@ -67,6 +70,9 @@ room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomVersion" }
 room-gradle-plugin = { group = "androidx.room", name = "room-gradle-plugin", version.ref = "roomGradlePlugin" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastoreVersion" }
 androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCryptoVersion" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+androidx-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
+androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycleRuntimeKtx" }
 
 # Build Logic
 agp = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }

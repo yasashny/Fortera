@@ -47,6 +47,14 @@ dependencies {
     implementation(projects.feature.settingsApi)
     implementation(projects.feature.settings)
 
+    // DataStore
+    implementation(libs.androidx.datastore.preferences)
+
+    // App lock
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.biometric)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+
     // Compose
     implementation(libs.androidx.activity.compose)
 

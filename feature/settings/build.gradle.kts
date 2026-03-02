@@ -8,4 +8,6 @@ android {
 
 dependencies {
     implementation(projects.feature.settingsApi)
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.datastore.preferences)
 }

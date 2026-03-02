@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="create_wallet_title">Создать кошелёк</string>
+    <string name="create_wallet_back_cd">Назад</string>
+    <string name="create_wallet_phrase_warning">Сохраните секретную фразу в надёжном месте.\nЕсли вы её потеряете, вы лишитесь доступа к кошельку.</string>
+    <string name="create_wallet_clipboard_label">Сид-фраза</string>
+    <string name="create_wallet_copy">Копировать</string>
+    <string name="create_wallet_copy_cd">Скопировать сид-фразу</string>
+    <string name="create_wallet_create_button">Создать</string>
+    <string name="create_wallet_name_template">Кошелёк №%d</string>
+</resources>

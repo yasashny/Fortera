@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Настройки</string>
+    <string name="settings_back_cd">Назад</string>
+    <string name="settings_language">Язык</string>
+    <string name="settings_currency">Валюта</string>
+    <string name="settings_password">Использовать пароль</string>
+</resources>

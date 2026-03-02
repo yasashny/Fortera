@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="import_wallet_title">Импортировать кошелёк</string>
+    <string name="import_wallet_back_cd">Назад</string>
+    <string name="import_wallet_name_placeholder">Название</string>
+    <string name="import_wallet_seed_phrase_placeholder">Секретная фраза</string>
+    <string name="import_wallet_paste_cd">Вставить</string>
+    <string name="import_wallet_import_button">Импортировать</string>
+</resources>

@@ -13,10 +13,12 @@ import com.yasashny.fortera.feature.importwallet.di.importWalletModule
 import com.yasashny.fortera.feature.main.di.mainModule
 import com.yasashny.fortera.feature.startup.Startup
 import com.yasashny.fortera.feature.startup.di.startupModule
+import com.yasashny.fortera.lock.AppLockViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 class ForteraApp : Application() {
@@ -33,6 +35,7 @@ class ForteraApp : Application() {
                 module {
                     single { AppNavigator(Startup) }
                     single { NavigationRegistry(getAll()) }
+                    viewModelOf(::AppLockViewModel)
                 },
                 startupModule,
                 importWalletModule,

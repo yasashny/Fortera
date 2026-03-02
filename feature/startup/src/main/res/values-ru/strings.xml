@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="startup_create_new_wallet">Создать новый кошелёк</string>
+    <string name="startup_import_wallet">Импортировать кошелёк</string>
+</resources>

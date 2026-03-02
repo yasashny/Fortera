@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="wallet_selector_create_new_wallet">Создать новый кошелёк</string>
+    <string name="wallet_selector_import_wallet">Импортировать кошелёк</string>
+    <string name="wallet_selector_settings_cd">Настройки кошелька</string>
+
+    <string name="wallet_settings_title">Настройки кошелька</string>
+    <string name="wallet_settings_back_cd">Назад</string>
+    <string name="wallet_settings_name_label">Название кошелька</string>
+    <string name="wallet_settings_save">Сохранить</string>
+    <string name="wallet_settings_delete">Удалить кошелёк</string>
+    <string name="wallet_settings_delete_dialog_title">Удалить кошелёк</string>
+    <string name="wallet_settings_delete_dialog_message">Вы уверены, что хотите удалить этот кошелёк? Это действие необратимо. Убедитесь, что вы сохранили сид-фразу.</string>
+    <string name="wallet_settings_delete_dialog_confirm">Удалить</string>
+    <string name="wallet_settings_delete_dialog_cancel">Отмена</string>
+    <string name="wallet_settings_rename_dialog_title">Переименовать кошелёк</string>
+    <string name="wallet_settings_change_name">Изменить название</string>
+</resources>

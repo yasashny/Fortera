@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Fortera</string>
+    <string name="app_lock_title">Fortera</string>
+    <string name="app_lock_subtitle">Confirm your identity to open the app</string>
 </resources>
