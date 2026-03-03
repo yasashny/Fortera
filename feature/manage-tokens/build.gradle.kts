@@ -7,7 +7,7 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.cryptoApi)
+    implementation(projects.core.domainCrypto)
     implementation(projects.feature.manageTokensApi)
     implementation(libs.androidx.datastore.preferences)
 }

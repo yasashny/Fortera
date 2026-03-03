@@ -64,13 +64,13 @@ internal fun AnimatedLogo(imageVector: Painter) {
                 .matchParentSize()
                 .graphicsLayer {
                     rotationZ = rotation
-                }, color = MaterialTheme.colorScheme.surfaceContainerHigh
+                }, color = MaterialTheme.colorScheme.primary
         )
         Icon(
             painter = imageVector,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.surfaceTint,
-            modifier = Modifier.size(180.dp)
+            tint = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier.size(106.dp)
         )
     }
 }
@@ -100,30 +100,32 @@ private fun ClickToMorphShapes(
     }
     val interactionSource = remember { MutableInteractionSource() }
     val context = LocalContext.current
-    Box(modifier
-        .clickable(interactionSource = interactionSource, indication = null) @androidx.annotation.RequiresPermission(
-            android.Manifest.permission.VIBRATE
-        ) {
-            vibration(context)
-            if (progress.isRunning) return@clickable
-            scope.launch {
-                progress.animateTo(
-                    targetValue = 1f, animationSpec = tween(animationDuration)
-                )
-                currentMorphIndex = (currentMorphIndex + 1) % morphSeq.size
-                progress.snapTo(0f)
+    Box(
+        modifier
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) {
+                vibration(context)
+                if (progress.isRunning) return@clickable
+                scope.launch {
+                    progress.animateTo(
+                        targetValue = 1f, animationSpec = tween(animationDuration)
+                    )
+                    currentMorphIndex = (currentMorphIndex + 1) % morphSeq.size
+                    progress.snapTo(0f)
+                }
             }
-        }
-        .fillMaxSize()
-        .drawWithContent {
-            val rawPath = morphSeq[currentMorphIndex].toPath(
-                progress = progress.value, path = Path(), startAngle = 0
-            )
-            val finalPath = processPath(
-                rawPath, size = size, scaleFactor = shapeScale, scaleMatrix = Matrix()
-            )
-            drawPath(finalPath, color, style = Fill)
-        }) {
+            .fillMaxSize()
+            .drawWithContent {
+                val rawPath = morphSeq[currentMorphIndex].toPath(
+                    progress = progress.value, path = Path(), startAngle = 0
+                )
+                val finalPath = processPath(
+                    rawPath, size = size, scaleFactor = shapeScale, scaleMatrix = Matrix()
+                )
+                drawPath(finalPath, color, style = Fill)
+            }) {
 
     }
 }
@@ -166,6 +168,6 @@ private fun processPath(
 @Preview
 @Composable
 private fun PreviewAnimatedLogo() {
-    val imageVector = painterResource(id = R.drawable.logo_add_request)
+    val imageVector = painterResource(id = R.drawable.logo)
     AnimatedLogo(imageVector)
 }

@@ -26,6 +26,8 @@ appcompat = "1.7.0"
 biometric = "1.1.0"
 okhttp = "4.12.0"
 bouncycastle = "1.78.1"
+ktor = "3.1.1"
+tradingview-lightweightcharts = "4.0.0"
 
 
 [libraries]
@@ -76,7 +78,12 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 androidx-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 bouncycastle = { group = "org.bouncycastle", name = "bcprov-jdk18on", version.ref = "bouncycastle" }
+ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktor" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
 androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycleRuntimeKtx" }
+tradingview-lightweightcharts = { module = "com.tradingview:lightweightcharts", version.ref = "tradingview-lightweightcharts" }
 
 # Build Logic
 agp = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }

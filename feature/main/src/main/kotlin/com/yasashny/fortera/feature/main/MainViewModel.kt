@@ -2,10 +2,10 @@ package com.yasashny.fortera.feature.main
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import com.yasashny.fortera.core.cryptoapi.CryptoRepository
-import com.yasashny.fortera.core.cryptoapi.HdWallet
-import com.yasashny.fortera.core.cryptoapi.TokenCatalog
-import com.yasashny.fortera.core.cryptoapi.TokenPreferences
+import com.yasashny.fortera.core.domaincrypto.HdWallet
+import com.yasashny.fortera.core.domaincrypto.TokenCatalog
+import com.yasashny.fortera.core.domaincrypto.TokenPreferences
+import com.yasashny.fortera.core.domaincrypto.repository.BalanceRepository
 import com.yasashny.fortera.core.domain.wallet.WalletInteractor
 import com.yasashny.fortera.core.mvi.MviViewModel
 import com.yasashny.fortera.feature.main.MainContract.Effect
@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.first
 
 class MainViewModel(
     private val walletInteractor: WalletInteractor,
-    private val cryptoRepository: CryptoRepository,
+    private val balanceRepository: BalanceRepository,
     private val dataStore: DataStore<Preferences>,
 ) : MviViewModel<State, Intent, Effect>(State()) {
 
@@ -46,7 +46,7 @@ class MainViewModel(
                     val enabledIds = prefs[TokenPreferences.ENABLED_TOKENS_KEY]
                         ?: TokenCatalog.defaultTokenIds
 
-                    cryptoRepository.getTokenBalances(ethAddress, btcAddress, enabledIds)
+                    balanceRepository.getTokenBalances(ethAddress, btcAddress, enabledIds)
                         .onSuccess { tokens ->
                             reduce(State(
                                 activeWalletName = wallet.name,
@@ -74,7 +74,7 @@ class MainViewModel(
                     val enabledIds = prefs[TokenPreferences.ENABLED_TOKENS_KEY]
                         ?: TokenCatalog.defaultTokenIds
 
-                    cryptoRepository.getTokenBalances(ethAddress, btcAddress, enabledIds)
+                    balanceRepository.getTokenBalances(ethAddress, btcAddress, enabledIds)
                         .onSuccess { tokens ->
                             reduce(State(
                                 activeWalletName = wallet.name,
@@ -90,8 +90,40 @@ class MainViewModel(
 
     override fun handleIntent(intent: Intent) {
         when (intent) {
+            Intent.Refresh -> intent {
+                reduce(currentState.copy(isRefreshing = true))
+                val wallet = walletInteractor.observeActiveWallet().first() ?: run {
+                    reduce(currentState.copy(isRefreshing = false))
+                    return@intent
+                }
+                val prefs = dataStore.data.first()
+                val seed = walletInteractor.getSeedPhrase(wallet.id)
+                    .getOrNull()?.toDisplayString() ?: run {
+                    reduce(currentState.copy(isRefreshing = false))
+                    return@intent
+                }
+                val ethAddress = HdWallet.deriveEthAddress(seed)
+                val btcAddress = HdWallet.deriveBtcAddress(seed)
+                val enabledIds = prefs[TokenPreferences.ENABLED_TOKENS_KEY]
+                    ?: TokenCatalog.defaultTokenIds
+
+                balanceRepository.getTokenBalances(ethAddress, btcAddress, enabledIds, forceRemote = true)
+                    .onSuccess { tokens ->
+                        reduce(State(
+                            activeWalletName = wallet.name,
+                            totalUsd = tokens.sumOf { it.balanceUsd },
+                            tokens = tokens,
+                            isLoading = false,
+                            isRefreshing = false,
+                        ))
+                    }
+                    .onFailure {
+                        reduce(currentState.copy(isRefreshing = false))
+                    }
+            }
             Intent.OpenManageTokens -> intent { sendEffect(Effect.NavigateToManageTokens) }
             Intent.OpenSettings -> intent { sendEffect(Effect.NavigateToSettings) }
+            is Intent.OpenTokenDetails -> intent { sendEffect(Effect.NavigateToTokenDetails(intent.tokenId)) }
             Intent.OpenWalletSelector -> Unit
         }
     }

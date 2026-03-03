@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="token_details_chart_placeholder">Chart</string>
+    <string name="token_details_send">Send</string>
+    <string name="token_details_receive">Receive</string>
+    <string name="token_details_extra_info_placeholder">Additional info</string>
+</resources>

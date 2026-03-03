@@ -142,9 +142,12 @@ fun GroupCard(
     onClick: () -> Unit,
     title: String,
     modifier: Modifier = Modifier,
+    titleSuffix: String? = null,
     subtitle: String? = null,
+    subtitleColor: Color? = null,
     iconUrl: String? = null,
     icon: CardIcon? = null,
+    badgeIconUrl: String? = null,
     cornerRadius: Dp = 16.dp,
     trailing: @Composable (() -> Unit)? = null
 ) {
@@ -164,7 +167,8 @@ fun GroupCard(
         ) {
             CardIconContent(
                 iconUrl = iconUrl,
-                icon = icon
+                icon = icon,
+                badgeIconUrl = badgeIconUrl,
             )
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -174,24 +178,38 @@ fun GroupCard(
                     .horizontalFadingEdge(),
                 verticalArrangement = if (subtitle != null) Arrangement.spacedBy(2.dp) else Arrangement.Center
             ) {
-                Text(
-                    text = title,
-                    style = if (subtitle != null) {
-                        MaterialTheme.typography.titleMedium
-                    } else {
-                        MaterialTheme.typography.bodyLarge
-                    },
-                    fontWeight = if (subtitle != null) FontWeight.Medium else FontWeight.Normal,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    softWrap = false
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text(
+                        text = title,
+                        style = if (subtitle != null) {
+                            MaterialTheme.typography.titleMedium
+                        } else {
+                            MaterialTheme.typography.bodyLarge
+                        },
+                        fontWeight = if (subtitle != null) FontWeight.Medium else FontWeight.Normal,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        softWrap = false,
+                    )
+                    if (titleSuffix != null) {
+                        Text(
+                            text = titleSuffix,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            softWrap = false,
+                        )
+                    }
+                }
 
                 if (subtitle != null) {
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = subtitleColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         softWrap = false
                     )
@@ -213,39 +231,61 @@ private fun CardIconContent(
     iconUrl: String?,
     icon: CardIcon?,
     modifier: Modifier = Modifier,
+    badgeIconUrl: String? = null,
     size: Dp = 40.dp
 ) {
     Box(
-        modifier = modifier
-            .size(size)
-            .clip(CircleShape),
+        modifier = modifier.size(size),
         contentAlignment = Alignment.Center
     ) {
-        when {
-            // Load image from URL
-            iconUrl != null -> {
-                AsyncImage(
-                    model = iconUrl,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(size)
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop
-                )
+        Box(
+            modifier = Modifier
+                .size(size)
+                .clip(CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            when {
+                iconUrl != null -> {
+                    AsyncImage(
+                        model = iconUrl,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(size)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+                icon != null -> {
+                    IconWithBackground(icon = icon, size = size)
+                }
+                else -> {
+                    Box(
+                        modifier = Modifier
+                            .size(size)
+                            .background(
+                                color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                shape = CircleShape
+                            )
+                    )
+                }
             }
-            icon != null -> {
-                IconWithBackground(icon = icon, size = size)
-            }
-            else -> {
-                Box(
-                    modifier = Modifier
-                        .size(size)
-                        .background(
-                            color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                            shape = CircleShape
-                        )
-                )
-            }
+        }
+        if (badgeIconUrl != null) {
+            val badgeSize = size * 0.4f
+            AsyncImage(
+                model = badgeIconUrl,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(badgeSize)
+                    .align(Alignment.BottomEnd)
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        shape = CircleShape,
+                    )
+                    .padding(1.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop,
+            )
         }
     }
 }

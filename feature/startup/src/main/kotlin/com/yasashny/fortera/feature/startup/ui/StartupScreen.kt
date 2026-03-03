@@ -14,14 +14,20 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 import com.yasashny.fortera.core.mvi.MviContainer
 import com.yasashny.fortera.core.navigation.LocalAppNavigator
@@ -82,6 +88,13 @@ private fun StartupLayout(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f), MaterialTheme.colorScheme.background),
+                    startY = 0f,
+                    endY = 1500f
+                )
+            )
     ) {
         Column(
             modifier = Modifier
@@ -91,9 +104,11 @@ private fun StartupLayout(
                 .padding(horizontal = 24.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
+
             Spacer(modifier = Modifier.weight(1f))
 
-            AnimatedLogo(painterResource(id = StartupR.drawable.logo_add_request))
+            AnimatedLogo(painterResource(id = StartupR.drawable.logo))
 
             Spacer(modifier = Modifier.weight(1f))
 

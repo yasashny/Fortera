@@ -2,12 +2,14 @@ package com.yasashny.fortera
 
 import android.app.Application
 import com.yasashny.fortera.core.common.dispatchersModule
-import com.yasashny.fortera.core.cryptoapi.di.cryptoApiModule
+import com.yasashny.fortera.core.domaincrypto.di.domainCryptoModule
+import com.yasashny.fortera.core.network.di.networkModule
 import com.yasashny.fortera.core.database.di.databaseModule
 import com.yasashny.fortera.core.domain.wallet.di.walletModule
 import com.yasashny.fortera.feature.walletselector.di.walletSelectorModule
 import com.yasashny.fortera.feature.settings.di.settingsModule
 import com.yasashny.fortera.feature.managetokens.di.manageTokensModule
+import com.yasashny.fortera.feature.tokendetails.di.tokenDetailsModule
 import com.yasashny.fortera.core.navigation.AppNavigator
 import com.yasashny.fortera.core.navigation.NavigationRegistry
 import com.yasashny.fortera.feature.createwallet.di.createWalletModule
@@ -33,7 +35,8 @@ class ForteraApp : Application() {
             modules(
                 dispatchersModule,
                 databaseModule,
-                cryptoApiModule,
+                networkModule,
+                domainCryptoModule,
                 walletModule,
                 module {
                     single { AppNavigator(Startup) }
@@ -47,6 +50,7 @@ class ForteraApp : Application() {
                 walletSelectorModule,
                 settingsModule,
                 manageTokensModule,
+                tokenDetailsModule,
             )
         }
     }

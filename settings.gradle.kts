@@ -28,7 +28,8 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 include(":app")
 
 // Core modules
-include(":core:crypto-api")
+include(":core:domain_crypto")
+include(":core:network")
 include(":core:database")
 include(":core:domain_wallet")
 include(":core:designsystem")
@@ -58,3 +59,6 @@ include(":feature:settings")
 
 include(":feature:manage-tokens-api")
 include(":feature:manage-tokens")
+
+include(":feature:token-details-api")
+include(":feature:token-details")
