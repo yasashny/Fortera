@@ -40,6 +40,7 @@ class TokenDetailsViewModel(
                 updateState { it.copy(selectedPeriod = intent.period, isChartLoading = true) }
                 intent { launch { loadChartData(intent.period) } }
             }
+            Intent.OpenReceive -> intent { sendEffect(Effect.NavigateToReceive(tokenId)) }
         }
     }
 

@@ -70,6 +70,7 @@ internal fun MainLayout(
     onSettingsClick: () -> Unit,
     onManageTokensClick: () -> Unit,
     onTokenClick: (String) -> Unit,
+    onReceiveClick: () -> Unit,
     onRefresh: () -> Unit,
 ) {
 
@@ -178,7 +179,7 @@ internal fun MainLayout(
                         bottomStart = 4.dp,
                         bottomEnd = 18.dp
                     ),
-                    onClick = {},
+                    onClick = onReceiveClick,
                 )
             }
         }
@@ -305,6 +306,7 @@ private fun MainLayoutPreview() {
             onSettingsClick = {},
             onManageTokensClick = {},
             onTokenClick = {},
+            onReceiveClick = {},
             onRefresh = {},
         )
     }

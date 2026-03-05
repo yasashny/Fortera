@@ -28,6 +28,7 @@ okhttp = "4.12.0"
 bouncycastle = "1.78.1"
 ktor = "3.1.1"
 tradingview-lightweightcharts = "4.0.0"
+zxing = "3.5.3"
 
 
 [libraries]
@@ -84,6 +85,7 @@ ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
 androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycleRuntimeKtx" }
 tradingview-lightweightcharts = { module = "com.tradingview:lightweightcharts", version.ref = "tradingview-lightweightcharts" }
+zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
 
 # Build Logic
 agp = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }

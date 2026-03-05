@@ -26,4 +26,5 @@ dependencies {
     implementation(libs.bouncycastle)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.koin.androidx.compose)
+    testImplementation(libs.junit)
 }

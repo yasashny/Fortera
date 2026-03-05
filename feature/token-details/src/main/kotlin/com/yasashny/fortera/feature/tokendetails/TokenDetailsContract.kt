@@ -30,9 +30,11 @@ object TokenDetailsContract {
 
     sealed interface Intent : UiIntent {
         data class SelectPeriod(val period: ChartPeriod) : Intent
+        data object OpenReceive : Intent
     }
 
     sealed interface Effect : UiEffect {
         data object NavigateBack : Effect
+        data class NavigateToReceive(val tokenId: String) : Effect
     }
 }

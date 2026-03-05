@@ -3,15 +3,13 @@ plugins {
 }
 
 android {
-    namespace = "com.yasashny.fortera.feature.tokendetails"
+    namespace = "com.yasashny.fortera.feature.receive"
 }
 
 dependencies {
     implementation(projects.core.domainWallet)
     implementation(projects.core.domainCrypto)
-    implementation(projects.feature.tokenDetailsApi)
     implementation(projects.feature.receiveApi)
-    implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.compose.material.icons.extended)
-    implementation(libs.tradingview.lightweightcharts)
+    implementation(libs.zxing.core)
 }

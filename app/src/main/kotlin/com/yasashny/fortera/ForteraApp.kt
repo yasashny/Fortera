@@ -10,6 +10,7 @@ import com.yasashny.fortera.feature.walletselector.di.walletSelectorModule
 import com.yasashny.fortera.feature.settings.di.settingsModule
 import com.yasashny.fortera.feature.managetokens.di.manageTokensModule
 import com.yasashny.fortera.feature.tokendetails.di.tokenDetailsModule
+import com.yasashny.fortera.feature.receive.di.receiveModule
 import com.yasashny.fortera.core.navigation.AppNavigator
 import com.yasashny.fortera.core.navigation.NavigationRegistry
 import com.yasashny.fortera.feature.createwallet.di.createWalletModule
@@ -51,6 +52,7 @@ class ForteraApp : Application() {
                 settingsModule,
                 manageTokensModule,
                 tokenDetailsModule,
+                receiveModule,
             )
         }
     }

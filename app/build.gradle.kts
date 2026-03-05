@@ -52,6 +52,8 @@ dependencies {
     implementation(projects.feature.manageTokens)
     implementation(projects.feature.tokenDetailsApi)
     implementation(projects.feature.tokenDetails)
+    implementation(projects.feature.receiveApi)
+    implementation(projects.feature.receive)
 
     // DataStore
     implementation(libs.androidx.datastore.preferences)

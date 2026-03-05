@@ -36,11 +36,11 @@ object HdWallet {
         return "0x" + hash.drop(12).joinToString("") { "%02x".format(it) }
     }
 
-    // BIP44 path m/44'/0'/0'/0/0 for Bitcoin (P2PKH mainnet)
+    // BIP84 path m/84'/0'/0'/0/0 for Bitcoin (Native SegWit P2WPKH)
     fun deriveBtcAddress(mnemonic: String): String {
         val seed = generateSeed(mnemonic)
         var (key, chain) = masterKey(seed)
-        val path = listOf(44 or 0x80000000.toInt(), 0 or 0x80000000.toInt(), 0 or 0x80000000.toInt(), 0, 0)
+        val path = listOf(84 or 0x80000000.toInt(), 0 or 0x80000000.toInt(), 0 or 0x80000000.toInt(), 0, 0)
         for (index in path) {
             val result = deriveChild(key, chain, index)
             key = result.first
@@ -48,7 +48,7 @@ object HdWallet {
         }
         val pubKey = publicKeyCompressed(key)
         val pubKeyHash = ripemd160(sha256(pubKey))
-        return base58CheckEncode(byteArrayOf(0x00.toByte()) + pubKeyHash)
+        return bech32Encode("bc", 0, pubKeyHash)
     }
 
     private fun generateSeed(mnemonic: String): ByteArray {
@@ -118,27 +118,62 @@ object HdWallet {
         return result
     }
 
-    private fun base58CheckEncode(payload: ByteArray): String {
-        val checksum = sha256(sha256(payload)).copyOfRange(0, 4)
-        val full = payload + checksum
-        return base58Encode(full)
+    private fun bech32Encode(hrp: String, witnessVersion: Int, data: ByteArray): String {
+        val converted = convertBits(data, 8, 5)
+        val values = intArrayOf(witnessVersion) + converted
+        val checksum = bech32Checksum(hrp, values)
+        val charset = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
+        val sb = StringBuilder(hrp).append('1')
+        for (v in values) sb.append(charset[v])
+        for (v in checksum) sb.append(charset[v])
+        return sb.toString()
     }
 
-    private fun base58Encode(input: ByteArray): String {
-        val alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
-        var num = BigInteger(1, input)
-        val sb = StringBuilder()
-        val base = BigInteger.valueOf(58)
-        while (num > BigInteger.ZERO) {
-            val (quotient, remainder) = num.divideAndRemainder(base)
-            sb.append(alphabet[remainder.toInt()])
-            num = quotient
+    private fun convertBits(data: ByteArray, fromBits: Int, toBits: Int): IntArray {
+        var acc = 0
+        var bits = 0
+        val result = mutableListOf<Int>()
+        val maxV = (1 shl toBits) - 1
+        for (byte in data) {
+            acc = (acc shl fromBits) or (byte.toInt() and 0xFF)
+            bits += fromBits
+            while (bits >= toBits) {
+                bits -= toBits
+                result.add((acc shr bits) and maxV)
+            }
         }
-        // Leading zeros
-        for (byte in input) {
-            if (byte == 0.toByte()) sb.append(alphabet[0]) else break
+        if (bits > 0) {
+            result.add((acc shl (toBits - bits)) and maxV)
         }
-        return sb.reverse().toString()
+        return result.toIntArray()
+    }
+
+    private fun bech32Checksum(hrp: String, values: IntArray): IntArray {
+        val expanded = bech32HrpExpand(hrp) + values + intArrayOf(0, 0, 0, 0, 0, 0)
+        val polymod = bech32Polymod(expanded) xor 1
+        return IntArray(6) { (polymod shr (5 * (5 - it))) and 31 }
+    }
+
+    private fun bech32HrpExpand(hrp: String): IntArray {
+        val result = IntArray(hrp.length * 2 + 1)
+        for (i in hrp.indices) {
+            result[i] = hrp[i].code shr 5
+            result[i + hrp.length + 1] = hrp[i].code and 31
+        }
+        return result
+    }
+
+    private fun bech32Polymod(values: IntArray): Int {
+        val gen = intArrayOf(0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3)
+        var chk = 1
+        for (v in values) {
+            val b = chk shr 25
+            chk = ((chk and 0x1ffffff) shl 5) xor v
+            for (i in 0..4) {
+                if ((b shr i) and 1 == 1) chk = chk xor gen[i]
+            }
+        }
+        return chk
     }
 
     private fun Int.toByteArrayBE(): ByteArray = byteArrayOf(

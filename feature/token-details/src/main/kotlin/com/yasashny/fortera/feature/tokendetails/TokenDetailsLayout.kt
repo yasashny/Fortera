@@ -76,6 +76,7 @@ internal fun TokenDetailsLayout(
     state: TokenDetailsContract.State,
     onBackClick: () -> Unit,
     onPeriodSelected: (TokenDetailsContract.ChartPeriod) -> Unit,
+    onReceiveClick: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -151,7 +152,7 @@ internal fun TokenDetailsLayout(
                         topStart = 4.dp, topEnd = 18.dp,
                         bottomStart = 4.dp, bottomEnd = 18.dp,
                     ),
-                    onClick = {},
+                    onClick = onReceiveClick,
                 )
             }
 
@@ -357,6 +358,7 @@ private fun TokenDetailsLayoutPreview() {
             ),
             onBackClick = {},
             onPeriodSelected = {},
+            onReceiveClick = {},
         )
     }
 }

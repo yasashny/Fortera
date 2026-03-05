@@ -62,3 +62,6 @@ include(":feature:manage-tokens")
 
 include(":feature:token-details-api")
 include(":feature:token-details")
+
+include(":feature:receive-api")
+include(":feature:receive")
