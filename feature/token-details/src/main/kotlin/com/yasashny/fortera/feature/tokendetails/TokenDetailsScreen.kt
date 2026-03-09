@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import com.yasashny.fortera.core.mvi.MviContainer
 import com.yasashny.fortera.core.navigation.LocalAppNavigator
 import com.yasashny.fortera.feature.receive.ReceiveToken
+import com.yasashny.fortera.feature.receive.SendToken
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -20,6 +21,7 @@ fun TokenDetailsScreen(
             when (effect) {
                 TokenDetailsContract.Effect.NavigateBack -> navigator.back()
                 is TokenDetailsContract.Effect.NavigateToReceive -> navigator.navigate(ReceiveToken(effect.tokenId))
+                is TokenDetailsContract.Effect.NavigateToSend -> navigator.navigate(SendToken(effect.tokenId))
             }
         },
     ) { state, sendIntent ->
@@ -27,6 +29,7 @@ fun TokenDetailsScreen(
             state = state,
             onBackClick = { navigator.back() },
             onPeriodSelected = { sendIntent(TokenDetailsContract.Intent.SelectPeriod(it)) },
+            onSendClick = { sendIntent(TokenDetailsContract.Intent.OpenSend) },
             onReceiveClick = { sendIntent(TokenDetailsContract.Intent.OpenReceive) },
         )
     }

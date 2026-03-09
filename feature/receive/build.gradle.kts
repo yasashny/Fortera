@@ -10,6 +10,7 @@ dependencies {
     implementation(projects.core.domainWallet)
     implementation(projects.core.domainCrypto)
     implementation(projects.feature.receiveApi)
+    implementation(projects.feature.mainApi)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.zxing.core)
 }

@@ -9,6 +9,7 @@ import com.yasashny.fortera.core.mvi.MviContainer
 import com.yasashny.fortera.core.navigation.LocalAppNavigator
 import com.yasashny.fortera.feature.managetokens.ManageTokens
 import com.yasashny.fortera.feature.receive.SelectTokenForReceive
+import com.yasashny.fortera.feature.receive.SelectTokenForSend
 import com.yasashny.fortera.feature.tokendetails.TokenDetails
 import com.yasashny.fortera.feature.settings.Settings
 import com.yasashny.fortera.feature.startup.Startup
@@ -31,6 +32,7 @@ fun MainScreen(
                 MainContract.Effect.NavigateToSettings -> navigator.navigate(Settings)
                 is MainContract.Effect.NavigateToTokenDetails -> navigator.navigate(TokenDetails(effect.tokenId))
                 MainContract.Effect.NavigateToSelectTokenForReceive -> navigator.navigate(SelectTokenForReceive)
+                MainContract.Effect.NavigateToSelectTokenForSend -> navigator.navigate(SelectTokenForSend)
             }
         },
     ) { state, sendIntent ->
@@ -40,6 +42,7 @@ fun MainScreen(
             onSettingsClick = { sendIntent(MainContract.Intent.OpenSettings) },
             onManageTokensClick = { sendIntent(MainContract.Intent.OpenManageTokens) },
             onTokenClick = { tokenId -> sendIntent(MainContract.Intent.OpenTokenDetails(tokenId)) },
+            onSendClick = { sendIntent(MainContract.Intent.OpenSend) },
             onReceiveClick = { sendIntent(MainContract.Intent.OpenReceive) },
             onRefresh = { sendIntent(MainContract.Intent.Refresh) },
         )

@@ -15,6 +15,7 @@ val tokenDetailsModule = module {
             walletInteractor = get(),
             balanceRepository = get(),
             priceRepository = get(),
+            transactionRepository = get(),
         )
     }
 }

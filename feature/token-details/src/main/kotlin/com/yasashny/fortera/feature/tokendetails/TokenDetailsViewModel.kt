@@ -4,6 +4,7 @@ import com.yasashny.fortera.core.domaincrypto.HdWallet
 import com.yasashny.fortera.core.domaincrypto.TokenCatalog
 import com.yasashny.fortera.core.domaincrypto.repository.BalanceRepository
 import com.yasashny.fortera.core.domaincrypto.repository.PriceRepository
+import com.yasashny.fortera.core.domaincrypto.repository.TransactionRepository
 import com.yasashny.fortera.core.domain.wallet.WalletInteractor
 import com.yasashny.fortera.core.mvi.MviViewModel
 import com.yasashny.fortera.feature.tokendetails.TokenDetailsContract.ChartPeriod
@@ -17,6 +18,7 @@ class TokenDetailsViewModel(
     private val walletInteractor: WalletInteractor,
     private val balanceRepository: BalanceRepository,
     private val priceRepository: PriceRepository,
+    private val transactionRepository: TransactionRepository,
 ) : MviViewModel<State, Intent, Effect>(State()) {
 
     private val token = TokenCatalog.tokens.find { it.id == tokenId }
@@ -31,6 +33,7 @@ class TokenDetailsViewModel(
 
             launch { loadBalance() }
             launch { loadChartData(currentState.selectedPeriod) }
+            launch { loadTransactions() }
         }
     }
 
@@ -41,6 +44,7 @@ class TokenDetailsViewModel(
                 intent { launch { loadChartData(intent.period) } }
             }
             Intent.OpenReceive -> intent { sendEffect(Effect.NavigateToReceive(tokenId)) }
+            Intent.OpenSend -> intent { sendEffect(Effect.NavigateToSend(tokenId)) }
         }
     }
 
@@ -75,6 +79,28 @@ class TokenDetailsViewModel(
             .onFailure {
                 setState(currentState.copy(isLoading = false))
             }
+    }
+
+    private suspend fun loadTransactions() {
+        val t = token ?: return
+        updateState { it.copy(isTransactionsLoading = true) }
+
+        val wallet = walletInteractor.observeActiveWallet().first() ?: run {
+            updateState { it.copy(isTransactionsLoading = false) }
+            return
+        }
+        val seed = walletInteractor.getSeedPhrase(wallet.id)
+            .getOrNull()?.toDisplayString() ?: run {
+            updateState { it.copy(isTransactionsLoading = false) }
+            return
+        }
+
+        val ethAddress = HdWallet.deriveEthAddress(seed)
+        val btcAddress = HdWallet.deriveBtcAddress(seed)
+
+        transactionRepository.getTransactions(t, ethAddress, btcAddress)
+            .onSuccess { txs -> updateState { it.copy(transactions = txs, isTransactionsLoading = false) } }
+            .onFailure { updateState { it.copy(isTransactionsLoading = false) } }
     }
 
     private suspend fun loadChartData(period: ChartPeriod) {

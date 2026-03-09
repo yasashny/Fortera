@@ -35,6 +35,7 @@ private val BlockchainNetwork.displayName: String
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SelectTokenLayout(
+    title: String,
     state: SelectTokenContract.State,
     onBackClick: () -> Unit,
     onTokenClick: (String) -> Unit,
@@ -43,7 +44,7 @@ internal fun SelectTokenLayout(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(text = stringResource(ReceiveR.string.select_token_title))
+                    Text(text = title)
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
@@ -92,6 +93,7 @@ internal fun SelectTokenLayout(
 private fun SelectTokenLayoutPreview() {
     ForteraTheme {
         SelectTokenLayout(
+            title = "Receive",
             state = SelectTokenContract.State(
                 tokens = TokenCatalog.tokens,
                 isLoading = false,

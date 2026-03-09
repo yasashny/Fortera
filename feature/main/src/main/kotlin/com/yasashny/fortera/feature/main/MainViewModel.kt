@@ -125,6 +125,7 @@ class MainViewModel(
             Intent.OpenSettings -> intent { sendEffect(Effect.NavigateToSettings) }
             is Intent.OpenTokenDetails -> intent { sendEffect(Effect.NavigateToTokenDetails(intent.tokenId)) }
             Intent.OpenReceive -> intent { sendEffect(Effect.NavigateToSelectTokenForReceive) }
+            Intent.OpenSend -> intent { sendEffect(Effect.NavigateToSelectTokenForSend) }
             Intent.OpenWalletSelector -> Unit
         }
     }

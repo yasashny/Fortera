@@ -22,6 +22,7 @@ object MainContract {
         data object OpenSettings : Intent
         data class OpenTokenDetails(val tokenId: String) : Intent
         data object OpenReceive : Intent
+        data object OpenSend : Intent
     }
 
     sealed interface Effect : UiEffect {
@@ -30,5 +31,6 @@ object MainContract {
         data object NavigateToSettings : Effect
         data class NavigateToTokenDetails(val tokenId: String) : Effect
         data object NavigateToSelectTokenForReceive : Effect
+        data object NavigateToSelectTokenForSend : Effect
     }
 }

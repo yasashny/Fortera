@@ -17,6 +17,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.automirrored.filled.CallMade
+import androidx.compose.material.icons.automirrored.filled.CallReceived
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -41,6 +43,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -61,9 +64,12 @@ import com.tradingview.lightweightcharts.api.series.models.Time
 import com.tradingview.lightweightcharts.view.ChartsView
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 import com.yasashny.fortera.core.domaincrypto.model.PricePoint
+import com.yasashny.fortera.core.domaincrypto.model.Transaction
 import com.yasashny.fortera.core.ui.component.CardPosition
 import com.yasashny.fortera.core.ui.component.GroupCard
 import java.math.BigDecimal
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 import com.yasashny.fortera.feature.tokendetails.R as TokenDetailsR
 
@@ -76,6 +82,7 @@ internal fun TokenDetailsLayout(
     state: TokenDetailsContract.State,
     onBackClick: () -> Unit,
     onPeriodSelected: (TokenDetailsContract.ChartPeriod) -> Unit,
+    onSendClick: () -> Unit,
     onReceiveClick: () -> Unit,
 ) {
     Scaffold(
@@ -142,7 +149,7 @@ internal fun TokenDetailsLayout(
                         topStart = 18.dp, topEnd = 4.dp,
                         bottomStart = 18.dp, bottomEnd = 4.dp,
                     ),
-                    onClick = {},
+                    onClick = onSendClick,
                 )
                 Spacer(Modifier.width(4.dp))
                 ActionButton(
@@ -183,28 +190,125 @@ internal fun TokenDetailsLayout(
 
             Spacer(Modifier.height(16.dp))
 
-            // Extra info placeholder
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .height(147.dp)
-                    .background(
-                        color = Color(0xFF2B5E48),
-                        shape = RoundedCornerShape(16.dp),
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = stringResource(TokenDetailsR.string.token_details_extra_info_placeholder),
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleMedium,
-                )
-            }
+            // Transactions
+            TransactionsSection(
+                transactions = state.transactions,
+                isLoading = state.isTransactionsLoading,
+            )
 
             Spacer(Modifier.height(32.dp))
         }
     }
+}
+
+@Composable
+private fun TransactionsSection(
+    transactions: List<Transaction>,
+    isLoading: Boolean,
+) {
+    Text(
+        text = stringResource(TokenDetailsR.string.token_details_transactions),
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.padding(horizontal = 16.dp),
+    )
+    Spacer(Modifier.height(8.dp))
+
+    if (isLoading) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(100.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            CircularProgressIndicator()
+        }
+    } else if (transactions.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .height(80.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    shape = RoundedCornerShape(16.dp),
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = stringResource(TokenDetailsR.string.token_details_no_transactions),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    } else {
+        transactions.forEachIndexed { index, tx ->
+            val position = when {
+                transactions.size == 1 -> CardPosition.Single
+                index == 0 -> CardPosition.First
+                index == transactions.lastIndex -> CardPosition.Last
+                else -> CardPosition.Middle
+            }
+            TransactionCard(
+                transaction = tx,
+                position = position,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun TransactionCard(
+    transaction: Transaction,
+    position: CardPosition,
+    modifier: Modifier = Modifier,
+) {
+    val dateFormat = remember { SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault()) }
+    val dateStr = if (transaction.timestampSeconds > 0) {
+        dateFormat.format(Date(transaction.timestampSeconds * 1000))
+    } else {
+        stringResource(TokenDetailsR.string.token_details_tx_pending)
+    }
+
+    val icon = if (transaction.isIncoming) Icons.AutoMirrored.Filled.CallReceived else Icons.AutoMirrored.Filled.CallMade
+    val amountPrefix = if (transaction.isIncoming) "+" else "-"
+    val amountColor = if (transaction.isIncoming) ChangePositive else MaterialTheme.colorScheme.onSurface
+    val counterparty = if (transaction.isIncoming) transaction.from else transaction.to
+
+    GroupCard(
+        modifier = modifier,
+        position = position,
+        onClick = {},
+        title = if (transaction.isIncoming) {
+            stringResource(TokenDetailsR.string.token_details_tx_received)
+        } else {
+            stringResource(TokenDetailsR.string.token_details_tx_sent)
+        },
+        subtitle = dateStr,
+        icon = com.yasashny.fortera.core.ui.component.CardIcon.Vector(icon),
+        trailing = {
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = "$amountPrefix${formatCrypto(transaction.amount)} ${transaction.symbol}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = amountColor,
+                )
+                Text(
+                    text = shortenAddress(counterparty),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        },
+    )
+}
+
+private fun shortenAddress(address: String): String {
+    if (address.length <= 13) return address
+    return "${address.take(6)}...${address.takeLast(4)}"
 }
 
 @Composable
@@ -355,9 +459,32 @@ private fun TokenDetailsLayoutPreview() {
                 priceUsd = 3200.0,
                 changePercent24h = 2.45,
                 isLoading = false,
+                transactions = listOf(
+                    Transaction(
+                        hash = "0xabc123",
+                        timestampSeconds = 1709900000,
+                        from = "0x1234567890abcdef1234567890abcdef12345678",
+                        to = "0xabcdef1234567890abcdef1234567890abcdef12",
+                        amount = BigDecimal("0.05"),
+                        symbol = "ETH",
+                        isIncoming = false,
+                        confirmed = true,
+                    ),
+                    Transaction(
+                        hash = "0xdef456",
+                        timestampSeconds = 1709800000,
+                        from = "0xabcdef1234567890abcdef1234567890abcdef12",
+                        to = "0x1234567890abcdef1234567890abcdef12345678",
+                        amount = BigDecimal("0.1"),
+                        symbol = "ETH",
+                        isIncoming = true,
+                        confirmed = true,
+                    ),
+                ),
             ),
             onBackClick = {},
             onPeriodSelected = {},
+            onSendClick = {},
             onReceiveClick = {},
         )
     }

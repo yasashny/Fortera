@@ -3,5 +3,9 @@
     <string name="token_details_chart_placeholder">Chart</string>
     <string name="token_details_send">Send</string>
     <string name="token_details_receive">Receive</string>
-    <string name="token_details_extra_info_placeholder">Additional info</string>
+    <string name="token_details_transactions">Transactions</string>
+    <string name="token_details_no_transactions">No transactions yet</string>
+    <string name="token_details_tx_received">Received</string>
+    <string name="token_details_tx_sent">Sent</string>
+    <string name="token_details_tx_pending">Pending</string>
 </resources>

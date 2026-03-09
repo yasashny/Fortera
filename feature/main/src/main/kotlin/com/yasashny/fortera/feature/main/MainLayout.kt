@@ -70,6 +70,7 @@ internal fun MainLayout(
     onSettingsClick: () -> Unit,
     onManageTokensClick: () -> Unit,
     onTokenClick: (String) -> Unit,
+    onSendClick: () -> Unit,
     onReceiveClick: () -> Unit,
     onRefresh: () -> Unit,
 ) {
@@ -167,7 +168,7 @@ internal fun MainLayout(
                         bottomStart = 18.dp,
                         bottomEnd = 4.dp
                     ),
-                    onClick = {},
+                    onClick = onSendClick,
                 )
                 Spacer(Modifier.width(4.dp))
                 ActionButton(
@@ -306,6 +307,7 @@ private fun MainLayoutPreview() {
             onSettingsClick = {},
             onManageTokensClick = {},
             onTokenClick = {},
+            onSendClick = {},
             onReceiveClick = {},
             onRefresh = {},
         )
