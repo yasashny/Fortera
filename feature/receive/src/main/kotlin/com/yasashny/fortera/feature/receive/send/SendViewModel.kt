@@ -1,9 +1,9 @@
 package com.yasashny.fortera.feature.receive.send
 
 import com.yasashny.fortera.core.domaincrypto.HdWallet
-import com.yasashny.fortera.core.domaincrypto.TokenCatalog
 import com.yasashny.fortera.core.domaincrypto.model.BlockchainNetwork
 import com.yasashny.fortera.core.domaincrypto.repository.BalanceRepository
+import com.yasashny.fortera.core.domaincrypto.repository.TokenRepository
 import com.yasashny.fortera.core.domain.wallet.WalletInteractor
 import com.yasashny.fortera.core.mvi.MviViewModel
 import com.yasashny.fortera.feature.receive.send.SendContract.Effect
@@ -17,11 +17,12 @@ internal class SendViewModel(
     private val tokenId: String,
     private val walletInteractor: WalletInteractor,
     private val balanceRepository: BalanceRepository,
+    private val tokenRepository: TokenRepository,
 ) : MviViewModel<State, Intent, Effect>(State()) {
 
     init {
         intent {
-            val token = TokenCatalog.tokens.find { it.id == tokenId }
+            val token = tokenRepository.getTokenById(tokenId)
             if (token == null) {
                 reduce(currentState.copy(isLoading = false))
                 return@intent
@@ -50,11 +51,12 @@ internal class SendViewModel(
             val btcAddress = HdWallet.deriveBtcAddress(seed)
 
             balanceRepository.getTokenBalances(
+                walletId = wallet.id,
                 ethAddress = ethAddress,
                 btcAddress = btcAddress,
                 enabledTokenIds = setOf(tokenId),
-            ).onSuccess { balances ->
-                val tokenBalance = balances.firstOrNull()
+            ).onSuccess { result ->
+                val tokenBalance = result.balances.firstOrNull()
                 reduce(
                     currentState.copy(
                         balance = tokenBalance?.balance ?: BigDecimal.ZERO,

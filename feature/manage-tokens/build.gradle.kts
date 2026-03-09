@@ -8,6 +8,6 @@ android {
 
 dependencies {
     implementation(projects.core.domainCrypto)
+    implementation(projects.core.domainWallet)
     implementation(projects.feature.manageTokensApi)
-    implementation(libs.androidx.datastore.preferences)
 }

@@ -16,6 +16,5 @@ dependencies {
     implementation(projects.feature.tokenDetailsApi)
     implementation(projects.feature.receiveApi)
     implementation(projects.feature.walletSelector)
-    implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.compose.material.icons.extended)
 }

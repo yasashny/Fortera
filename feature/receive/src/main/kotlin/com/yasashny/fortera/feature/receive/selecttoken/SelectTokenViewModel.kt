@@ -1,16 +1,18 @@
 package com.yasashny.fortera.feature.receive.selecttoken
 
-import com.yasashny.fortera.core.domaincrypto.TokenCatalog
+import com.yasashny.fortera.core.domaincrypto.repository.TokenRepository
 import com.yasashny.fortera.core.mvi.MviViewModel
 import com.yasashny.fortera.feature.receive.selecttoken.SelectTokenContract.Effect
 import com.yasashny.fortera.feature.receive.selecttoken.SelectTokenContract.Intent
 import com.yasashny.fortera.feature.receive.selecttoken.SelectTokenContract.State
 
-internal class SelectTokenViewModel : MviViewModel<State, Intent, Effect>(State()) {
+internal class SelectTokenViewModel(
+    private val tokenRepository: TokenRepository,
+) : MviViewModel<State, Intent, Effect>(State()) {
 
     init {
         intent {
-            reduce(State(tokens = TokenCatalog.tokens, isLoading = false))
+            reduce(State(tokens = tokenRepository.getAllTokens(), isLoading = false))
         }
     }
 

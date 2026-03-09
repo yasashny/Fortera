@@ -1,8 +1,8 @@
 package com.yasashny.fortera.feature.receive.receive
 
 import com.yasashny.fortera.core.domaincrypto.HdWallet
-import com.yasashny.fortera.core.domaincrypto.TokenCatalog
 import com.yasashny.fortera.core.domaincrypto.model.BlockchainNetwork
+import com.yasashny.fortera.core.domaincrypto.repository.TokenRepository
 import com.yasashny.fortera.core.domain.wallet.WalletInteractor
 import com.yasashny.fortera.core.mvi.MviViewModel
 import com.yasashny.fortera.feature.receive.receive.ReceiveContract.Effect
@@ -13,11 +13,12 @@ import kotlinx.coroutines.flow.first
 internal class ReceiveViewModel(
     private val tokenId: String,
     private val walletInteractor: WalletInteractor,
+    private val tokenRepository: TokenRepository,
 ) : MviViewModel<State, Intent, Effect>(State()) {
 
     init {
         intent {
-            val token = TokenCatalog.tokens.find { it.id == tokenId }
+            val token = tokenRepository.getTokenById(tokenId)
             if (token == null) {
                 reduce(currentState.copy(isLoading = false))
                 return@intent

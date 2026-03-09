@@ -2,6 +2,7 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.fortera.android.library)
+    alias(libs.plugins.fortera.android.room)
 }
 
 android {
@@ -24,7 +25,6 @@ dependencies {
     api(projects.core.network)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.bouncycastle)
-    implementation(libs.androidx.datastore.preferences)
     implementation(libs.koin.androidx.compose)
     testImplementation(libs.junit)
 }

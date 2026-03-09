@@ -16,6 +16,7 @@ val tokenDetailsModule = module {
             balanceRepository = get(),
             priceRepository = get(),
             transactionRepository = get(),
+            tokenRepository = get(),
         )
     }
 }

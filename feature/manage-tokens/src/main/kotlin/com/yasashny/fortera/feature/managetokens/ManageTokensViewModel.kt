@@ -1,36 +1,35 @@
 package com.yasashny.fortera.feature.managetokens
 
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
-import com.yasashny.fortera.core.domaincrypto.TokenCatalog
-import com.yasashny.fortera.core.domaincrypto.TokenPreferences
+import com.yasashny.fortera.core.domain.wallet.WalletInteractor
+import com.yasashny.fortera.core.domaincrypto.repository.TokenRepository
 import com.yasashny.fortera.core.mvi.MviViewModel
 import com.yasashny.fortera.feature.managetokens.ManageTokensContract.Effect
 import com.yasashny.fortera.feature.managetokens.ManageTokensContract.Intent
 import com.yasashny.fortera.feature.managetokens.ManageTokensContract.State
 import com.yasashny.fortera.feature.managetokens.ManageTokensContract.TokenItem
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 
 class ManageTokensViewModel(
-    private val dataStore: DataStore<Preferences>,
+    private val tokenRepository: TokenRepository,
+    private val walletInteractor: WalletInteractor,
 ) : MviViewModel<State, Intent, Effect>(State()) {
+
+    private var activeWalletId: String? = null
 
     init {
         intent {
             launch {
-                val enabledIds = dataStore.data.first()[TokenPreferences.ENABLED_TOKENS_KEY]
-                    ?: TokenCatalog.defaultTokenIds
-                val initialTokens = TokenCatalog.tokens.map { token ->
+                val wallet = walletInteractor.observeActiveWallet().first() ?: return@launch
+                activeWalletId = wallet.id
+
+                val allTokens = tokenRepository.getAllTokens()
+                val enabledIds = tokenRepository.getEnabledTokenIds(wallet.id)
+                val initialTokens = allTokens.map { token ->
                     TokenItem(token = token, isEnabled = token.id in enabledIds)
                 }
                 reduce(State(tokens = initialTokens, isLoading = false))
 
-                dataStore.data
-                    .map { prefs ->
-                        prefs[TokenPreferences.ENABLED_TOKENS_KEY] ?: TokenCatalog.defaultTokenIds
-                    }
+                tokenRepository.observeEnabledTokenIds(wallet.id)
                     .collect { ids ->
                         reduce(currentState.copy(
                             tokens = currentState.tokens.map { it.copy(isEnabled = it.token.id in ids) },
@@ -43,14 +42,11 @@ class ManageTokensViewModel(
     override fun handleIntent(intent: Intent) {
         when (intent) {
             is Intent.Toggle -> intent {
+                val walletId = activeWalletId ?: return@intent
                 launch {
-                    dataStore.edit { prefs ->
-                        val current = prefs[TokenPreferences.ENABLED_TOKENS_KEY]
-                            ?: TokenCatalog.defaultTokenIds
-                        prefs[TokenPreferences.ENABLED_TOKENS_KEY] =
-                            if (intent.tokenId in current) current - intent.tokenId
-                            else current + intent.tokenId
-                    }
+                    val isCurrentlyEnabled = currentState.tokens
+                        .find { it.token.id == intent.tokenId }?.isEnabled ?: return@launch
+                    tokenRepository.setTokenEnabled(walletId, intent.tokenId, !isCurrentlyEnabled)
                 }
             }
         }

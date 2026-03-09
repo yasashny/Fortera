@@ -1,4 +1,4 @@
-package com.yasashny.fortera.feature.main
+package com.yasashny.fortera.feature.main.presentation
 
 import com.yasashny.fortera.core.domaincrypto.model.TokenBalance
 import com.yasashny.fortera.core.mvi.UiEffect
@@ -13,6 +13,7 @@ object MainContract {
         val tokens: List<TokenBalance> = emptyList(),
         val isLoading: Boolean = true,
         val isRefreshing: Boolean = false,
+        val isCached: Boolean = false,
     ) : UiState
 
     sealed interface Intent : UiIntent {
@@ -32,5 +33,7 @@ object MainContract {
         data class NavigateToTokenDetails(val tokenId: String) : Effect
         data object NavigateToSelectTokenForReceive : Effect
         data object NavigateToSelectTokenForSend : Effect
+        data class ShowNetworkError(val networks: Set<String>) : Effect
+        data object ShowError : Effect
     }
 }

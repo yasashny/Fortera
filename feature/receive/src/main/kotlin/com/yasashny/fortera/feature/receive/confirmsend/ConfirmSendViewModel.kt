@@ -1,8 +1,8 @@
 package com.yasashny.fortera.feature.receive.confirmsend
 
-import com.yasashny.fortera.core.domaincrypto.TokenCatalog
 import com.yasashny.fortera.core.domaincrypto.model.BlockchainNetwork
 import com.yasashny.fortera.core.domaincrypto.repository.PriceRepository
+import com.yasashny.fortera.core.domaincrypto.repository.TokenRepository
 import com.yasashny.fortera.core.mvi.MviViewModel
 import com.yasashny.fortera.feature.receive.confirmsend.ConfirmSendContract.Effect
 import com.yasashny.fortera.feature.receive.confirmsend.ConfirmSendContract.Intent
@@ -15,11 +15,12 @@ internal class ConfirmSendViewModel(
     private val amount: String,
     private val address: String,
     private val priceRepository: PriceRepository,
+    private val tokenRepository: TokenRepository,
 ) : MviViewModel<State, Intent, Effect>(State()) {
 
     init {
         intent {
-            val token = TokenCatalog.tokens.find { it.id == tokenId }
+            val token = tokenRepository.getTokenById(tokenId)
             if (token == null) {
                 reduce(currentState.copy(isLoading = false))
                 return@intent

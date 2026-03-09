@@ -1,9 +1,10 @@
 package com.yasashny.fortera.feature.tokendetails
 
 import com.yasashny.fortera.core.domaincrypto.HdWallet
-import com.yasashny.fortera.core.domaincrypto.TokenCatalog
+import com.yasashny.fortera.core.domaincrypto.model.TokenDefinition
 import com.yasashny.fortera.core.domaincrypto.repository.BalanceRepository
 import com.yasashny.fortera.core.domaincrypto.repository.PriceRepository
+import com.yasashny.fortera.core.domaincrypto.repository.TokenRepository
 import com.yasashny.fortera.core.domaincrypto.repository.TransactionRepository
 import com.yasashny.fortera.core.domain.wallet.WalletInteractor
 import com.yasashny.fortera.core.mvi.MviViewModel
@@ -19,17 +20,20 @@ class TokenDetailsViewModel(
     private val balanceRepository: BalanceRepository,
     private val priceRepository: PriceRepository,
     private val transactionRepository: TransactionRepository,
+    private val tokenRepository: TokenRepository,
 ) : MviViewModel<State, Intent, Effect>(State()) {
 
-    private val token = TokenCatalog.tokens.find { it.id == tokenId }
+    private var token: TokenDefinition? = null
 
     init {
         intent {
-            if (token == null) {
+            token = tokenRepository.getTokenById(tokenId)
+            val t = token
+            if (t == null) {
                 reduce(currentState.copy(isLoading = false))
                 return@intent
             }
-            reduce(currentState.copy(tokenName = token.name, tokenSymbol = token.symbol))
+            reduce(currentState.copy(tokenName = t.name, tokenSymbol = t.symbol))
 
             launch { loadBalance() }
             launch { loadChartData(currentState.selectedPeriod) }
@@ -64,9 +68,9 @@ class TokenDetailsViewModel(
         val ethAddress = HdWallet.deriveEthAddress(seed)
         val btcAddress = HdWallet.deriveBtcAddress(seed)
 
-        balanceRepository.getTokenBalances(ethAddress, btcAddress, setOf(tokenId))
-            .onSuccess { tokens ->
-                val tb = tokens.find { it.token.id == tokenId }
+        balanceRepository.getTokenBalances(wallet.id, ethAddress, btcAddress, setOf(tokenId))
+            .onSuccess { result ->
+                val tb = result.balances.find { it.token.id == tokenId }
                 setState(
                     currentState.copy(
                         balance = tb?.balance ?: currentState.balance,

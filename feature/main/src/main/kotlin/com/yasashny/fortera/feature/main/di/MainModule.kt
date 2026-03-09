@@ -1,8 +1,8 @@
 package com.yasashny.fortera.feature.main.di
 
 import com.yasashny.fortera.core.navigation.FeatureNavProvider
-import com.yasashny.fortera.feature.main.MainNavProvider
-import com.yasashny.fortera.feature.main.MainViewModel
+import com.yasashny.fortera.feature.main.di.MainNavProvider
+import com.yasashny.fortera.feature.main.presentation.MainViewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.bind
