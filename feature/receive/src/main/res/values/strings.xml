@@ -2,6 +2,8 @@
 <resources>
     <string name="select_token_title">Receive</string>
     <string name="receive_title">Receive</string>
+    <string name="receive_wallet_address_label">Wallet address</string>
+    <string name="receive_copy">Copy</string>
     <string name="receive_copy_address">Copy address</string>
     <string name="receive_address_copied">Address copied</string>
     <string name="receive_network_warning">Send only %1$s on %2$s network</string>
@@ -9,7 +11,7 @@
     <string name="send_title">Send</string>
     <string name="send_input_address">Input Address</string>
     <string name="send_paste">Paste</string>
-    <string name="send_insufficient_funds">Недостаточно средств</string>
+    <string name="send_insufficient_funds">Insufficient funds</string>
     <string name="send_continue">Continue</string>
     <string name="send_confirm_address">Address</string>
     <string name="send_confirm_network">Network</string>

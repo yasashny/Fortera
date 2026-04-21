@@ -165,7 +165,7 @@ fun GroupCard(
                 .padding(vertical = 12.dp, horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            CardIconContent(
+            TokenIcon(
                 iconUrl = iconUrl,
                 icon = icon,
                 badgeIconUrl = badgeIconUrl,
@@ -224,10 +224,13 @@ fun GroupCard(
 }
 
 /**
- * Card icon content with Coil support and fallback.
+ * Token/card icon with optional network badge. Shows [iconUrl] via Coil,
+ * falls back to [icon] (Resource/Vector/Letter) when the url is null,
+ * and overlays a [badgeIconUrl] chip at the bottom-end with a
+ * surface-colored ring so the badge reads on any background.
  */
 @Composable
-private fun CardIconContent(
+fun TokenIcon(
     iconUrl: String?,
     icon: CardIcon?,
     modifier: Modifier = Modifier,
