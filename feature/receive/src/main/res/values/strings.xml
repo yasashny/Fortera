@@ -9,7 +9,7 @@
     <string name="receive_network_warning">Send only %1$s on %2$s network</string>
 
     <string name="send_title">Send</string>
-    <string name="send_input_address">Input Address</string>
+    <string name="send_input_address">Enter address</string>
     <string name="send_paste">Paste</string>
     <string name="send_insufficient_funds">Insufficient funds</string>
     <string name="send_continue">Continue</string>
@@ -17,6 +17,6 @@
     <string name="send_confirm_network">Network</string>
     <string name="send_confirm_commission">Commission</string>
     <string name="send_confirm_send">Send</string>
-    <string name="send_success">Success Send</string>
+    <string name="send_success">Sent successfully</string>
     <string name="send_close">Close</string>
 </resources>
