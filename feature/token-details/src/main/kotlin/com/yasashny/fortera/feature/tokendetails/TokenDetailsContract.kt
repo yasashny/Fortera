@@ -1,5 +1,6 @@
 package com.yasashny.fortera.feature.tokendetails
 
+import androidx.annotation.StringRes
 import com.yasashny.fortera.core.domaincrypto.model.PricePoint
 import com.yasashny.fortera.core.domaincrypto.model.Transaction
 import com.yasashny.fortera.core.mvi.UiEffect
@@ -9,17 +10,18 @@ import java.math.BigDecimal
 
 object TokenDetailsContract {
 
-    enum class ChartPeriod(val days: String, val label: String) {
-        DAY("24h", "1D"),
-        WEEK("1w", "1W"),
-        MONTH("1m", "1M"),
-        YEAR("1y", "1Y"),
-        ALL("all", "All"),
+    enum class ChartPeriod(val days: String, @StringRes val labelRes: Int) {
+        DAY("24h", R.string.token_details_period_1d),
+        WEEK("1w", R.string.token_details_period_1w),
+        MONTH("1m", R.string.token_details_period_1m),
+        YEAR("1y", R.string.token_details_period_1y),
+        ALL("all", R.string.token_details_period_all),
     }
 
     data class State(
         val tokenName: String = "",
         val tokenSymbol: String = "",
+        val tokenContractAddress: String? = null,
         val balance: BigDecimal = BigDecimal.ZERO,
         val priceUsd: Double = 0.0,
         val changePercent24h: Double = 0.0,

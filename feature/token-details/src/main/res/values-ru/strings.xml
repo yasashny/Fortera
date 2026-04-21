@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="token_details_send">Отправить</string>
+    <string name="token_details_receive">Получить</string>
+    <string name="token_details_transactions">Транзакции</string>
+    <string name="token_details_no_transactions">Транзакций пока нет</string>
+    <string name="token_details_tx_received">Получено</string>
+    <string name="token_details_tx_sent">Отправлено</string>
+    <string name="token_details_tx_pending">В ожидании</string>
+    <string name="token_details_period_1d">1Д</string>
+    <string name="token_details_period_1w">1Н</string>
+    <string name="token_details_period_1m">1М</string>
+    <string name="token_details_period_1y">1Г</string>
+    <string name="token_details_period_all">Все</string>
+</resources>

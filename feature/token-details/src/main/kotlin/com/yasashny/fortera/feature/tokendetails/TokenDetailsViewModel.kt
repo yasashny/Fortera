@@ -33,7 +33,13 @@ class TokenDetailsViewModel(
                 reduce(currentState.copy(isLoading = false))
                 return@intent
             }
-            reduce(currentState.copy(tokenName = t.name, tokenSymbol = t.symbol))
+            reduce(
+                currentState.copy(
+                    tokenName = t.name,
+                    tokenSymbol = t.symbol,
+                    tokenContractAddress = t.contractAddress,
+                )
+            )
 
             launch { loadBalance() }
             launch { loadChartData(currentState.selectedPeriod) }

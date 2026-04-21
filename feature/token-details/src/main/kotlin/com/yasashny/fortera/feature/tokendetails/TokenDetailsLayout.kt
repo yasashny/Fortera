@@ -1,6 +1,5 @@
 package com.yasashny.fortera.feature.tokendetails
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,19 +19,18 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.automirrored.filled.CallMade
 import androidx.compose.material.icons.automirrored.filled.CallReceived
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.ToggleButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -62,9 +60,13 @@ import com.tradingview.lightweightcharts.api.series.enums.LineWidth
 import com.tradingview.lightweightcharts.api.series.models.AreaData
 import com.tradingview.lightweightcharts.api.series.models.Time
 import com.tradingview.lightweightcharts.view.ChartsView
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 import com.yasashny.fortera.core.domaincrypto.model.PricePoint
 import com.yasashny.fortera.core.domaincrypto.model.Transaction
+import com.yasashny.fortera.core.ui.component.CardIcon
 import com.yasashny.fortera.core.ui.component.CardPosition
 import com.yasashny.fortera.core.ui.component.GroupCard
 import java.math.BigDecimal
@@ -75,6 +77,9 @@ import com.yasashny.fortera.feature.tokendetails.R as TokenDetailsR
 
 private val ChangePositive = Color(0xFF02A64C)
 private val ChangeNegative = Color(0xFFD0081C)
+
+private fun tokenIconUrl(symbol: String): String =
+    "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${symbol.lowercase()}.png"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -104,36 +109,19 @@ internal fun TokenDetailsLayout(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState()),
         ) {
-            // Price chart
             PriceChart(
                 priceHistory = state.priceHistory,
-                isLoading = state.isChartLoading,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(300.dp),
+                    .height(350.dp),
             )
 
             Spacer(Modifier.height(8.dp))
 
-            // Period selector
-            SingleChoiceSegmentedButtonRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-            ) {
-                TokenDetailsContract.ChartPeriod.entries.forEachIndexed { index, period ->
-                    SegmentedButton(
-                        selected = period == state.selectedPeriod,
-                        onClick = { onPeriodSelected(period) },
-                        shape = SegmentedButtonDefaults.itemShape(
-                            index = index,
-                            count = TokenDetailsContract.ChartPeriod.entries.size,
-                        ),
-                    ) {
-                        Text(text = period.label)
-                    }
-                }
-            }
+            PeriodSelector(
+                selected = state.selectedPeriod,
+                onPeriodSelected = onPeriodSelected,
+            )
 
             Spacer(Modifier.height(16.dp))
 
@@ -172,6 +160,11 @@ internal fun TokenDetailsLayout(
                 change < 0 -> ChangeNegative
                 else -> MaterialTheme.colorScheme.onSurfaceVariant
             }
+            val badgeUrl = if (state.tokenContractAddress != null) {
+                tokenIconUrl("eth")
+            } else {
+                null
+            }
             GroupCard(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 position = CardPosition.Single,
@@ -179,6 +172,9 @@ internal fun TokenDetailsLayout(
                 title = state.tokenName,
                 subtitle = String.format(Locale.US, "%+.2f%%", change),
                 subtitleColor = changeColor,
+                iconUrl = tokenIconUrl(state.tokenSymbol),
+                icon = state.tokenSymbol.firstOrNull()?.let { CardIcon.Letter(it) },
+                badgeIconUrl = badgeUrl,
                 trailing = {
                     Text(
                         text = "${formatCrypto(state.balance)} ${state.tokenSymbol}",
@@ -206,6 +202,22 @@ private fun TransactionsSection(
     transactions: List<Transaction>,
     isLoading: Boolean,
 ) {
+    if (!isLoading && transactions.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 24.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = stringResource(TokenDetailsR.string.token_details_no_transactions),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        return
+    }
+
     Text(
         text = stringResource(TokenDetailsR.string.token_details_transactions),
         style = MaterialTheme.typography.titleMedium,
@@ -218,28 +230,7 @@ private fun TransactionsSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(100.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            CircularProgressIndicator()
-        }
-    } else if (transactions.isEmpty()) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .height(80.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    shape = RoundedCornerShape(16.dp),
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = stringResource(TokenDetailsR.string.token_details_no_transactions),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
+        )
     } else {
         transactions.forEachIndexed { index, tx ->
             val position = when {
@@ -253,6 +244,38 @@ private fun TransactionsSection(
                 position = position,
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun PeriodSelector(
+    selected: TokenDetailsContract.ChartPeriod,
+    onPeriodSelected: (TokenDetailsContract.ChartPeriod) -> Unit,
+) {
+    val options = TokenDetailsContract.ChartPeriod.entries
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+    ) {
+        options.forEachIndexed { index, period ->
+            ToggleButton(
+                checked = period == selected,
+                onCheckedChange = { onPeriodSelected(period) },
+                modifier = Modifier
+                    .weight(1f)
+                    .semantics { role = Role.RadioButton },
+                shapes = when (index) {
+                    0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                    options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                    else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                },
+            ) {
+                Text(text = stringResource(period.labelRes))
+            }
         }
     }
 }
@@ -312,34 +335,12 @@ private fun shortenAddress(address: String): String {
 }
 
 @Composable
-private fun ChartPlaceholder(isLoading: Boolean, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.background(
-            color = MaterialTheme.colorScheme.surfaceVariant,
-            shape = RoundedCornerShape(16.dp),
-        ),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (isLoading) {
-            CircularProgressIndicator()
-        } else {
-            Text(
-                text = stringResource(TokenDetailsR.string.token_details_chart_placeholder),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-
-@Composable
 private fun PriceChart(
     priceHistory: List<PricePoint>,
-    isLoading: Boolean,
     modifier: Modifier = Modifier,
 ) {
     if (priceHistory.isEmpty()) {
-        ChartPlaceholder(isLoading = isLoading, modifier = modifier.padding(horizontal = 16.dp))
+        Box(modifier = modifier)
         return
     }
 
