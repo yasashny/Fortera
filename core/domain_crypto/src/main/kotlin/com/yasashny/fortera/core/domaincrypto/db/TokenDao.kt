@@ -56,4 +56,7 @@ interface TokenDao {
 
     @Query("DELETE FROM cached_balances WHERE walletId = :walletId")
     suspend fun deleteCachedBalancesForWallet(walletId: String)
+
+    @Query("DELETE FROM cached_balances")
+    suspend fun clearAllCachedBalances()
 }

@@ -29,6 +29,8 @@ bouncycastle = "1.78.1"
 ktor = "3.1.1"
 tradingview-lightweightcharts = "4.0.0"
 zxing = "3.5.3"
+web3j = "4.12.1"
+bitcoinj = "0.16.3"
 
 
 [libraries]
@@ -86,6 +88,9 @@ ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "k
 androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycleRuntimeKtx" }
 tradingview-lightweightcharts = { module = "com.tradingview:lightweightcharts", version.ref = "tradingview-lightweightcharts" }
 zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
+web3j-core = { module = "org.web3j:core", version.ref = "web3j" }
+web3j-crypto = { module = "org.web3j:crypto", version.ref = "web3j" }
+bitcoinj-core = { module = "org.bitcoinj:bitcoinj-core", version.ref = "bitcoinj" }
 
 # Build Logic
 agp = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }

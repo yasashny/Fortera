@@ -1,7 +1,7 @@
 package com.yasashny.fortera.feature.main.presentation
 
 import com.yasashny.fortera.core.domain.wallet.WalletInteractor
-import com.yasashny.fortera.core.domaincrypto.HdWallet
+import com.yasashny.fortera.core.domaincrypto.AddressResolver
 import com.yasashny.fortera.core.domaincrypto.repository.BalanceRepository
 import com.yasashny.fortera.core.domaincrypto.repository.TokenRepository
 import com.yasashny.fortera.core.mvi.MviViewModel
@@ -18,6 +18,7 @@ class MainViewModel(
     private val walletInteractor: WalletInteractor,
     private val balanceRepository: BalanceRepository,
     private val tokenRepository: TokenRepository,
+    private val addressResolver: AddressResolver,
 ) : MviViewModel<MainContract.State, MainContract.Intent, MainContract.Effect>(MainContract.State()) {
 
     init {
@@ -65,8 +66,8 @@ class MainViewModel(
                         val seed = walletInteractor.getSeedPhrase(wallet.id)
                             .getOrNull()?.toDisplayString() ?: return@collect
 
-                        val ethAddress = HdWallet.deriveEthAddress(seed)
-                        val btcAddress = HdWallet.deriveBtcAddress(seed)
+                        val ethAddress = addressResolver.ethAddress(seed)
+                        val btcAddress = addressResolver.btcAddress(seed)
 
                         balanceRepository.getTokenBalances(wallet.id, ethAddress, btcAddress, ids)
                             .onSuccess { result ->
@@ -106,8 +107,8 @@ class MainViewModel(
                     reduce(currentState.copy(isRefreshing = false))
                     return@intent
                 }
-                val ethAddress = HdWallet.deriveEthAddress(seed)
-                val btcAddress = HdWallet.deriveBtcAddress(seed)
+                val ethAddress = addressResolver.ethAddress(seed)
+                val btcAddress = addressResolver.btcAddress(seed)
                 val enabledIds = tokenRepository.getEnabledTokenIds(wallet.id)
 
                 balanceRepository.getTokenBalances(

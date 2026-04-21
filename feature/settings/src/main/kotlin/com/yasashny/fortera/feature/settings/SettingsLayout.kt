@@ -4,23 +4,31 @@ import android.content.Intent as AndroidIntent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -31,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
+import com.yasashny.fortera.core.network.environment.AppEnvironment
 import com.yasashny.fortera.core.ui.component.CardGroup
 import com.yasashny.fortera.core.ui.component.CardIcon
 import com.yasashny.fortera.core.ui.component.CardPosition
@@ -125,7 +134,88 @@ internal fun SettingsLayout(
                     },
                 )
             }
+
+            if (state.isDebugMode) {
+                Spacer(Modifier.height(16.dp))
+                Text(
+                    text = stringResource(SettingsR.string.settings_debug_section),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 4.dp, bottom = 6.dp),
+                )
+                CardGroup {
+                    GroupCard(
+                        position = CardPosition.Single,
+                        onClick = { onIntent(Intent.OpenEnvironmentSheet) },
+                        title = stringResource(SettingsR.string.settings_environment),
+                        subtitle = state.environment.displayName,
+                        icon = CardIcon.Vector(Icons.Default.Tune),
+                    )
+                }
+            }
         }
+    }
+
+    if (state.isEnvSheetOpen) {
+        val sheetState = rememberModalBottomSheetState()
+        ModalBottomSheet(
+            onDismissRequest = { onIntent(Intent.DismissEnvironmentSheet) },
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        ) {
+            EnvironmentSheetContent(
+                current = state.environment,
+                onSelect = { onIntent(Intent.SelectEnvironment(it)) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun EnvironmentSheetContent(
+    current: AppEnvironment,
+    onSelect: (AppEnvironment) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = stringResource(SettingsR.string.settings_environment_title),
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Text(
+            text = stringResource(SettingsR.string.settings_environment_hint),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        Spacer(Modifier.height(4.dp))
+
+        AppEnvironment.entries.forEach { env ->
+            val selected = env == current
+            GroupCard(
+                position = CardPosition.Single,
+                onClick = { onSelect(env) },
+                title = env.displayName,
+                subtitle = if (env.isTestnet) "Sepolia / BTC testnet" else "Mainnet",
+                icon = CardIcon.Vector(Icons.Default.Tune),
+                trailing = if (selected) {
+                    {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                } else null,
+            )
+        }
+
+        Spacer(Modifier.height(12.dp))
     }
 }
 
@@ -134,7 +224,11 @@ internal fun SettingsLayout(
 private fun SettingsLayoutPreview() {
     ForteraTheme {
         SettingsLayout(
-            state = State(isPasswordEnabled = false, isLoading = false),
+            state = State(
+                isPasswordEnabled = false,
+                isLoading = false,
+                isDebugMode = true,
+            ),
             onIntent = {},
             onBack = {},
         )

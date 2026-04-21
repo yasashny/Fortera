@@ -21,6 +21,7 @@ val receiveModule = module {
             tokenId = params.get<String>(),
             walletInteractor = get(),
             tokenRepository = get(),
+            addressResolver = get(),
         )
     }
     viewModel { params ->
@@ -29,6 +30,7 @@ val receiveModule = module {
             walletInteractor = get(),
             balanceRepository = get(),
             tokenRepository = get(),
+            addressResolver = get(),
         )
     }
     viewModel { params ->
@@ -36,8 +38,10 @@ val receiveModule = module {
             tokenId = params.get<String>(0),
             amount = params.get<String>(1),
             address = params.get<String>(2),
+            walletInteractor = get(),
             priceRepository = get(),
             tokenRepository = get(),
+            sendTransactionRepository = get(),
         )
     }
 }

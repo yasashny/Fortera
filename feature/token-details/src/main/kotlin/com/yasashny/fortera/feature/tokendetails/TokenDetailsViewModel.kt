@@ -1,6 +1,6 @@
 package com.yasashny.fortera.feature.tokendetails
 
-import com.yasashny.fortera.core.domaincrypto.HdWallet
+import com.yasashny.fortera.core.domaincrypto.AddressResolver
 import com.yasashny.fortera.core.domaincrypto.model.TokenDefinition
 import com.yasashny.fortera.core.domaincrypto.repository.BalanceRepository
 import com.yasashny.fortera.core.domaincrypto.repository.PriceRepository
@@ -21,6 +21,7 @@ class TokenDetailsViewModel(
     private val priceRepository: PriceRepository,
     private val transactionRepository: TransactionRepository,
     private val tokenRepository: TokenRepository,
+    private val addressResolver: AddressResolver,
 ) : MviViewModel<State, Intent, Effect>(State()) {
 
     private var token: TokenDefinition? = null
@@ -71,8 +72,8 @@ class TokenDetailsViewModel(
             return
         }
 
-        val ethAddress = HdWallet.deriveEthAddress(seed)
-        val btcAddress = HdWallet.deriveBtcAddress(seed)
+        val ethAddress = addressResolver.ethAddress(seed)
+        val btcAddress = addressResolver.btcAddress(seed)
 
         balanceRepository.getTokenBalances(wallet.id, ethAddress, btcAddress, setOf(tokenId))
             .onSuccess { result ->
@@ -105,8 +106,8 @@ class TokenDetailsViewModel(
             return
         }
 
-        val ethAddress = HdWallet.deriveEthAddress(seed)
-        val btcAddress = HdWallet.deriveBtcAddress(seed)
+        val ethAddress = addressResolver.ethAddress(seed)
+        val btcAddress = addressResolver.btcAddress(seed)
 
         transactionRepository.getTransactions(t, ethAddress, btcAddress)
             .onSuccess { txs -> updateState { it.copy(transactions = txs, isTransactionsLoading = false) } }

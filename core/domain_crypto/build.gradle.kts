@@ -25,6 +25,15 @@ dependencies {
     api(projects.core.network)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.bouncycastle)
+    implementation(libs.web3j.core) {
+        exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
+    }
+    implementation(libs.web3j.crypto) {
+        exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
+    }
+    implementation(libs.bitcoinj.core) {
+        exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
+    }
     implementation(libs.koin.androidx.compose)
     testImplementation(libs.junit)
 }

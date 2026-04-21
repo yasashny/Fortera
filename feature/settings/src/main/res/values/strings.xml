@@ -5,4 +5,8 @@
     <string name="settings_language">Language</string>
     <string name="settings_currency">Currency</string>
     <string name="settings_password">Use password</string>
+    <string name="settings_debug_section">Debug</string>
+    <string name="settings_environment">Environment</string>
+    <string name="settings_environment_title">Select environment</string>
+    <string name="settings_environment_hint">Switching clears cached balances and changes Bitcoin addresses.</string>
 </resources>

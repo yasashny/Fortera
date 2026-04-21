@@ -1,6 +1,6 @@
 package com.yasashny.fortera.feature.receive.send
 
-import com.yasashny.fortera.core.domaincrypto.HdWallet
+import com.yasashny.fortera.core.domaincrypto.AddressResolver
 import com.yasashny.fortera.core.domaincrypto.model.BlockchainNetwork
 import com.yasashny.fortera.core.domaincrypto.repository.BalanceRepository
 import com.yasashny.fortera.core.domaincrypto.repository.TokenRepository
@@ -18,6 +18,7 @@ internal class SendViewModel(
     private val walletInteractor: WalletInteractor,
     private val balanceRepository: BalanceRepository,
     private val tokenRepository: TokenRepository,
+    private val addressResolver: AddressResolver,
 ) : MviViewModel<State, Intent, Effect>(State()) {
 
     init {
@@ -47,8 +48,8 @@ internal class SendViewModel(
                 return@intent
             }
 
-            val ethAddress = HdWallet.deriveEthAddress(seed)
-            val btcAddress = HdWallet.deriveBtcAddress(seed)
+            val ethAddress = addressResolver.ethAddress(seed)
+            val btcAddress = addressResolver.btcAddress(seed)
 
             balanceRepository.getTokenBalances(
                 walletId = wallet.id,

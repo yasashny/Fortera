@@ -1,17 +1,28 @@
 package com.yasashny.fortera.core.domaincrypto.datasource
 
 import com.yasashny.fortera.core.domaincrypto.model.Transaction
+import com.yasashny.fortera.core.network.environment.EnvironmentRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import org.json.JSONArray
 import org.json.JSONObject
 import java.math.BigDecimal
 
-class BlockstreamDataSource(private val httpClient: HttpClient) {
+class BlockstreamDataSource(
+    private val httpClient: HttpClient,
+    private val environmentRepository: EnvironmentRepository,
+) {
+
+    private suspend fun baseUrl(): String = environmentRepository.current().btcEsploraBase
 
     suspend fun getBtcBalance(address: String): BigDecimal {
-        val response = httpClient.get("https://blockstream.info/api/address/$address").bodyAsText()
+        val response = httpClient.get("${baseUrl()}/address/$address").bodyAsText()
         val json = JSONObject(response)
         val chainStats = json.getJSONObject("chain_stats")
         val funded = chainStats.getLong("funded_txo_sum")
@@ -21,7 +32,7 @@ class BlockstreamDataSource(private val httpClient: HttpClient) {
     }
 
     suspend fun getTransactions(address: String, limit: Int = 10): List<Transaction> {
-        val response = httpClient.get("https://blockstream.info/api/address/$address/txs").bodyAsText()
+        val response = httpClient.get("${baseUrl()}/address/$address/txs").bodyAsText()
         val arr = JSONArray(response)
         val count = minOf(arr.length(), limit)
         return (0 until count).map { i ->
@@ -86,4 +97,51 @@ class BlockstreamDataSource(private val httpClient: HttpClient) {
             )
         }
     }
+
+    suspend fun getFeeEstimates(): Map<Int, Double> {
+        val response = httpClient.get("${baseUrl()}/fee-estimates").bodyAsText()
+        val json = JSONObject(response)
+        val out = mutableMapOf<Int, Double>()
+        for (key in json.keys()) {
+            val target = key.toIntOrNull() ?: continue
+            out[target] = json.getDouble(key)
+        }
+        return out
+    }
+
+    suspend fun getUtxos(address: String): List<Utxo> {
+        val response = httpClient.get("${baseUrl()}/address/$address/utxo").bodyAsText()
+        val arr = JSONArray(response)
+        return (0 until arr.length()).map { i ->
+            val u = arr.getJSONObject(i)
+            val status = u.getJSONObject("status")
+            Utxo(
+                txid = u.getString("txid"),
+                vout = u.getInt("vout"),
+                valueSats = u.getLong("value"),
+                confirmed = status.optBoolean("confirmed", false),
+                blockHeight = if (status.optBoolean("confirmed", false)) status.optInt("block_height") else null,
+            )
+        }
+    }
+
+    suspend fun broadcastTransaction(rawHex: String): String {
+        val response = httpClient.post("${baseUrl()}/tx") {
+            contentType(ContentType.Text.Plain)
+            setBody(rawHex)
+        }
+        val body = response.bodyAsText()
+        if (!response.status.isSuccess()) {
+            throw RuntimeException("broadcast failed: $body")
+        }
+        return body.trim()
+    }
+
+    data class Utxo(
+        val txid: String,
+        val vout: Int,
+        val valueSats: Long,
+        val confirmed: Boolean,
+        val blockHeight: Int?,
+    )
 }

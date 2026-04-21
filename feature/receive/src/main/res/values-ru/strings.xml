@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="select_token_title">Получить</string>
+    <string name="receive_title">Получить</string>
+    <string name="receive_wallet_address_label">Адрес кошелька</string>
+    <string name="receive_copy">Копировать</string>
+    <string name="receive_copy_address">Копировать адрес</string>
+    <string name="receive_address_copied">Адрес скопирован</string>
+    <string name="receive_network_warning">Отправляйте только %1$s в сети %2$s</string>
+
+    <string name="send_title">Отправить</string>
+    <string name="send_input_address">Введите адрес</string>
+    <string name="send_paste">Вставить</string>
+    <string name="send_insufficient_funds">Недостаточно средств</string>
+    <string name="send_continue">Продолжить</string>
+    <string name="send_confirm_title">Подтверждение</string>
+    <string name="send_confirm_from_wallet">Из %1$s</string>
+    <string name="send_confirm_to">Получатель</string>
+    <string name="send_confirm_address">Адрес</string>
+    <string name="send_confirm_network">Сеть</string>
+    <string name="send_confirm_fee">Комиссия</string>
+    <string name="send_confirm_commission">Комиссия</string>
+    <string name="send_confirm_total">Итого</string>
+    <string name="send_confirm_warning">Проверьте получателя. Транзакции в сети %1$s необратимы.</string>
+    <string name="send_confirm_send">Подтвердить и отправить</string>
+    <string name="send_confirm_speed_title">Скорость транзакции</string>
+    <string name="send_confirm_speed_subtitle">Выберите, как быстро подтвердится транзакция</string>
+    <string name="send_confirm_speed_slow">Медленно</string>
+    <string name="send_confirm_speed_fast">Быстро</string>
+    <string name="send_confirm_speed_instant">Моментально</string>
+    <string name="send_confirm_speed_slow_eta">~10 мин</string>
+    <string name="send_confirm_speed_fast_eta">~2 мин</string>
+    <string name="send_confirm_speed_instant_eta">~30 с</string>
+    <string name="send_success">Отправка выполнена</string>
+    <string name="send_close">Закрыть</string>
+</resources>

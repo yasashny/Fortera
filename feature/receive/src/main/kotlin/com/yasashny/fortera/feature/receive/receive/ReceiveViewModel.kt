@@ -1,6 +1,6 @@
 package com.yasashny.fortera.feature.receive.receive
 
-import com.yasashny.fortera.core.domaincrypto.HdWallet
+import com.yasashny.fortera.core.domaincrypto.AddressResolver
 import com.yasashny.fortera.core.domaincrypto.model.BlockchainNetwork
 import com.yasashny.fortera.core.domaincrypto.repository.TokenRepository
 import com.yasashny.fortera.core.domain.wallet.WalletInteractor
@@ -14,6 +14,7 @@ internal class ReceiveViewModel(
     private val tokenId: String,
     private val walletInteractor: WalletInteractor,
     private val tokenRepository: TokenRepository,
+    private val addressResolver: AddressResolver,
 ) : MviViewModel<State, Intent, Effect>(State()) {
 
     init {
@@ -52,8 +53,8 @@ internal class ReceiveViewModel(
             }
 
             val address = when (token.network) {
-                BlockchainNetwork.ETHEREUM -> HdWallet.deriveEthAddress(seed)
-                BlockchainNetwork.BITCOIN -> HdWallet.deriveBtcAddress(seed)
+                BlockchainNetwork.ETHEREUM -> addressResolver.ethAddress(seed)
+                BlockchainNetwork.BITCOIN -> addressResolver.btcAddress(seed)
             }
 
             reduce(currentState.copy(address = address, isLoading = false))

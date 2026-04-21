@@ -29,6 +29,9 @@ internal fun ConfirmSendScreen(
             state = state,
             onBackClick = { navigator.back() },
             onSendClick = { sendIntent(ConfirmSendContract.Intent.Send) },
+            onSpeedClick = { sendIntent(ConfirmSendContract.Intent.OpenSpeedSheet) },
+            onDismissSpeedSheet = { sendIntent(ConfirmSendContract.Intent.DismissSpeedSheet) },
+            onSelectSpeed = { sendIntent(ConfirmSendContract.Intent.SelectSpeed(it)) },
         )
     }
 }

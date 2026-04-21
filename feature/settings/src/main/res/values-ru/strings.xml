@@ -5,4 +5,8 @@
     <string name="settings_language">Язык</string>
     <string name="settings_currency">Валюта</string>
     <string name="settings_password">Использовать пароль</string>
+    <string name="settings_debug_section">Debug</string>
+    <string name="settings_environment">Окружение</string>
+    <string name="settings_environment_title">Выберите окружение</string>
+    <string name="settings_environment_hint">Смена окружения очистит кэш балансов и поменяет Bitcoin-адреса.</string>
 </resources>

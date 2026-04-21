@@ -13,4 +13,5 @@ dependencies {
     api(libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.client.logging)
     implementation(libs.koin.androidx.compose)
+    implementation(libs.androidx.datastore.preferences)
 }

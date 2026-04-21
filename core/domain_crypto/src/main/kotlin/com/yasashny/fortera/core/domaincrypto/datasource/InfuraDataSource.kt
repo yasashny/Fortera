@@ -2,6 +2,7 @@ package com.yasashny.fortera.core.domaincrypto.datasource
 
 import com.yasashny.fortera.core.domaincrypto.BuildConfig
 import com.yasashny.fortera.core.domaincrypto.model.Transaction
+import com.yasashny.fortera.core.network.environment.EnvironmentRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.post
@@ -14,9 +15,17 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.Instant
 
-class InfuraDataSource(private val httpClient: HttpClient) {
+class InfuraDataSource(
+    private val httpClient: HttpClient,
+    private val environmentRepository: EnvironmentRepository,
+) {
 
-    private val baseUrl = "https://mainnet.infura.io/v3/${BuildConfig.INFURA_PROJECT_ID}"
+    private suspend fun rpcUrl(): String {
+        val env = environmentRepository.current()
+        return "https://${env.ethHost}/v3/${BuildConfig.INFURA_PROJECT_ID}"
+    }
+
+    private suspend fun blockscoutBase(): String = environmentRepository.current().ethBlockscoutBase
 
     suspend fun getEthBalance(address: String): BigDecimal {
         val body = """{"jsonrpc":"2.0","method":"eth_getBalance","params":["$address","latest"],"id":1}"""
@@ -38,7 +47,7 @@ class InfuraDataSource(private val httpClient: HttpClient) {
     }
 
     suspend fun getEthTransactions(address: String, limit: Int = 10): List<Transaction> {
-        val url = "https://eth.blockscout.com/api/v2/addresses/$address/transactions"
+        val url = "${blockscoutBase()}/api/v2/addresses/$address/transactions"
         val response = httpClient.get(url).bodyAsText()
         val json = JSONObject(response)
         val items = json.optJSONArray("items") ?: return emptyList()
@@ -79,7 +88,7 @@ class InfuraDataSource(private val httpClient: HttpClient) {
         decimals: Int = 18,
         limit: Int = 10,
     ): List<Transaction> {
-        val url = "https://eth.blockscout.com/api/v2/addresses/$address/token-transfers?type=ERC-20&token=$contractAddress"
+        val url = "${blockscoutBase()}/api/v2/addresses/$address/token-transfers?type=ERC-20&token=$contractAddress"
         val response = httpClient.get(url).bodyAsText()
         val json = JSONObject(response)
         val items = json.optJSONArray("items") ?: return emptyList()
@@ -113,8 +122,30 @@ class InfuraDataSource(private val httpClient: HttpClient) {
         }
     }
 
+    suspend fun getGasPrice(): BigInteger {
+        val body = """{"jsonrpc":"2.0","method":"eth_gasPrice","params":[],"id":1}"""
+        val hex = JSONObject(post(body)).getString("result")
+        return BigInteger(hex.removePrefix("0x"), 16)
+    }
+
+    suspend fun getNonce(address: String): BigInteger {
+        val body = """{"jsonrpc":"2.0","method":"eth_getTransactionCount","params":["$address","pending"],"id":1}"""
+        val hex = JSONObject(post(body)).getString("result")
+        return BigInteger(hex.removePrefix("0x"), 16)
+    }
+
+    suspend fun sendRawTransaction(rawHex: String): String {
+        val prefixed = if (rawHex.startsWith("0x")) rawHex else "0x$rawHex"
+        val body = """{"jsonrpc":"2.0","method":"eth_sendRawTransaction","params":["$prefixed"],"id":1}"""
+        val response = JSONObject(post(body))
+        response.optJSONObject("error")?.let {
+            throw RuntimeException("eth_sendRawTransaction: ${it.optString("message")}")
+        }
+        return response.getString("result")
+    }
+
     private suspend fun post(bodyStr: String): String {
-        return httpClient.post(baseUrl) {
+        return httpClient.post(rpcUrl()) {
             contentType(ContentType.Application.Json)
             setBody(bodyStr)
         }.bodyAsText()
