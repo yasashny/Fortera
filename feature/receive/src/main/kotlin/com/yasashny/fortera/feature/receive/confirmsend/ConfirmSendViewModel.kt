@@ -1,16 +1,20 @@
 package com.yasashny.fortera.feature.receive.confirmsend
 
+import androidx.lifecycle.viewModelScope
 import com.yasashny.fortera.core.domain.wallet.WalletInteractor
-import com.yasashny.fortera.core.domaincrypto.model.BlockchainNetwork
+import com.yasashny.fortera.core.domaincrypto.TokenCatalog
 import com.yasashny.fortera.core.domaincrypto.model.FeeEstimates
 import com.yasashny.fortera.core.domaincrypto.model.FeeSpeed
 import com.yasashny.fortera.core.domaincrypto.model.TokenDefinition
 import com.yasashny.fortera.core.domaincrypto.repository.PriceRepository
+import com.yasashny.fortera.core.domaincrypto.repository.SendTransactionError
 import com.yasashny.fortera.core.domaincrypto.repository.TokenRepository
-import androidx.lifecycle.viewModelScope
 import com.yasashny.fortera.core.mvi.MviViewModel
 import com.yasashny.fortera.core.ui.format.formatUsd as sharedFormatUsd
+import com.yasashny.fortera.core.ui.text.UiText
+import com.yasashny.fortera.core.walletbalances.WalletBalances
 import com.yasashny.fortera.core.walletbalances.WalletTransactionSender
+import com.yasashny.fortera.feature.receive.R
 import com.yasashny.fortera.feature.receive.confirmsend.ConfirmSendContract.CommissionInfo
 import com.yasashny.fortera.feature.receive.confirmsend.ConfirmSendContract.Effect
 import com.yasashny.fortera.feature.receive.confirmsend.ConfirmSendContract.Intent
@@ -22,59 +26,72 @@ import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.util.Locale
 
+/**
+ * Drives the "confirm send" screen.
+ *
+ * Every 15 seconds, three things are refreshed in parallel:
+ *   1. Fee estimates from the chain-specific sender (ETH/BTC, with real amount + sender address
+ *      so the fee matches what we'd actually pay),
+ *   2. Spot prices for the token + the native fee currency (keeps USD display fresh while user
+ *      is on screen),
+ *   3. Native-balance check — if the computed fee exceeds the user's native balance (e.g. ERC-20
+ *      send with insufficient ETH for gas), we mark state.insufficientGas and the Layout blocks
+ *      the Send button.
+ *
+ * At actual send time the underlying sender re-fetches fees again, so the signed transaction is
+ * always priced on latest chain state — display values are informational only.
+ */
 internal class ConfirmSendViewModel(
     private val tokenId: String,
-    private val amount: String,
+    amount: String,
     private val address: String,
     private val walletInteractor: WalletInteractor,
     private val priceRepository: PriceRepository,
     private val tokenRepository: TokenRepository,
+    private val walletBalances: WalletBalances,
     private val transactionSender: WalletTransactionSender,
 ) : MviViewModel<State, Intent, Effect>(State()) {
 
     private var token: TokenDefinition? = null
-    private var amountDouble: Double = 0.0
+    private val amountDecimal: BigDecimal = amount.toBigDecimalOrNull() ?: BigDecimal.ZERO
+    private val amountDouble: Double = amountDecimal.toDouble()
     private var tokenPriceUsd: Double = 0.0
     private var nativePriceUsd: Double = 0.0
+    private var nativeBalance: BigDecimal = BigDecimal.ZERO
+    private var walletId: String? = null
+    private var nativeTokenId: String = ""
     private var pollingJob: Job? = null
 
     init {
         intent {
             val loadedToken = tokenRepository.getTokenById(tokenId)
             if (loadedToken == null) {
-                reduce(currentState.copy(isLoading = false, errorMessage = "Token not found"))
+                reduce(
+                    currentState.copy(
+                        isLoading = false,
+                        errorMessage = UiText.of(R.string.send_confirm_error_token_not_found),
+                    )
+                )
                 return@intent
             }
             token = loadedToken
-
-            val networkName = when (loadedToken.network) {
-                BlockchainNetwork.ETHEREUM -> "Ethereum"
-                BlockchainNetwork.BITCOIN -> "Bitcoin"
-            }
-            val nativeTokenId = when (loadedToken.network) {
-                BlockchainNetwork.ETHEREUM -> "ethereum"
-                BlockchainNetwork.BITCOIN -> "bitcoin"
-            }
-
-            val prices = priceRepository.getPrices(
-                listOf(tokenId, nativeTokenId).distinct(),
-            )
-            tokenPriceUsd = prices[tokenId]?.priceUsd ?: 0.0
-            nativePriceUsd = prices[nativeTokenId]?.priceUsd ?: tokenPriceUsd
-            amountDouble = amount.toDoubleOrNull() ?: 0.0
+            nativeTokenId = TokenCatalog.nativeToken(loadedToken.network)?.id ?: loadedToken.id
 
             val wallet = walletInteractor.observeActiveWallet().first()
-            val walletName = wallet?.name?.takeIf { it.isNotBlank() } ?: "Wallet"
+            walletId = wallet?.id
+
+            refreshPrices(loadedToken)
+            refreshNativeBalance(wallet?.id)
 
             reduce(
                 State(
                     tokenName = loadedToken.name,
                     tokenSymbol = loadedToken.symbol,
-                    walletName = walletName,
+                    walletName = wallet?.name?.takeIf { it.isNotBlank() }.orEmpty(),
                     amount = "${formatCrypto(amountDouble)} ${loadedToken.symbol}",
                     amountUsd = formatUsd(amountDouble * tokenPriceUsd),
                     address = address,
-                    networkName = networkName,
+                    networkName = loadedToken.network.displayName,
                     isLoading = false,
                     isFeesLoading = true,
                 )
@@ -93,13 +110,8 @@ internal class ConfirmSendViewModel(
         when (intent) {
             Intent.Send -> sendTransaction()
 
-            Intent.OpenSpeedSheet -> intent {
-                reduce(currentState.copy(isSpeedSheetOpen = true))
-            }
-
-            Intent.DismissSpeedSheet -> intent {
-                reduce(currentState.copy(isSpeedSheetOpen = false))
-            }
+            Intent.OpenSpeedSheet -> updateState { it.copy(isSpeedSheetOpen = true) }
+            Intent.DismissSpeedSheet -> updateState { it.copy(isSpeedSheetOpen = false) }
 
             is Intent.SelectSpeed -> intent {
                 val commission = currentState.commissions[intent.speed] ?: return@intent
@@ -112,45 +124,64 @@ internal class ConfirmSendViewModel(
                         selectedSpeed = intent.speed,
                         totalAmount = totalAmount,
                         totalAmountUsd = totalAmountUsd,
+                        insufficientGas = isInsufficientGas(commission),
                         isSpeedSheetOpen = false,
                     )
                 )
             }
 
-            Intent.DismissError -> intent {
-                reduce(currentState.copy(errorMessage = null))
-            }
+            Intent.DismissError -> updateState { it.copy(errorMessage = null) }
         }
     }
+
+    // ─────────────────── Polling ───────────────────
 
     private fun startFeePolling(forToken: TokenDefinition) {
         pollingJob?.cancel()
         pollingJob = viewModelScope.launch {
             while (true) {
-                refreshFees(forToken)
+                runCatching {
+                    refreshPrices(forToken)
+                    refreshNativeBalance(walletId)
+                    refreshFees(forToken)
+                }
                 delay(FEE_REFRESH_MS)
             }
         }
     }
 
+    private suspend fun refreshPrices(forToken: TokenDefinition) {
+        val ids = listOf(forToken.id, nativeTokenId).distinct()
+        val prices = runCatching { priceRepository.getPrices(ids) }.getOrNull().orEmpty()
+        tokenPriceUsd = prices[forToken.id]?.priceUsd ?: tokenPriceUsd
+        nativePriceUsd = prices[nativeTokenId]?.priceUsd ?: nativePriceUsd
+        if (nativePriceUsd == 0.0) nativePriceUsd = tokenPriceUsd
+    }
+
+    private suspend fun refreshNativeBalance(walletId: String?) {
+        if (walletId == null) return
+        val snapshot = runCatching { walletBalances.refresh(walletId) }.getOrNull()?.getOrNull()
+            ?: return
+        nativeBalance = snapshot.balances.firstOrNull { it.token.id == nativeTokenId }
+            ?.balance ?: BigDecimal.ZERO
+    }
+
     private suspend fun refreshFees(forToken: TokenDefinition) {
-        val result = transactionSender.estimateFees(forToken)
-        val estimates = result.getOrNull()
+        val ownerId = walletId ?: return
+        val estimates = transactionSender.estimateFees(ownerId, forToken, amountDecimal).getOrNull()
+
         intent {
             if (estimates == null) {
-                reduce(
-                    currentState.copy(
-                        isFeesLoading = currentState.commissions.isEmpty(),
-                    )
-                )
+                reduce(currentState.copy(isFeesLoading = currentState.commissions.isEmpty()))
                 return@intent
             }
             val commissions = toCommissions(estimates)
             val selected = currentState.selectedSpeed.takeIf { commissions.containsKey(it) }
                 ?: FeeSpeed.FAST
+            val commission = commissions.getValue(selected)
             val (totalAmount, totalAmountUsd) = computeTotal(
                 tokenSymbol = currentState.tokenSymbol,
-                commission = commissions.getValue(selected),
+                commission = commission,
             )
             reduce(
                 currentState.copy(
@@ -158,6 +189,7 @@ internal class ConfirmSendViewModel(
                     selectedSpeed = selected,
                     totalAmount = totalAmount,
                     totalAmountUsd = totalAmountUsd,
+                    insufficientGas = isInsufficientGas(commission),
                     isFeesLoading = false,
                 )
             )
@@ -166,60 +198,95 @@ internal class ConfirmSendViewModel(
 
     private fun toCommissions(estimates: FeeEstimates): Map<FeeSpeed, CommissionInfo> =
         estimates.mapValues { (_, estimate) ->
-            val nativeAmountDouble = estimate.nativeAmount.toDouble()
-            val feeUsd = nativeAmountDouble * nativePriceUsd
+            val feeUsd = estimate.nativeAmount.toDouble() * nativePriceUsd
             CommissionInfo(
-                nativeAmount = "${formatCrypto(nativeAmountDouble)} ${estimate.nativeSymbol}",
+                estimate = estimate,
+                nativeAmount = "${formatCrypto(estimate.nativeAmount.toDouble())} ${estimate.nativeSymbol}",
                 usdAmount = formatUsd(feeUsd),
             )
         }
 
+    // ─────────────────── Math ───────────────────
+
+    /**
+     * Returns (totalNativeDisplay, totalUsdDisplay). Works in BigDecimal throughout — no string parsing.
+     *
+     * If the token being sent IS the fee currency (native ETH / BTC), total = amount + fee.
+     * Otherwise (ERC-20 vs ETH fee), the token total is just the amount and fee shows up in
+     * USD addition only.
+     */
+    private fun computeTotal(
+        tokenSymbol: String,
+        commission: CommissionInfo,
+    ): Pair<String, String> {
+        val feeNative: BigDecimal = commission.estimate.nativeAmount
+        val feeSymbol = commission.estimate.nativeSymbol
+        val sameUnit = tokenSymbol.equals(feeSymbol, ignoreCase = true)
+
+        val totalNative: BigDecimal = if (sameUnit) amountDecimal + feeNative else amountDecimal
+        val totalUsd: Double =
+            amountDecimal.toDouble() * tokenPriceUsd + feeNative.toDouble() * nativePriceUsd
+
+        return "${formatCrypto(totalNative.toDouble())} $tokenSymbol" to formatUsd(totalUsd)
+    }
+
+    /**
+     * True when the wallet can't cover the fee. For ERC-20 sends, compares fee (in native ETH)
+     * to native balance. For native sends, subtracts amount first — there must be enough native
+     * left to pay the fee after the transfer.
+     */
+    private fun isInsufficientGas(commission: CommissionInfo): Boolean {
+        val tokenSymbol = token?.symbol ?: return false
+        val feeNative = commission.estimate.nativeAmount
+        val feeSymbol = commission.estimate.nativeSymbol
+        val available = if (tokenSymbol.equals(feeSymbol, ignoreCase = true)) {
+            nativeBalance - amountDecimal
+        } else {
+            nativeBalance
+        }
+        return available < feeNative
+    }
+
+    // ─────────────────── Send ───────────────────
+
     private fun sendTransaction() {
         val activeToken = token ?: return
+        val owner = walletId ?: return
         intent {
-            if (currentState.commissions.isEmpty() || currentState.isSending) return@intent
+            if (currentState.commissions.isEmpty() || currentState.isSending || currentState.insufficientGas) return@intent
             reduce(currentState.copy(isSending = true, errorMessage = null))
 
-            val wallet = walletInteractor.observeActiveWallet().first()
-            if (wallet == null) {
-                reduce(currentState.copy(isSending = false, errorMessage = "No active wallet"))
-                return@intent
-            }
-
-            val result = transactionSender.send(
-                walletId = wallet.id,
+            transactionSender.send(
+                walletId = owner,
                 token = activeToken,
                 toAddress = address,
-                amount = amount.toBigDecimalOrNull() ?: BigDecimal.ZERO,
+                amount = amountDecimal,
                 speed = currentState.selectedSpeed,
-            )
-            result.fold(
+            ).fold(
                 onSuccess = {
                     reduce(currentState.copy(isSending = false))
                     sendEffect(Effect.NavigateToSuccess)
                 },
                 onFailure = { throwable ->
-                    reduce(
-                        currentState.copy(
-                            isSending = false,
-                            errorMessage = throwable.message ?: "Send failed",
-                        )
-                    )
+                    reduce(currentState.copy(isSending = false, errorMessage = mapSendError(throwable)))
                 },
             )
         }
     }
 
-    private fun computeTotal(tokenSymbol: String, commission: CommissionInfo): Pair<String, String> {
-        val feeNative = commission.nativeAmount
-            .substringBefore(' ')
-            .toDoubleOrNull()
-            ?: 0.0
-        val feeSymbol = commission.nativeAmount.substringAfter(' ', "")
-        val sameUnit = tokenSymbol.equals(feeSymbol, ignoreCase = true)
-        val totalNative = if (sameUnit) amountDouble + feeNative else amountDouble
-        val totalUsd = amountDouble * tokenPriceUsd + feeNative * nativePriceUsd
-        return "${formatCrypto(totalNative)} $tokenSymbol" to formatUsd(totalUsd)
+    /**
+     * Maps send-time exceptions to localised UI messages.
+     * Known [SendTransactionError] cases resolve to feature strings; everything else falls
+     * back to the exception message (usually from RPC / http layer) wrapped as a literal, or
+     * the generic "send failed" resource if the message is empty.
+     */
+    private fun mapSendError(throwable: Throwable): UiText = when (throwable) {
+        is SendTransactionError.NoConfirmedUtxos ->
+            UiText.of(R.string.send_confirm_error_no_utxos)
+        is SendTransactionError.InsufficientFunds ->
+            UiText.of(R.string.send_confirm_error_insufficient_funds)
+        else -> throwable.message?.takeIf { it.isNotBlank() }?.let(UiText::of)
+            ?: UiText.of(R.string.send_confirm_error_send_failed)
     }
 
     private companion object {
@@ -229,7 +296,7 @@ internal class ConfirmSendViewModel(
 
 /**
  * Trimmed crypto amount with no trailing zeros — the review screen prefers
- * `0.05` over `0.050000`, different from [sharedFormatCrypto]'s fixed-precision.
+ * `0.05` over `0.050000`, different from the shared fixed-precision formatter.
  */
 private fun formatCrypto(value: Double): String =
     String.format(Locale.US, "%.6f", value).trimEnd('0').trimEnd('.')

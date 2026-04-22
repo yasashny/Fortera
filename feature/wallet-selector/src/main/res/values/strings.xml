@@ -3,6 +3,7 @@
     <string name="wallet_selector_create_new_wallet">Create new wallet</string>
     <string name="wallet_selector_import_wallet">Import wallet</string>
     <string name="wallet_selector_settings_cd">Wallet settings</string>
+    <string name="wallet_selector_error_select_failed">Could not switch active wallet</string>
 
     <string name="wallet_settings_title">Wallet settings</string>
     <string name="wallet_settings_back_cd">Back</string>
@@ -15,4 +16,8 @@
     <string name="wallet_settings_delete_dialog_cancel">Cancel</string>
     <string name="wallet_settings_rename_dialog_title">Rename wallet</string>
     <string name="wallet_settings_change_name">Change name</string>
+    <string name="wallet_settings_error_name_empty">Wallet name cannot be empty</string>
+    <string name="wallet_settings_error_save_failed">Could not save the wallet name</string>
+    <string name="wallet_settings_error_delete_failed">Could not delete the wallet</string>
+    <string name="wallet_settings_name_saved">Wallet name saved</string>
 </resources>

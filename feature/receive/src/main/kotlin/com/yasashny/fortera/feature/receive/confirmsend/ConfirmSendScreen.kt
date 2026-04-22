@@ -3,6 +3,7 @@ package com.yasashny.fortera.feature.receive.confirmsend
 import androidx.compose.runtime.Composable
 import com.yasashny.fortera.core.mvi.MviContainer
 import com.yasashny.fortera.core.navigation.LocalAppNavigator
+import com.yasashny.fortera.core.ui.dialog.ErrorDialog
 import com.yasashny.fortera.feature.receive.SendSuccess
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -32,6 +33,11 @@ internal fun ConfirmSendScreen(
             onSpeedClick = { sendIntent(ConfirmSendContract.Intent.OpenSpeedSheet) },
             onDismissSpeedSheet = { sendIntent(ConfirmSendContract.Intent.DismissSpeedSheet) },
             onSelectSpeed = { sendIntent(ConfirmSendContract.Intent.SelectSpeed(it)) },
+        )
+
+        ErrorDialog(
+            message = state.errorMessage,
+            onDismiss = { sendIntent(ConfirmSendContract.Intent.DismissError) },
         )
     }
 }

@@ -58,7 +58,9 @@ import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 import com.yasashny.fortera.core.ui.component.CardIcon
 import com.yasashny.fortera.core.ui.component.TokenIcon
 import com.yasashny.fortera.core.ui.token.tokenIconUrl
+import com.yasashny.fortera.core.domaincrypto.model.FeeEstimate
 import com.yasashny.fortera.core.domaincrypto.model.FeeSpeed
+import java.math.BigDecimal
 import com.yasashny.fortera.feature.receive.R as ReceiveR
 
 private fun shortAddress(address: String): String {
@@ -100,7 +102,8 @@ internal fun ConfirmSendLayout(
                 onClick = onSendClick,
                 enabled = !state.isSending
                     && !state.isLoading
-                    && state.commissions.isNotEmpty(),
+                    && state.commissions.isNotEmpty()
+                    && !state.insufficientGas,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 16.dp)
@@ -149,6 +152,12 @@ internal fun ConfirmSendLayout(
                 totalAmount = state.totalAmount,
                 totalAmountUsd = state.totalAmountUsd,
             )
+
+            if (state.insufficientGas) {
+                InsufficientGasBanner(
+                    feeSymbol = state.commission?.estimate?.nativeSymbol ?: "",
+                )
+            }
 
             WarningChip(networkName = state.networkName)
 
@@ -200,10 +209,13 @@ private fun HeroCard(state: ConfirmSendContract.State) {
                         ),
                         color = MaterialTheme.colorScheme.inverseOnSurface.copy(alpha = 0.7f),
                     )
+                    val displayWalletName = state.walletName.ifBlank {
+                        stringResource(ReceiveR.string.send_confirm_default_wallet_name)
+                    }
                     Text(
                         text = stringResource(
                             ReceiveR.string.send_confirm_from_wallet,
-                            state.walletName,
+                            displayWalletName,
                         ),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.inverseOnSurface,
@@ -546,6 +558,31 @@ private fun WarningChip(networkName: String) {
 }
 
 @Composable
+private fun InsufficientGasBanner(feeSymbol: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.errorContainer)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Icon(
+            imageVector = Icons.TwoTone.Warning,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.error,
+            modifier = Modifier.size(18.dp),
+        )
+        Text(
+            text = stringResource(ReceiveR.string.send_confirm_insufficient_gas, feeSymbol),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onErrorContainer,
+        )
+    }
+}
+
+@Composable
 private fun SpeedSheetContent(
     commissions: Map<FeeSpeed, ConfirmSendContract.CommissionInfo>,
     selectedSpeed: FeeSpeed,
@@ -695,9 +732,9 @@ private fun ConfirmSendLayoutPreview() {
                 address = "0xGGJ7GJHHJGJHFDFKJDFKFNKDBJF",
                 networkName = "Ethereum",
                 commissions = mapOf(
-                    FeeSpeed.SLOW to ConfirmSendContract.CommissionInfo("0.000090 ETH", "≈ $0.09"),
-                    FeeSpeed.FAST to ConfirmSendContract.CommissionInfo("0.000150 ETH", "≈ $0.15"),
-                    FeeSpeed.INSTANT to ConfirmSendContract.CommissionInfo("0.000270 ETH", "≈ $0.27"),
+                    FeeSpeed.SLOW to previewCommission("0.000090", 0.09),
+                    FeeSpeed.FAST to previewCommission("0.000150", 0.15),
+                    FeeSpeed.INSTANT to previewCommission("0.000270", 0.27),
                 ),
                 selectedSpeed = FeeSpeed.FAST,
                 totalAmount = "0.000495 ETH",
@@ -711,4 +748,16 @@ private fun ConfirmSendLayoutPreview() {
             onSelectSpeed = {},
         )
     }
+}
+
+private fun previewCommission(
+    nativeAmount: String,
+    usd: Double,
+): ConfirmSendContract.CommissionInfo {
+    val decimal = BigDecimal(nativeAmount)
+    return ConfirmSendContract.CommissionInfo(
+        estimate = FeeEstimate(nativeAmount = decimal, nativeSymbol = "ETH"),
+        nativeAmount = "$nativeAmount ETH",
+        usdAmount = "≈ \$${"%.2f".format(usd)}",
+    )
 }

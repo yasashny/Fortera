@@ -36,6 +36,7 @@ import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 import com.yasashny.fortera.core.ui.component.CardPosition
 import com.yasashny.fortera.core.ui.component.InputCard
 import com.yasashny.fortera.core.ui.component.InputCardGroup
+import com.yasashny.fortera.core.ui.text.asString
 import com.yasashny.fortera.feature.importwallet.presentation.ImportWalletContract.Intent
 import com.yasashny.fortera.feature.importwallet.presentation.ImportWalletContract.State
 import kotlinx.coroutines.launch
@@ -123,7 +124,7 @@ private fun ImportWalletContent(
                 onValueChange = onNameChanged,
                 placeholder = stringResource(ImportWalletR.string.import_wallet_name_placeholder),
                 enabled = !state.isLoading,
-                error = state.nameError,
+                error = state.nameError?.asString(),
                 position = CardPosition.First,
             )
             InputCard(
@@ -131,7 +132,7 @@ private fun ImportWalletContent(
                 onValueChange = onSeedPhraseChanged,
                 placeholder = stringResource(ImportWalletR.string.import_wallet_seed_phrase_placeholder),
                 enabled = !state.isLoading,
-                error = state.seedPhraseError,
+                error = state.seedPhraseError?.asString(),
                 position = CardPosition.Last,
                 trailingIcon = {
                     Icon(

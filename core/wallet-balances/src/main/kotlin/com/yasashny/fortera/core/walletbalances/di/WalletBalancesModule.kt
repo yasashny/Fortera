@@ -22,5 +22,11 @@ val walletBalancesModule = module {
             dispatcher = get(named(ForteraDispatchers.IO)),
         )
     } bind WalletBalances::class
-    single { WalletTransactionSenderImpl(get(), get()) } bind WalletTransactionSender::class
+    single {
+        WalletTransactionSenderImpl(
+            walletInteractor = get(),
+            addresses = get(),
+            sendTransactionRepository = get(),
+        )
+    } bind WalletTransactionSender::class
 }

@@ -12,6 +12,9 @@
     <string name="send_input_address">Введите адрес</string>
     <string name="send_paste">Вставить</string>
     <string name="send_insufficient_funds">Недостаточно средств</string>
+    <string name="send_error_amount_only_digits">Допустимы только цифры и разделитель</string>
+    <string name="send_error_invalid_eth_address">Некорректный Ethereum-адрес — ожидается 0x и 40 hex-символов</string>
+    <string name="send_error_invalid_btc_address">Некорректный Bitcoin-адрес для текущей сети</string>
     <string name="send_continue">Продолжить</string>
     <string name="send_confirm_title">Подтверждение</string>
     <string name="send_confirm_from_wallet">Из %1$s</string>
@@ -22,6 +25,12 @@
     <string name="send_confirm_commission">Комиссия</string>
     <string name="send_confirm_total">Итого</string>
     <string name="send_confirm_warning">Проверьте получателя. Транзакции в сети %1$s необратимы.</string>
+    <string name="send_confirm_insufficient_gas">Недостаточно %1$s для оплаты комиссии сети.</string>
+    <string name="send_confirm_default_wallet_name">Кошелёк</string>
+    <string name="send_confirm_error_token_not_found">Токен не найден</string>
+    <string name="send_confirm_error_send_failed">Не удалось отправить транзакцию</string>
+    <string name="send_confirm_error_no_utxos">Нет подтверждённых UTXO — дождитесь подтверждения входящей транзакции.</string>
+    <string name="send_confirm_error_insufficient_funds">Недостаточно средств для суммы + комиссии сети.</string>
     <string name="send_confirm_send">Подтвердить и отправить</string>
     <string name="send_confirm_speed_title">Скорость транзакции</string>
     <string name="send_confirm_speed_subtitle">Выберите, как быстро подтвердится транзакция</string>

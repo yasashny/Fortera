@@ -1,13 +1,16 @@
 package com.yasashny.fortera.feature.receive.confirmsend
 
+import com.yasashny.fortera.core.domaincrypto.model.FeeEstimate
 import com.yasashny.fortera.core.domaincrypto.model.FeeSpeed
 import com.yasashny.fortera.core.mvi.UiEffect
 import com.yasashny.fortera.core.mvi.UiIntent
 import com.yasashny.fortera.core.mvi.UiState
+import com.yasashny.fortera.core.ui.text.UiText
 
 internal object ConfirmSendContract {
 
     data class CommissionInfo(
+        val estimate: FeeEstimate,
         val nativeAmount: String,
         val usdAmount: String,
     )
@@ -15,6 +18,7 @@ internal object ConfirmSendContract {
     data class State(
         val tokenName: String = "",
         val tokenSymbol: String = "",
+        /** Empty when the wallet name is unknown — the Layout falls back to a localised default. */
         val walletName: String = "",
         val amount: String = "",
         val amountUsd: String = "",
@@ -28,9 +32,11 @@ internal object ConfirmSendContract {
         val isSpeedSheetOpen: Boolean = false,
         val isSending: Boolean = false,
         val isLoading: Boolean = true,
-        val errorMessage: String? = null,
+        val insufficientGas: Boolean = false,
+        val errorMessage: UiText? = null,
     ) : UiState {
         val commission: CommissionInfo? get() = commissions[selectedSpeed]
+        val canSend: Boolean get() = !isSending && !insufficientGas && commission != null
     }
 
     sealed interface Intent : UiIntent {

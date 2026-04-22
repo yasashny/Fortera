@@ -89,4 +89,12 @@ object TokenCatalog {
     )
 
     val defaultTokenIds: Set<String> = tokens.filter { it.isDefault }.map { it.id }.toSet()
+
+    /**
+     * Native token for a given network (no ERC-20 contract address) — BTC for Bitcoin,
+     * ETH for Ethereum. Used whenever a caller needs the "base currency" of a network,
+     * e.g. to fetch native balance for a gas check or the native price for USD math.
+     */
+    fun nativeToken(network: BlockchainNetwork): TokenDefinition? =
+        tokens.firstOrNull { it.network == network && it.contractAddress == null }
 }

@@ -4,6 +4,7 @@ import com.yasashny.fortera.core.domain.wallet.Wallet
 import com.yasashny.fortera.core.mvi.UiEffect
 import com.yasashny.fortera.core.mvi.UiIntent
 import com.yasashny.fortera.core.mvi.UiState
+import com.yasashny.fortera.core.ui.text.UiText
 
 object WalletSelectorContract {
 
@@ -11,6 +12,7 @@ object WalletSelectorContract {
         val wallets: List<Wallet> = emptyList(),
         val activeWalletId: String? = null,
         val isLoading: Boolean = true,
+        val errorMessage: UiText? = null,
     ) : UiState
 
     sealed interface Intent : UiIntent {
@@ -18,12 +20,12 @@ object WalletSelectorContract {
         data class SettingsClicked(val walletId: String) : Intent
         data object CreateWalletClicked : Intent
         data object ImportWalletClicked : Intent
+        data object DismissError : Intent
     }
 
     sealed interface Effect : UiEffect {
         data object NavigateToCreateWallet : Effect
         data object NavigateToImportWallet : Effect
         data class NavigateToSettings(val walletId: String) : Effect
-        data class ShowError(val message: String) : Effect
     }
 }

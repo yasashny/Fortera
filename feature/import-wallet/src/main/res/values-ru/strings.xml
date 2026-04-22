@@ -6,4 +6,7 @@
     <string name="import_wallet_seed_phrase_placeholder">Секретная фраза</string>
     <string name="import_wallet_paste_cd">Вставить</string>
     <string name="import_wallet_import_button">Импортировать</string>
+    <string name="import_wallet_error_name_empty">Введите название кошелька</string>
+    <string name="import_wallet_error_seed_empty">Введите секретную фразу</string>
+    <string name="import_wallet_error_import_failed">Не удалось импортировать кошелёк</string>
 </resources>

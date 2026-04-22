@@ -1,5 +1,6 @@
 package com.yasashny.fortera.core.datacrypto.datasource
 
+import com.yasashny.fortera.core.domaincrypto.model.BlockchainNetwork
 import com.yasashny.fortera.core.domaincrypto.model.Transaction
 import com.yasashny.fortera.core.network.environment.EnvironmentRepository
 import io.ktor.client.HttpClient
@@ -88,7 +89,7 @@ class BlockstreamDataSource(
                 from = from,
                 to = to,
                 amount = amount,
-                symbol = "BTC",
+                symbol = BlockchainNetwork.BITCOIN.nativeSymbol,
                 isIncoming = isIncoming,
                 confirmed = confirmed,
             )

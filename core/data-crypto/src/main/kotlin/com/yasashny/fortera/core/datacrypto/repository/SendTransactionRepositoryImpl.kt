@@ -18,10 +18,14 @@ internal class SendTransactionRepositoryImpl(
     private val bitcoinSender: BitcoinSender,
 ) : SendTransactionRepository {
 
-    override suspend fun estimateFees(token: TokenDefinition): Result<FeeEstimates> = runCatching {
+    override suspend fun estimateFees(
+        token: TokenDefinition,
+        fromAddress: String?,
+        amount: BigDecimal,
+    ): Result<FeeEstimates> = runCatching {
         when (token.network) {
-            BlockchainNetwork.ETHEREUM -> ethereumSender.estimateFees(token)
-            BlockchainNetwork.BITCOIN -> bitcoinSender.estimateFees()
+            BlockchainNetwork.ETHEREUM -> ethereumSender.estimateFees(token, fromAddress, amount)
+            BlockchainNetwork.BITCOIN -> bitcoinSender.estimateFees(fromAddress, amount)
         }
     }
 

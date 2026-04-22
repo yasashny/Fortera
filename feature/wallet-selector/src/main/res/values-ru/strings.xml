@@ -3,6 +3,7 @@
     <string name="wallet_selector_create_new_wallet">Создать новый кошелёк</string>
     <string name="wallet_selector_import_wallet">Импортировать кошелёк</string>
     <string name="wallet_selector_settings_cd">Настройки кошелька</string>
+    <string name="wallet_selector_error_select_failed">Не удалось переключить активный кошелёк</string>
 
     <string name="wallet_settings_title">Настройки кошелька</string>
     <string name="wallet_settings_back_cd">Назад</string>
@@ -15,4 +16,8 @@
     <string name="wallet_settings_delete_dialog_cancel">Отмена</string>
     <string name="wallet_settings_rename_dialog_title">Переименовать кошелёк</string>
     <string name="wallet_settings_change_name">Изменить название</string>
+    <string name="wallet_settings_error_name_empty">Название кошелька не может быть пустым</string>
+    <string name="wallet_settings_error_save_failed">Не удалось сохранить название</string>
+    <string name="wallet_settings_error_delete_failed">Не удалось удалить кошелёк</string>
+    <string name="wallet_settings_name_saved">Название сохранено</string>
 </resources>

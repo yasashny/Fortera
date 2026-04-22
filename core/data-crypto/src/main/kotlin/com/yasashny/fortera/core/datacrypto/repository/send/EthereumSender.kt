@@ -2,6 +2,7 @@ package com.yasashny.fortera.core.datacrypto.repository.send
 
 import com.yasashny.fortera.core.datacrypto.AddressResolverImpl
 import com.yasashny.fortera.core.datacrypto.datasource.InfuraDataSource
+import com.yasashny.fortera.core.domaincrypto.model.BlockchainNetwork
 import com.yasashny.fortera.core.domaincrypto.model.FeeEstimate
 import com.yasashny.fortera.core.domaincrypto.model.FeeEstimates
 import com.yasashny.fortera.core.domaincrypto.model.FeeSpeed
@@ -20,9 +21,15 @@ import java.math.BigDecimal
 import java.math.BigInteger
 
 /**
- * Signs and broadcasts ETH / ERC-20 transactions. Pure network + crypto logic;
- * the outer [SendTransactionRepositoryImpl][com.yasashny.fortera.core.datacrypto.repository.SendTransactionRepositoryImpl]
- * just dispatches here for [com.yasashny.fortera.core.domaincrypto.model.BlockchainNetwork.ETHEREUM].
+ * Signs and broadcasts ETH / ERC-20 transactions using EIP-1559 fee semantics.
+ *
+ * Gas pricing is derived from `eth_feeHistory` — slow/fast/instant tiers map to
+ * 10th / 50th / 90th-percentile priority-fee tips plus a safety buffer on the
+ * predicted next-block base fee. ERC-20 gas limits come from `eth_estimateGas`
+ * with a 20% headroom, so we don't rely on hard-coded values per token.
+ *
+ * Falls back to legacy `eth_gasPrice` + conservative gas limits if the node
+ * rejects fee history (older RPC endpoints).
  */
 internal class EthereumSender(
     private val infuraDataSource: InfuraDataSource,
@@ -30,14 +37,19 @@ internal class EthereumSender(
     private val environmentRepository: EnvironmentRepository,
 ) {
 
-    suspend fun estimateFees(token: TokenDefinition): FeeEstimates {
-        val baseGasPrice = infuraDataSource.getGasPrice()
-        val gasLimit = gasLimitFor(token)
+    suspend fun estimateFees(
+        token: TokenDefinition,
+        fromAddress: String?,
+        amount: BigDecimal,
+    ): FeeEstimates {
+        val pricing = resolvePricing()
+        val gasLimit = resolveGasLimit(token, fromAddress, amount)
+
         return FeeSpeed.entries.associateWith { speed ->
-            val wei = gasPriceFor(baseGasPrice, speed).multiply(gasLimit)
+            val totalWei = pricing.maxFeePerGas(speed).multiply(gasLimit)
             FeeEstimate(
-                nativeAmount = wei.toBigDecimal().movePointLeft(WEI_DECIMALS).stripTrailingZeros(),
-                nativeSymbol = "ETH",
+                nativeAmount = totalWei.toBigDecimal().movePointLeft(WEI_DECIMALS).stripTrailingZeros(),
+                nativeSymbol = BlockchainNetwork.ETHEREUM.nativeSymbol,
             )
         }
     }
@@ -51,51 +63,210 @@ internal class EthereumSender(
     ): String {
         val credentials = addressResolver.ethKeys(mnemonic).credentials
         val chainId = environmentRepository.current().ethChainId
-
-        val gasPrice = gasPriceFor(infuraDataSource.getGasPrice(), speed)
-        val gasLimit = gasLimitFor(token)
         val nonce = infuraDataSource.getNonce(credentials.address)
 
-        val raw = if (token.contractAddress != null) {
-            val rawAmount = amount.movePointRight(token.decimals).toBigInteger()
-            val function = Function(
-                "transfer",
-                listOf(Address(toAddress), Uint256(rawAmount)),
-                listOf(TypeReference.create(Bool::class.java)),
-            )
-            RawTransaction.createTransaction(
-                nonce,
-                gasPrice,
-                gasLimit,
-                token.contractAddress,
-                BigInteger.ZERO,
-                FunctionEncoder.encode(function),
-            )
-        } else {
-            val valueWei = amount.movePointRight(WEI_DECIMALS).toBigInteger()
-            RawTransaction.createEtherTransaction(nonce, gasPrice, gasLimit, toAddress, valueWei)
-        }
+        val pricing = resolvePricing()
+        val gasLimit = resolveGasLimit(token, credentials.address, amount)
+
+        val raw = pricing.buildTransaction(
+            nonce = nonce,
+            chainId = chainId,
+            gasLimit = gasLimit,
+            speed = speed,
+            token = token,
+            toAddress = toAddress,
+            amount = amount,
+        )
 
         val signed = TransactionEncoder.signMessage(raw, chainId, credentials)
         return infuraDataSource.sendRawTransaction(Numeric.toHexString(signed))
     }
 
-    private fun gasLimitFor(token: TokenDefinition): BigInteger =
-        if (token.contractAddress != null) ERC20_GAS_LIMIT else ETH_TRANSFER_GAS_LIMIT
+    // ────────────────────────────── Gas pricing ──────────────────────────────
 
-    private fun gasPriceFor(base: BigInteger, speed: FeeSpeed): BigInteger {
-        val multiplier = when (speed) {
-            FeeSpeed.SLOW -> 85
-            FeeSpeed.FAST -> 100
-            FeeSpeed.INSTANT -> 140
+    private suspend fun resolvePricing(): GasPricing = runCatching {
+        val history = infuraDataSource.getFeeHistory(
+            blockCount = FEE_HISTORY_BLOCKS,
+            rewardPercentiles = PERCENTILES,
+        )
+        val baseFee = history.nextBaseFee.takeIf { it > BigInteger.ZERO } ?: error("empty fee history")
+        val slowTip = history.medianPriorityFee(0).coerceAtLeastTip()
+        val fastTip = history.medianPriorityFee(1).coerceAtLeastTip()
+        val instantTip = history.medianPriorityFee(2).coerceAtLeastTip()
+        GasPricing.Eip1559(baseFee, slowTip, fastTip, instantTip)
+    }.getOrElse {
+        // Older RPCs or certain testnets may not support feeHistory — fall back to legacy.
+        GasPricing.Legacy(infuraDataSource.getGasPrice())
+    }
+
+    // ───────────────────────────── Gas limit ─────────────────────────────
+
+    private suspend fun resolveGasLimit(
+        token: TokenDefinition,
+        fromAddress: String?,
+        amount: BigDecimal,
+    ): BigInteger {
+        val contract = token.contractAddress ?: return ETH_TRANSFER_GAS_LIMIT
+
+        // ERC-20 — simulate to avoid over/under-shooting per-token variance.
+        val caller = fromAddress ?: ZERO_ADDRESS
+        val estimated = runCatching {
+            val rawAmount = amount.movePointRight(token.decimals).toBigInteger()
+                .takeIf { it > BigInteger.ZERO } ?: BigInteger.ONE
+            val data = encodeErc20TransferData(caller, rawAmount)
+            infuraDataSource.estimateGas(from = caller, to = contract, data = data)
+        }.getOrNull() ?: ERC20_FALLBACK_GAS_LIMIT
+
+        // 20% headroom — mempool relay rules are stricter than simulation.
+        return estimated.multiply(BigInteger.valueOf(120)).divide(HUNDRED)
+    }
+
+    private fun encodeErc20TransferData(toAddress: String, rawAmount: BigInteger): String {
+        val function = Function(
+            "transfer",
+            listOf(Address(toAddress), Uint256(rawAmount)),
+            listOf(TypeReference.create(Bool::class.java)),
+        )
+        return FunctionEncoder.encode(function)
+    }
+
+    private fun BigInteger.coerceAtLeastTip(): BigInteger =
+        if (this <= BigInteger.ZERO) MIN_PRIORITY_FEE_WEI else this
+
+    // ───────────────────────────── Pricing models ─────────────────────────────
+
+    private sealed interface GasPricing {
+
+        fun maxFeePerGas(speed: FeeSpeed): BigInteger
+
+        fun buildTransaction(
+            nonce: BigInteger,
+            chainId: Long,
+            gasLimit: BigInteger,
+            speed: FeeSpeed,
+            token: TokenDefinition,
+            toAddress: String,
+            amount: BigDecimal,
+        ): RawTransaction
+
+        data class Eip1559(
+            val nextBaseFee: BigInteger,
+            val slowTip: BigInteger,
+            val fastTip: BigInteger,
+            val instantTip: BigInteger,
+        ) : GasPricing {
+
+            fun tipFor(speed: FeeSpeed): BigInteger = when (speed) {
+                FeeSpeed.SLOW -> slowTip
+                FeeSpeed.FAST -> fastTip
+                FeeSpeed.INSTANT -> instantTip
+            }
+
+            override fun maxFeePerGas(speed: FeeSpeed): BigInteger {
+                // 2× baseFee covers up to ~87.5% base-fee bump over several blocks.
+                return nextBaseFee.multiply(BigInteger.TWO).add(tipFor(speed))
+            }
+
+            override fun buildTransaction(
+                nonce: BigInteger,
+                chainId: Long,
+                gasLimit: BigInteger,
+                speed: FeeSpeed,
+                token: TokenDefinition,
+                toAddress: String,
+                amount: BigDecimal,
+            ): RawTransaction {
+                val maxPriorityFee = tipFor(speed)
+                val maxFee = maxFeePerGas(speed)
+                val contract = token.contractAddress
+
+                return if (contract != null) {
+                    val rawAmount = amount.movePointRight(token.decimals).toBigInteger()
+                    val data = FunctionEncoder.encode(
+                        Function(
+                            "transfer",
+                            listOf(Address(toAddress), Uint256(rawAmount)),
+                            listOf(TypeReference.create(Bool::class.java)),
+                        )
+                    )
+                    RawTransaction.createTransaction(
+                        chainId,
+                        nonce,
+                        gasLimit,
+                        contract,
+                        BigInteger.ZERO,
+                        data,
+                        maxPriorityFee,
+                        maxFee,
+                    )
+                } else {
+                    val valueWei = amount.movePointRight(WEI_DECIMALS).toBigInteger()
+                    RawTransaction.createTransaction(
+                        chainId,
+                        nonce,
+                        gasLimit,
+                        toAddress,
+                        valueWei,
+                        "",
+                        maxPriorityFee,
+                        maxFee,
+                    )
+                }
+            }
         }
-        return base.multiply(BigInteger.valueOf(multiplier.toLong())).divide(HUNDRED)
+
+        data class Legacy(val baseGasPrice: BigInteger) : GasPricing {
+            override fun maxFeePerGas(speed: FeeSpeed): BigInteger {
+                val multiplier = when (speed) {
+                    FeeSpeed.SLOW -> 90
+                    FeeSpeed.FAST -> 110
+                    FeeSpeed.INSTANT -> 150
+                }
+                return baseGasPrice.multiply(BigInteger.valueOf(multiplier.toLong())).divide(HUNDRED)
+            }
+
+            override fun buildTransaction(
+                nonce: BigInteger,
+                chainId: Long,
+                gasLimit: BigInteger,
+                speed: FeeSpeed,
+                token: TokenDefinition,
+                toAddress: String,
+                amount: BigDecimal,
+            ): RawTransaction {
+                val gasPrice = maxFeePerGas(speed)
+                val contract = token.contractAddress
+
+                return if (contract != null) {
+                    val rawAmount = amount.movePointRight(token.decimals).toBigInteger()
+                    val data = FunctionEncoder.encode(
+                        Function(
+                            "transfer",
+                            listOf(Address(toAddress), Uint256(rawAmount)),
+                            listOf(TypeReference.create(Bool::class.java)),
+                        )
+                    )
+                    RawTransaction.createTransaction(
+                        nonce, gasPrice, gasLimit, contract, BigInteger.ZERO, data,
+                    )
+                } else {
+                    val valueWei = amount.movePointRight(WEI_DECIMALS).toBigInteger()
+                    RawTransaction.createEtherTransaction(nonce, gasPrice, gasLimit, toAddress, valueWei)
+                }
+            }
+        }
     }
 
     private companion object {
         const val WEI_DECIMALS = 18
+        const val FEE_HISTORY_BLOCKS = 10
+        val PERCENTILES = listOf(10, 50, 90)
+
         val ETH_TRANSFER_GAS_LIMIT: BigInteger = BigInteger.valueOf(21_000)
-        val ERC20_GAS_LIMIT: BigInteger = BigInteger.valueOf(65_000)
+        val ERC20_FALLBACK_GAS_LIMIT: BigInteger = BigInteger.valueOf(90_000)
         val HUNDRED: BigInteger = BigInteger.valueOf(100)
+        val MIN_PRIORITY_FEE_WEI: BigInteger = BigInteger.valueOf(1_000_000_000L) // 1 gwei floor
+
+        const val ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
     }
 }

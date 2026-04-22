@@ -3,10 +3,11 @@ package com.yasashny.fortera.feature.walletselector.main.ui
 import androidx.compose.runtime.Composable
 import com.yasashny.fortera.core.mvi.MviContainer
 import com.yasashny.fortera.core.navigation.LocalAppNavigator
-import com.yasashny.fortera.core.ui.LocalSnackbarHostState
+import com.yasashny.fortera.core.ui.dialog.ErrorDialog
 import com.yasashny.fortera.feature.createwallet.CreateWallet
 import com.yasashny.fortera.feature.importwallet.ImportWallet
 import com.yasashny.fortera.feature.walletselector.WalletSettings
+import com.yasashny.fortera.feature.walletselector.main.presentation.WalletSelectorContract
 import com.yasashny.fortera.feature.walletselector.main.presentation.WalletSelectorContract.Effect
 import com.yasashny.fortera.feature.walletselector.main.presentation.WalletSelectorViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -17,7 +18,6 @@ fun WalletSelectorSheet(
     viewModel: WalletSelectorViewModel = koinViewModel(),
 ) {
     val navigator = LocalAppNavigator.current
-    val snackbarHostState = LocalSnackbarHostState.current
 
     MviContainer(
         viewModel = viewModel,
@@ -35,7 +35,6 @@ fun WalletSelectorSheet(
                     onDismiss()
                     navigator.navigate(WalletSettings(effect.walletId))
                 }
-                is Effect.ShowError -> snackbarHostState.showSnackbar(effect.message)
             }
         },
     ) { state, onIntent ->
@@ -43,6 +42,11 @@ fun WalletSelectorSheet(
             state = state,
             onIntent = onIntent,
             onDismiss = onDismiss,
+        )
+
+        ErrorDialog(
+            message = state.errorMessage,
+            onDismiss = { onIntent(WalletSelectorContract.Intent.DismissError) },
         )
     }
 }

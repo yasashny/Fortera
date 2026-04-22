@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="core_ui_error_title">Error</string>
+    <string name="core_ui_ok">OK</string>
+    <string name="core_ui_dismiss">Dismiss</string>
+</resources>

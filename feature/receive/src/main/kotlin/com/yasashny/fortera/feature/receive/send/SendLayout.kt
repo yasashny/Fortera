@@ -31,7 +31,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
@@ -43,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 import com.yasashny.fortera.core.ui.component.CardIcon
 import com.yasashny.fortera.core.ui.component.TokenIcon
+import com.yasashny.fortera.core.ui.text.asString
 import com.yasashny.fortera.core.ui.token.tokenIconUrl
 import com.yasashny.fortera.feature.receive.R as ReceiveR
 import java.math.BigDecimal
@@ -65,22 +65,22 @@ internal fun SendLayout(
     onPasteClick: () -> Unit,
     onContinueClick: () -> Unit,
 ) {
-    val amountDecimal = remember(state.amount) { state.amount.toBigDecimalOrNull() }
-    val isAmountValid = amountDecimal != null && amountDecimal > BigDecimal.ZERO
-    val isAddressValid = state.address.isNotBlank()
-    val isFormValid = isAmountValid && isAddressValid && !state.insufficientFunds
-
-    val amountColor = if (state.insufficientFunds) {
+    val amountColor = if (state.insufficientFunds || state.amountError != null) {
         MaterialTheme.colorScheme.error
     } else {
         MaterialTheme.colorScheme.primary
+    }
+    val addressColor = if (state.addressError != null) {
+        MaterialTheme.colorScheme.error
+    } else {
+        MaterialTheme.colorScheme.onSurface
     }
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(text = stringResource(ReceiveR.string.send_title))
+                    Text(text = stringResource(ReceiveR.string.send_title), fontWeight = FontWeight.Bold)
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
@@ -125,7 +125,7 @@ internal fun SendLayout(
 
                 Button(
                     onClick = onContinueClick,
-                    enabled = isFormValid,
+                    enabled = state.canContinue,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(59.dp),
@@ -189,6 +189,20 @@ internal fun SendLayout(
                 )
             }
 
+            val amountHint: String? = when {
+                state.amountError != null -> state.amountError.asString()
+                state.insufficientFunds -> stringResource(ReceiveR.string.send_insufficient_funds)
+                else -> null
+            }
+            if (amountHint != null) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = amountHint,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+
             Spacer(Modifier.height(8.dp))
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Spacer(Modifier.height(8.dp))
@@ -202,12 +216,12 @@ internal fun SendLayout(
                     value = state.address,
                     onValueChange = onAddressChange,
                     textStyle = addressStyle.copy(
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = addressColor,
                         fontWeight = FontWeight.Medium,
                     ),
                     singleLine = true,
                     modifier = Modifier.weight(1f),
-                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                    cursorBrush = SolidColor(addressColor),
                     decorationBox = { innerTextField ->
                         Box {
                             if (state.address.isEmpty()) {
@@ -231,10 +245,10 @@ internal fun SendLayout(
                 }
             }
 
-            if (state.insufficientFunds) {
+            if (state.addressError != null) {
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = stringResource(ReceiveR.string.send_insufficient_funds),
+                    text = state.addressError.asString(),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.error,
                 )
