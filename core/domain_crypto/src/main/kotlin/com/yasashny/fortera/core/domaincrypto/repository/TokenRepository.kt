@@ -7,6 +7,8 @@ import com.yasashny.fortera.core.domaincrypto.db.toEntity
 import com.yasashny.fortera.core.domaincrypto.db.toTokenDefinition
 import com.yasashny.fortera.core.domaincrypto.model.TokenDefinition
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 
 interface TokenRepository {
@@ -50,8 +52,9 @@ internal class TokenRepositoryImpl(
         return tokenDao.getEnabledTokenIds(walletId).toSet()
     }
 
-    override fun observeEnabledTokenIds(walletId: String): Flow<Set<String>> {
-        return tokenDao.observeEnabledTokenIds(walletId).map { it.toSet() }
+    override fun observeEnabledTokenIds(walletId: String): Flow<Set<String>> = flow {
+        ensureWalletSeeded(walletId)
+        emitAll(tokenDao.observeEnabledTokenIds(walletId).map { it.toSet() })
     }
 
     override suspend fun setTokenEnabled(walletId: String, tokenId: String, enabled: Boolean) {

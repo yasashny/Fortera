@@ -16,22 +16,32 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
+import com.yasashny.fortera.feature.main.presentation.Banner
+import com.yasashny.fortera.feature.main.ui.component.asDisplayText
 import kotlinx.coroutines.delay
 
+private const val AutoDismissDelayMs = 3000L
+
+/**
+ * State-driven banner overlay. Renders nothing when [banner] is null, and auto-dismisses
+ * after [AutoDismissDelayMs] via [onDismiss]. Animates in/out purely on [banner] visibility.
+ */
 @Composable
 internal fun ErrorBanner(
-    modifier: Modifier = Modifier,
-    visible: Boolean,
-    message: String,
+    banner: Banner?,
     onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
+    val message = remember(banner) { banner }?.asDisplayText().orEmpty()
+
     AnimatedVisibility(
-        visible = visible,
+        visible = banner != null,
         modifier = modifier
             .fillMaxWidth()
             .padding(top = 48.dp),
@@ -59,9 +69,9 @@ internal fun ErrorBanner(
         }
     }
 
-    if (visible) {
-        LaunchedEffect(Unit) {
-            delay(3000)
+    if (banner != null) {
+        LaunchedEffect(banner) {
+            delay(AutoDismissDelayMs)
             onDismiss()
         }
     }
@@ -69,11 +79,10 @@ internal fun ErrorBanner(
 
 @Preview(showBackground = true)
 @Composable
-private fun ErrorBannerPreview() {
+private fun ErrorBannerGenericPreview() {
     ForteraTheme {
         ErrorBanner(
-            visible = true,
-            message = "Сеть Ethereum недоступна",
+            banner = Banner.GenericError,
             onDismiss = {},
         )
     }
@@ -81,11 +90,10 @@ private fun ErrorBannerPreview() {
 
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun ErrorBannerDarkPreview() {
+private fun ErrorBannerNetworksPreview() {
     ForteraTheme {
         ErrorBanner(
-            visible = true,
-            message = "Сеть Ethereum недоступна",
+            banner = Banner.NetworksUnavailable(setOf("Ethereum")),
             onDismiss = {},
         )
     }

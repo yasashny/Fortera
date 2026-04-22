@@ -5,5 +5,7 @@
     <string name="main_send">Send</string>
     <string name="main_receive">Receive</string>
     <string name="main_manage_tokens">Manage tokens</string>
-    <string name="main_load_error">Не удалось загрузить данные</string>
+    <string name="main_load_error">Failed to load data</string>
+    <string name="main_network_unavailable_single">%1$s is unavailable</string>
+    <string name="main_networks_unavailable_multiple">%1$s are unavailable</string>
 </resources>

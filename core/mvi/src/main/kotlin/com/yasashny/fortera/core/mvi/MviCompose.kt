@@ -3,24 +3,19 @@ package com.yasashny.fortera.core.mvi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collectLatest
 
 /**
  * Collect UI state with lifecycle awareness.
  *
- * Example:
- * ```
- * @Composable
- * fun HomeScreen(viewModel: HomeViewModel) {
- *     val state by viewModel.collectState()
+ * Backed by [collectAsStateWithLifecycle] — pauses collection when the host lifecycle is stopped.
  *
- *     when (state) {
- *         is HomeState.Loading -> LoadingIndicator()
- *         is HomeState.Success -> ContentList(state.items)
- *     }
- * }
+ * ```
+ * val state by viewModel.collectState()
  * ```
  */
 @Composable
@@ -28,54 +23,61 @@ fun <S : UiState, I : UiIntent, E : UiEffect> MviViewModel<S, I, E>.collectState
     state.collectAsStateWithLifecycle()
 
 /**
- * Collect and handle side effects.
+ * Collect and handle one-shot effects, with lifecycle awareness.
  *
- * Example:
+ * Collection is gated by [lifecycleState] (default [Lifecycle.State.STARTED]) so effects
+ * won't fire on a backgrounded screen — events queue in the underlying unlimited channel
+ * and flush when the lifecycle resumes.
+ *
+ * Uses `collect`, not `collectLatest`: one-shot handlers must run to completion — losing a
+ * navigation call because another effect arrived would be a silent bug.
+ *
  * ```
- * @Composable
- * fun HomeScreen(
- *     viewModel: HomeViewModel,
- *     onNavigateToDetail: (String) -> Unit
- * ) {
- *     viewModel.collectEffect { effect ->
- *         when (effect) {
- *             is HomeEffect.NavigateToDetail -> onNavigateToDetail(effect.id)
- *             is HomeEffect.ShowSnackbar -> showSnackbar(effect.message)
- *         }
+ * viewModel.collectEffect { effect ->
+ *     when (effect) {
+ *         is HomeEffect.NavigateToDetail -> navigator.navigate(Detail(effect.id))
  *     }
  * }
  * ```
  */
 @Composable
 fun <S : UiState, I : UiIntent, E : UiEffect> MviViewModel<S, I, E>.collectEffect(
-    onEffect: suspend (E) -> Unit
+    lifecycleState: Lifecycle.State = Lifecycle.State.STARTED,
+    onEffect: suspend (E) -> Unit,
 ) {
-    LaunchedEffect(Unit) {
-        effect.collectLatest { effect ->
-            onEffect(effect)
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(this, lifecycleOwner, lifecycleState) {
+        lifecycleOwner.repeatOnLifecycle(lifecycleState) {
+            effect.collect(onEffect)
         }
     }
 }
 
 /**
- * Collect effects from a Flow.
+ * Collect effects from an arbitrary [Flow] with the same lifecycle semantics as [collectEffect].
+ *
+ * Useful when effects come from a non-ViewModel source (e.g., a shared coordinator flow).
  */
 @Composable
 fun <E : UiEffect> CollectEffect(
     effectFlow: Flow<E>,
-    onEffect: suspend (E) -> Unit
+    lifecycleState: Lifecycle.State = Lifecycle.State.STARTED,
+    onEffect: suspend (E) -> Unit,
 ) {
-    LaunchedEffect(Unit) {
-        effectFlow.collectLatest { effect ->
-            onEffect(effect)
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(effectFlow, lifecycleOwner, lifecycleState) {
+        lifecycleOwner.repeatOnLifecycle(lifecycleState) {
+            effectFlow.collect(onEffect)
         }
     }
 }
 
 /**
- * Container composable for MVI screen with state and effect handling.
+ * Screen-level container for an MVI view model.
  *
- * Example:
+ * Wires state collection, effect handling, and intent dispatch in one place so the screen
+ * Composable is a tiny adapter between the ViewModel and the Layout.
+ *
  * ```
  * @Composable
  * fun HomeScreen(viewModel: HomeViewModel = koinViewModel()) {
@@ -83,15 +85,10 @@ fun <E : UiEffect> CollectEffect(
  *         viewModel = viewModel,
  *         onEffect = { effect ->
  *             when (effect) {
- *                 is HomeEffect.NavigateToDetail -> navigateToDetail(effect.id)
+ *                 is HomeEffect.NavigateToDetail -> navigator.navigate(Detail(effect.id))
  *             }
- *         }
- *     ) { state, onIntent ->
- *         HomeContent(
- *             state = state,
- *             onItemClick = { id -> onIntent(HomeIntent.ItemClicked(id)) }
- *         )
- *     }
+ *         },
+ *     ) { state, onIntent -> HomeLayout(state = state, onIntent = onIntent) }
  * }
  * ```
  */
@@ -99,11 +96,9 @@ fun <E : UiEffect> CollectEffect(
 fun <S : UiState, I : UiIntent, E : UiEffect> MviContainer(
     viewModel: MviViewModel<S, I, E>,
     onEffect: suspend (E) -> Unit = {},
-    content: @Composable (state: S, onIntent: (I) -> Unit) -> Unit
+    content: @Composable (state: S, onIntent: (I) -> Unit) -> Unit,
 ) {
     val state by viewModel.collectState()
-
-    viewModel.collectEffect(onEffect)
-
+    viewModel.collectEffect(onEffect = onEffect)
     content(state, viewModel::onIntent)
 }

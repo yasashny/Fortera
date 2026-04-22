@@ -1,8 +1,13 @@
 package com.yasashny.fortera.core.mvi
 
+import androidx.compose.runtime.Immutable
+
 /**
- * Marker interface for UI state.
- * All screen states should implement this interface.
+ * Marker for UI state.
+ *
+ * All implementors **must be immutable** — states are compared structurally and passed
+ * directly to Compose, so mutation after construction breaks recomposition correctness.
+ * The [Immutable] annotation lets Compose treat them as skippable.
  *
  * Example:
  * ```
@@ -13,4 +18,5 @@ package com.yasashny.fortera.core.mvi
  * }
  * ```
  */
+@Immutable
 interface UiState

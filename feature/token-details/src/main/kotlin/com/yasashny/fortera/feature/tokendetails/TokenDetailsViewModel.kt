@@ -62,13 +62,13 @@ class TokenDetailsViewModel(
     private suspend fun loadBalance() {
         val wallet = walletInteractor.observeActiveWallet().first()
         if (wallet == null) {
-            setState(currentState.copy(isLoading = false))
+            reduce(currentState.copy(isLoading = false))
             return
         }
         val seed = walletInteractor.getSeedPhrase(wallet.id)
             .getOrNull()?.toDisplayString()
         if (seed == null) {
-            setState(currentState.copy(isLoading = false))
+            reduce(currentState.copy(isLoading = false))
             return
         }
 
@@ -78,7 +78,7 @@ class TokenDetailsViewModel(
         balanceRepository.getTokenBalances(wallet.id, ethAddress, btcAddress, setOf(tokenId))
             .onSuccess { result ->
                 val tb = result.balances.find { it.token.id == tokenId }
-                setState(
+                reduce(
                     currentState.copy(
                         balance = tb?.balance ?: currentState.balance,
                         priceUsd = tb?.priceUsd ?: currentState.priceUsd,
@@ -88,7 +88,7 @@ class TokenDetailsViewModel(
                 )
             }
             .onFailure {
-                setState(currentState.copy(isLoading = false))
+                reduce(currentState.copy(isLoading = false))
             }
     }
 

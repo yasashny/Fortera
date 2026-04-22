@@ -1,151 +1,75 @@
 package com.yasashny.fortera.feature.main.presentation
 
 import com.yasashny.fortera.core.domain.wallet.WalletInteractor
-import com.yasashny.fortera.core.domaincrypto.AddressResolver
-import com.yasashny.fortera.core.domaincrypto.repository.BalanceRepository
-import com.yasashny.fortera.core.domaincrypto.repository.TokenRepository
 import com.yasashny.fortera.core.mvi.MviViewModel
-import com.yasashny.fortera.feature.main.presentation.MainContract
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
+import com.yasashny.fortera.feature.main.domain.MainOverviewEvent
+import com.yasashny.fortera.feature.main.domain.MainOverviewInteractor
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.mapNotNull
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class MainViewModel(
+    private val overviewInteractor: MainOverviewInteractor,
     private val walletInteractor: WalletInteractor,
-    private val balanceRepository: BalanceRepository,
-    private val tokenRepository: TokenRepository,
-    private val addressResolver: AddressResolver,
-) : MviViewModel<MainContract.State, MainContract.Intent, MainContract.Effect>(MainContract.State()) {
+) : MviViewModel<MainState, MainIntent, MainEffect>(MainState.Initial) {
 
     init {
-        intent {
-            launch {
-                walletInteractor.observeActiveWallet()
-                    .flatMapLatest { activeWallet ->
-                        if (activeWallet == null) return@flatMapLatest flowOf(null)
-                        tokenRepository.getEnabledTokenIds(activeWallet.id)
-                        tokenRepository.observeEnabledTokenIds(activeWallet.id)
-                            .map { enabledIds -> activeWallet to enabledIds }
-                    }
-                    .combine(walletInteractor.getWallets()) { walletWithTokens, wallets ->
-                        Triple(wallets, walletWithTokens?.first, walletWithTokens?.second)
-                    }
-                    .collect { (wallets, activeWallet, enabledIds) ->
-                        if (wallets.isEmpty()) {
-                            sendEffect(MainContract.Effect.NavigateToStartup)
-                            return@collect
-                        }
-                        val wallet = activeWallet ?: return@collect
-                        val ids = enabledIds ?: return@collect
+        observeOverview()
+        observeWalletName()
+    }
 
-                        val isFirstLoad = currentState.isLoading
+    override fun handleIntent(intent: MainIntent) {
+        when (intent) {
+            MainIntent.Refresh -> refresh()
+            MainIntent.OpenWalletSelector -> updateState { it.copy(isWalletSelectorVisible = true) }
+            MainIntent.DismissWalletSelector -> updateState { it.copy(isWalletSelectorVisible = false) }
+            MainIntent.DismissBanner -> updateState { it.copy(banner = null) }
+            MainIntent.OpenSettings -> sendEffect(MainEffect.NavigateToSettings)
+            MainIntent.OpenSend -> sendEffect(MainEffect.NavigateToSend)
+            MainIntent.OpenReceive -> sendEffect(MainEffect.NavigateToReceive)
+            MainIntent.OpenManageTokens -> sendEffect(MainEffect.NavigateToManageTokens)
+            is MainIntent.OpenTokenDetails -> sendEffect(MainEffect.NavigateToTokenDetails(intent.tokenId))
+        }
+    }
 
-                        if (isFirstLoad) {
-                            val cached = balanceRepository.getCachedBalances(wallet.id, ids)
-                            if (cached != null) {
-                                reduce(
-                                    MainContract.State(
-                                        activeWalletName = wallet.name,
-                                        totalUsd = cached.sumOf { it.balanceUsd },
-                                        tokens = cached,
-                                        isLoading = false,
-                                        isCached = true,
-                                    )
-                                )
-                            } else {
-                                reduce(currentState.copy(activeWalletName = wallet.name, isLoading = true))
-                            }
-                        } else {
-                            reduce(currentState.copy(activeWalletName = wallet.name, isCached = true))
-                        }
+    private fun observeOverview() = intent {
+        launch {
+            overviewInteractor.observe().collect { event ->
+                when (event) {
+                    MainOverviewEvent.NoWallets ->
+                        sendEffect(MainEffect.NavigateToStartup)
 
-                        val seed = walletInteractor.getSeedPhrase(wallet.id)
-                            .getOrNull()?.toDisplayString() ?: return@collect
+                    is MainOverviewEvent.WalletActivated ->
+                        updateState { MainReducer.onWalletActivated(it, event.walletName) }
 
-                        val ethAddress = addressResolver.ethAddress(seed)
-                        val btcAddress = addressResolver.btcAddress(seed)
+                    is MainOverviewEvent.Data ->
+                        updateState { MainReducer.onOverview(it, event) }
 
-                        balanceRepository.getTokenBalances(wallet.id, ethAddress, btcAddress, ids)
-                            .onSuccess { result ->
-                                balanceRepository.cacheBalances(wallet.id, result.balances)
-                                reduce(
-                                    MainContract.State(
-                                        activeWalletName = wallet.name,
-                                        totalUsd = result.balances.sumOf { it.balanceUsd },
-                                        tokens = result.balances,
-                                        isLoading = false,
-                                        isCached = result.failedNetworks.isNotEmpty(),
-                                    )
-                                )
-                                if (result.failedNetworks.isNotEmpty()) {
-                                    sendEffect(MainContract.Effect.ShowNetworkError(result.failedNetworks))
-                                }
-                            }
-                            .onFailure {
-                                reduce(currentState.copy(isLoading = false))
-                                sendEffect(MainContract.Effect.ShowError)
-                            }
-                    }
+                    is MainOverviewEvent.Failed ->
+                        updateState { MainReducer.onLoadFailed(it) }
+                }
             }
         }
     }
 
-    override fun handleIntent(intent: MainContract.Intent) {
-        when (intent) {
-            MainContract.Intent.Refresh -> intent {
-                reduce(currentState.copy(isRefreshing = true))
-                val wallet = walletInteractor.observeActiveWallet().first() ?: run {
-                    reduce(currentState.copy(isRefreshing = false))
-                    return@intent
+    private fun observeWalletName() = intent {
+        launch {
+            walletInteractor.observeActiveWallet()
+                .mapNotNull { it?.name }
+                .distinctUntilChanged()
+                .collect { name ->
+                    updateState { MainReducer.onWalletNameChanged(it, name) }
                 }
-                val seed = walletInteractor.getSeedPhrase(wallet.id)
-                    .getOrNull()?.toDisplayString() ?: run {
-                    reduce(currentState.copy(isRefreshing = false))
-                    return@intent
-                }
-                val ethAddress = addressResolver.ethAddress(seed)
-                val btcAddress = addressResolver.btcAddress(seed)
-                val enabledIds = tokenRepository.getEnabledTokenIds(wallet.id)
-
-                balanceRepository.getTokenBalances(
-                    wallet.id,
-                    ethAddress,
-                    btcAddress,
-                    enabledIds,
-                    forceRemote = true
-                )
-                    .onSuccess { result ->
-                        balanceRepository.cacheBalances(wallet.id, result.balances)
-                        reduce(
-                            MainContract.State(
-                                activeWalletName = wallet.name,
-                                totalUsd = result.balances.sumOf { it.balanceUsd },
-                                tokens = result.balances,
-                                isLoading = false,
-                                isRefreshing = false,
-                                isCached = result.failedNetworks.isNotEmpty(),
-                            )
-                        )
-                        if (result.failedNetworks.isNotEmpty()) {
-                            sendEffect(MainContract.Effect.ShowNetworkError(result.failedNetworks))
-                        }
-                    }
-                    .onFailure {
-                        reduce(currentState.copy(isRefreshing = false))
-                        sendEffect(MainContract.Effect.ShowError)
-                    }
-            }
-
-            MainContract.Intent.OpenManageTokens -> intent { sendEffect(MainContract.Effect.NavigateToManageTokens) }
-            MainContract.Intent.OpenSettings -> intent { sendEffect(MainContract.Effect.NavigateToSettings) }
-            is MainContract.Intent.OpenTokenDetails -> intent { sendEffect(MainContract.Effect.NavigateToTokenDetails(intent.tokenId)) }
-            MainContract.Intent.OpenReceive -> intent { sendEffect(MainContract.Effect.NavigateToSelectTokenForReceive) }
-            MainContract.Intent.OpenSend -> intent { sendEffect(MainContract.Effect.NavigateToSelectTokenForSend) }
-            MainContract.Intent.OpenWalletSelector -> Unit
         }
+    }
+
+    private fun refresh() = intent {
+        updateState { MainReducer.onRefreshStarted(it) }
+        overviewInteractor.refresh()
+            .onSuccess { overview ->
+                updateState { MainReducer.onRefreshSucceeded(it, overview) }
+            }
+            .onFailure {
+                updateState { MainReducer.onRefreshFailed(it) }
+            }
     }
 }

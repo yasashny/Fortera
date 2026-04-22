@@ -1,8 +1,11 @@
 package com.yasashny.fortera.core.mvi
 
 /**
- * Marker interface for side effects.
- * One-time events like navigation, showing snackbar, etc.
+ * Marker for one-shot side effects.
+ *
+ * Use effects only for things that **cannot be modeled as state**: navigation, system calls,
+ * showing a snackbar, vibration. Anything that should survive configuration changes — banners,
+ * dialogs, loading flags — belongs in [UiState].
  *
  * Example:
  * ```

@@ -1,8 +1,10 @@
 package com.yasashny.fortera.core.mvi
 
 /**
- * Marker interface for user intents/events.
- * All user actions should be represented as intents.
+ * Marker for user intents / events.
+ *
+ * Every user action is represented as an intent. Intents should be value objects — data classes
+ * or `data object`s of a sealed hierarchy — so equality, logging, and testing stay trivial.
  *
  * Example:
  * ```

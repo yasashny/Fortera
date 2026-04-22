@@ -5,4 +5,7 @@
     <string name="main_send">Отправить</string>
     <string name="main_receive">Получить</string>
     <string name="main_manage_tokens">Управление токенами</string>
+    <string name="main_load_error">Не удалось загрузить данные</string>
+    <string name="main_network_unavailable_single">Сеть %1$s недоступна</string>
+    <string name="main_networks_unavailable_multiple">Сети %1$s недоступны</string>
 </resources>
