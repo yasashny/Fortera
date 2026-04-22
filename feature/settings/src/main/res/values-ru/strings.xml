@@ -9,4 +9,10 @@
     <string name="settings_environment">Окружение</string>
     <string name="settings_environment_title">Выберите окружение</string>
     <string name="settings_environment_hint">Смена окружения очистит кэш балансов и поменяет Bitcoin-адреса.</string>
+    <string name="settings_biometric_enable_title">Включить защиту</string>
+    <string name="settings_biometric_disable_title">Отключить защиту</string>
+    <string name="settings_language_ru">Русский</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_environment_mainnet">Mainnet</string>
+    <string name="settings_environment_testnet">Sepolia / BTC testnet</string>
 </resources>

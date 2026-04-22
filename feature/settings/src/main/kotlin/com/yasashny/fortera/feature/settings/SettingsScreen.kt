@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import com.yasashny.fortera.core.mvi.MviContainer
 import com.yasashny.fortera.core.navigation.LocalAppNavigator
 import com.yasashny.fortera.feature.settings.SettingsContract.Effect
@@ -24,6 +25,8 @@ internal fun SettingsScreen() {
     val viewModel: SettingsViewModel = koinViewModel()
 
     var pendingEnable by remember { mutableStateOf(false) }
+    val enableTitle = stringResource(R.string.settings_biometric_enable_title)
+    val disableTitle = stringResource(R.string.settings_biometric_disable_title)
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult(),
@@ -40,7 +43,7 @@ internal fun SettingsScreen() {
                 is Effect.RequestBiometric -> {
                     pendingEnable = effect.enable
                     val km = context.getSystemService(KeyguardManager::class.java)
-                    val title = if (effect.enable) "Включить защиту" else "Отключить защиту"
+                    val title = if (effect.enable) enableTitle else disableTitle
                     val intent = km?.createConfirmDeviceCredentialIntent(title, null)
                     if (intent != null) {
                         launcher.launch(intent)

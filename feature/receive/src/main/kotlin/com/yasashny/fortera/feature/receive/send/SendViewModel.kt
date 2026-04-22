@@ -1,11 +1,10 @@
 package com.yasashny.fortera.feature.receive.send
 
-import com.yasashny.fortera.core.domaincrypto.AddressResolver
-import com.yasashny.fortera.core.domaincrypto.model.BlockchainNetwork
+import com.yasashny.fortera.core.domain.wallet.WalletInteractor
 import com.yasashny.fortera.core.domaincrypto.repository.BalanceRepository
 import com.yasashny.fortera.core.domaincrypto.repository.TokenRepository
-import com.yasashny.fortera.core.domain.wallet.WalletInteractor
 import com.yasashny.fortera.core.mvi.MviViewModel
+import com.yasashny.fortera.core.walletbalances.WalletAddressesService
 import com.yasashny.fortera.feature.receive.send.SendContract.Effect
 import com.yasashny.fortera.feature.receive.send.SendContract.Intent
 import com.yasashny.fortera.feature.receive.send.SendContract.State
@@ -18,7 +17,7 @@ internal class SendViewModel(
     private val walletInteractor: WalletInteractor,
     private val balanceRepository: BalanceRepository,
     private val tokenRepository: TokenRepository,
-    private val addressResolver: AddressResolver,
+    private val walletAddressesService: WalletAddressesService,
 ) : MviViewModel<State, Intent, Effect>(State()) {
 
     init {
@@ -41,20 +40,16 @@ internal class SendViewModel(
                 reduce(currentState.copy(isLoading = false))
                 return@intent
             }
-            val seed = walletInteractor.getSeedPhrase(wallet.id)
-                .getOrNull()?.toDisplayString()
-            if (seed == null) {
+            val addresses = walletAddressesService.forWallet(wallet.id)
+            if (addresses == null) {
                 reduce(currentState.copy(isLoading = false))
                 return@intent
             }
 
-            val ethAddress = addressResolver.ethAddress(seed)
-            val btcAddress = addressResolver.btcAddress(seed)
-
             balanceRepository.getTokenBalances(
                 walletId = wallet.id,
-                ethAddress = ethAddress,
-                btcAddress = btcAddress,
+                ethAddress = addresses.eth,
+                btcAddress = addresses.btc,
                 enabledTokenIds = setOf(tokenId),
             ).onSuccess { result ->
                 val tokenBalance = result.balances.firstOrNull()

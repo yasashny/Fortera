@@ -9,4 +9,10 @@
     <string name="settings_environment">Environment</string>
     <string name="settings_environment_title">Select environment</string>
     <string name="settings_environment_hint">Switching clears cached balances and changes Bitcoin addresses.</string>
+    <string name="settings_biometric_enable_title">Enable protection</string>
+    <string name="settings_biometric_disable_title">Disable protection</string>
+    <string name="settings_language_ru">Русский</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_environment_mainnet">Mainnet</string>
+    <string name="settings_environment_testnet">Sepolia / BTC testnet</string>
 </resources>

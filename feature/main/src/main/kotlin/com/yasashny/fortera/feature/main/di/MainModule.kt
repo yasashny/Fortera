@@ -15,9 +15,7 @@ val mainModule = module {
     factory {
         MainOverviewInteractor(
             walletInteractor = get(),
-            balanceRepository = get(),
-            tokenRepository = get(),
-            addressResolver = get(),
+            walletBalances = get(),
             dispatcher = get(named(ForteraDispatchers.IO)),
         )
     }

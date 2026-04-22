@@ -57,11 +57,9 @@ import androidx.compose.ui.unit.sp
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 import com.yasashny.fortera.core.ui.component.CardIcon
 import com.yasashny.fortera.core.ui.component.TokenIcon
+import com.yasashny.fortera.core.ui.token.tokenIconUrl
 import com.yasashny.fortera.core.domaincrypto.model.FeeSpeed
 import com.yasashny.fortera.feature.receive.R as ReceiveR
-
-private fun tokenIconUrl(symbol: String): String =
-    "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${symbol.lowercase()}.png"
 
 private fun shortAddress(address: String): String {
     if (address.length <= 12) return address

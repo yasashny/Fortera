@@ -28,15 +28,17 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 include(":app")
 
 // Core modules
-include(":core:domain_crypto")
+include(":core:domain-crypto")
+include(":core:data-crypto")
 include(":core:network")
 include(":core:database")
-include(":core:domain_wallet")
+include(":core:domain-wallet")
 include(":core:designsystem")
 include(":core:common")
 include(":core:ui")
 include(":core:navigation")
 include(":core:mvi")
+include(":core:wallet-balances")
 
 // Feature modules
 include(":feature:startup-api")

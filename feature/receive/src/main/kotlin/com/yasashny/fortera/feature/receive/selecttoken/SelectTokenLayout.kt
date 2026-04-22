@@ -16,21 +16,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.yasashny.fortera.core.domaincrypto.TokenCatalog
-import com.yasashny.fortera.core.domaincrypto.model.BlockchainNetwork
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 import com.yasashny.fortera.core.ui.component.CardIcon
 import com.yasashny.fortera.core.ui.component.GroupCard
 import com.yasashny.fortera.core.ui.component.cardGroupItems
+import com.yasashny.fortera.core.ui.token.tokenIconUrl
 import com.yasashny.fortera.feature.receive.R as ReceiveR
-
-private fun tokenIconUrl(symbol: String): String =
-    "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${symbol.lowercase()}.png"
-
-private val BlockchainNetwork.displayName: String
-    get() = when (this) {
-        BlockchainNetwork.ETHEREUM -> "Ethereum"
-        BlockchainNetwork.BITCOIN -> "Bitcoin"
-    }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

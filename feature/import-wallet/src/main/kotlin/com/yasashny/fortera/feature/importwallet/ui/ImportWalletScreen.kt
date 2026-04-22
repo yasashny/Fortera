@@ -25,7 +25,6 @@ internal fun ImportWalletScreen(
                 Effect.NavigateBack -> navigator.back()
                 Effect.NavigateToHome -> navigator.clearAndNavigate(Main)
                 is Effect.ShowError -> snackbarHostState.showSnackbar(effect.message)
-                Effect.RequestPaste -> Unit
             }
         }
     ) { state, onIntent ->

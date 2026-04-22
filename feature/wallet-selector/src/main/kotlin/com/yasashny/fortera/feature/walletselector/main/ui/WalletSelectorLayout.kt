@@ -143,8 +143,8 @@ private fun WalletItem(
 @Composable
 private fun WalletSelectorLayoutPreview() {
     val wallets = listOf(
-        Wallet(id = "1", name = "Wallet №1", address = "0x1234567890abcdef1234"),
-        Wallet(id = "2", name = "Wallet №2", address = "0xabcdef1234567890abcd"),
+        Wallet(id = "1", name = "Wallet №1"),
+        Wallet(id = "2", name = "Wallet №2"),
     )
     ForteraTheme {
         WalletSelectorLayout(

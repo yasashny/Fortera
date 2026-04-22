@@ -1,20 +1,18 @@
 package com.yasashny.fortera.feature.receive.receive
 
-import com.yasashny.fortera.core.domaincrypto.AddressResolver
 import com.yasashny.fortera.core.domaincrypto.model.BlockchainNetwork
 import com.yasashny.fortera.core.domaincrypto.repository.TokenRepository
-import com.yasashny.fortera.core.domain.wallet.WalletInteractor
 import com.yasashny.fortera.core.mvi.MviViewModel
+import com.yasashny.fortera.core.ui.token.networkBadgeUrlFor
+import com.yasashny.fortera.core.walletbalances.WalletAddressesService
 import com.yasashny.fortera.feature.receive.receive.ReceiveContract.Effect
 import com.yasashny.fortera.feature.receive.receive.ReceiveContract.Intent
 import com.yasashny.fortera.feature.receive.receive.ReceiveContract.State
-import kotlinx.coroutines.flow.first
 
 internal class ReceiveViewModel(
     private val tokenId: String,
-    private val walletInteractor: WalletInteractor,
     private val tokenRepository: TokenRepository,
-    private val addressResolver: AddressResolver,
+    private val walletAddressesService: WalletAddressesService,
 ) : MviViewModel<State, Intent, Effect>(State()) {
 
     init {
@@ -28,11 +26,7 @@ internal class ReceiveViewModel(
                 BlockchainNetwork.ETHEREUM -> "Ethereum (ERC-20)"
                 BlockchainNetwork.BITCOIN -> "Bitcoin"
             }
-            val networkIconUrl = if (token.contractAddress != null) {
-                "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png"
-            } else {
-                null
-            }
+            val networkIconUrl = networkBadgeUrlFor(token)
             reduce(currentState.copy(
                 tokenName = token.name,
                 tokenSymbol = token.symbol,
@@ -40,21 +34,15 @@ internal class ReceiveViewModel(
                 networkIconUrl = networkIconUrl,
             ))
 
-            val wallet = walletInteractor.observeActiveWallet().first()
-            if (wallet == null) {
-                reduce(currentState.copy(isLoading = false))
-                return@intent
-            }
-            val seed = walletInteractor.getSeedPhrase(wallet.id)
-                .getOrNull()?.toDisplayString()
-            if (seed == null) {
+            val addresses = walletAddressesService.forActiveWallet()
+            if (addresses == null) {
                 reduce(currentState.copy(isLoading = false))
                 return@intent
             }
 
             val address = when (token.network) {
-                BlockchainNetwork.ETHEREUM -> addressResolver.ethAddress(seed)
-                BlockchainNetwork.BITCOIN -> addressResolver.btcAddress(seed)
+                BlockchainNetwork.ETHEREUM -> addresses.eth
+                BlockchainNetwork.BITCOIN -> addresses.btc
             }
 
             reduce(currentState.copy(address = address, isLoading = false))

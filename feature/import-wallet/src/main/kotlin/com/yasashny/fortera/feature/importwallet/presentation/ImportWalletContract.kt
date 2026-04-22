@@ -19,7 +19,6 @@ object ImportWalletContract {
     sealed interface Intent : UiIntent {
         data class NameChanged(val value: String) : Intent
         data class SeedPhraseChanged(val value: String) : Intent
-        data object PasteClicked : Intent
         data object ImportClicked : Intent
         data object BackClicked : Intent
     }
@@ -28,6 +27,5 @@ object ImportWalletContract {
         data object NavigateBack : Effect
         data object NavigateToHome : Effect
         data class ShowError(val message: String) : Effect
-        data object RequestPaste : Effect
     }
 }

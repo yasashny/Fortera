@@ -1,6 +1,5 @@
 package com.yasashny.fortera.feature.tokendetails
 
-import com.yasashny.fortera.core.domaincrypto.AddressResolver
 import com.yasashny.fortera.core.domaincrypto.model.TokenDefinition
 import com.yasashny.fortera.core.domaincrypto.repository.BalanceRepository
 import com.yasashny.fortera.core.domaincrypto.repository.PriceRepository
@@ -8,6 +7,7 @@ import com.yasashny.fortera.core.domaincrypto.repository.TokenRepository
 import com.yasashny.fortera.core.domaincrypto.repository.TransactionRepository
 import com.yasashny.fortera.core.domain.wallet.WalletInteractor
 import com.yasashny.fortera.core.mvi.MviViewModel
+import com.yasashny.fortera.core.walletbalances.WalletAddressesService
 import com.yasashny.fortera.feature.tokendetails.TokenDetailsContract.ChartPeriod
 import com.yasashny.fortera.feature.tokendetails.TokenDetailsContract.Effect
 import com.yasashny.fortera.feature.tokendetails.TokenDetailsContract.Intent
@@ -21,7 +21,7 @@ class TokenDetailsViewModel(
     private val priceRepository: PriceRepository,
     private val transactionRepository: TransactionRepository,
     private val tokenRepository: TokenRepository,
-    private val addressResolver: AddressResolver,
+    private val walletAddressesService: WalletAddressesService,
 ) : MviViewModel<State, Intent, Effect>(State()) {
 
     private var token: TokenDefinition? = null
@@ -65,17 +65,13 @@ class TokenDetailsViewModel(
             reduce(currentState.copy(isLoading = false))
             return
         }
-        val seed = walletInteractor.getSeedPhrase(wallet.id)
-            .getOrNull()?.toDisplayString()
-        if (seed == null) {
+        val addresses = walletAddressesService.forWallet(wallet.id)
+        if (addresses == null) {
             reduce(currentState.copy(isLoading = false))
             return
         }
 
-        val ethAddress = addressResolver.ethAddress(seed)
-        val btcAddress = addressResolver.btcAddress(seed)
-
-        balanceRepository.getTokenBalances(wallet.id, ethAddress, btcAddress, setOf(tokenId))
+        balanceRepository.getTokenBalances(wallet.id, addresses.eth, addresses.btc, setOf(tokenId))
             .onSuccess { result ->
                 val tb = result.balances.find { it.token.id == tokenId }
                 reduce(
@@ -100,16 +96,12 @@ class TokenDetailsViewModel(
             updateState { it.copy(isTransactionsLoading = false) }
             return
         }
-        val seed = walletInteractor.getSeedPhrase(wallet.id)
-            .getOrNull()?.toDisplayString() ?: run {
+        val addresses = walletAddressesService.forWallet(wallet.id) ?: run {
             updateState { it.copy(isTransactionsLoading = false) }
             return
         }
 
-        val ethAddress = addressResolver.ethAddress(seed)
-        val btcAddress = addressResolver.btcAddress(seed)
-
-        transactionRepository.getTransactions(t, ethAddress, btcAddress)
+        transactionRepository.getTransactions(t, addresses.eth, addresses.btc)
             .onSuccess { txs -> updateState { it.copy(transactions = txs, isTransactionsLoading = false) } }
             .onFailure { updateState { it.copy(isTransactionsLoading = false) } }
     }

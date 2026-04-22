@@ -9,6 +9,7 @@ android {
 dependencies {
     implementation(projects.core.domainWallet)
     implementation(projects.core.domainCrypto)
+    implementation(projects.core.walletBalances)
     implementation(projects.feature.tokenDetailsApi)
     implementation(projects.feature.receiveApi)
     implementation(libs.androidx.datastore.preferences)

@@ -58,9 +58,9 @@ internal fun SettingsLayout(
 ) {
     val context = LocalContext.current
 
-    val currentLanguage = remember {
-        if (Locale.getDefault().language == "ru") "Русский" else "English"
-    }
+    val currentLanguage =
+        if (Locale.getDefault().language == "ru") stringResource(SettingsR.string.settings_language_ru)
+        else stringResource(SettingsR.string.settings_language_en)
 
     val openLanguageSettings: () -> Unit = remember {
         {
@@ -201,7 +201,10 @@ private fun EnvironmentSheetContent(
                 position = CardPosition.Single,
                 onClick = { onSelect(env) },
                 title = env.displayName,
-                subtitle = if (env.isTestnet) "Sepolia / BTC testnet" else "Mainnet",
+                subtitle = stringResource(
+                    if (env.isTestnet) SettingsR.string.settings_environment_testnet
+                    else SettingsR.string.settings_environment_mainnet,
+                ),
                 icon = CardIcon.Vector(Icons.Default.Tune),
                 trailing = if (selected) {
                     {

@@ -9,6 +9,7 @@ android {
 dependencies {
     implementation(projects.core.domainWallet)
     implementation(projects.core.domainCrypto)
+    implementation(projects.core.walletBalances)
     implementation(projects.feature.mainApi)
     implementation(projects.feature.settingsApi)
     implementation(projects.feature.startupApi)

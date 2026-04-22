@@ -22,17 +22,9 @@ import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 import com.yasashny.fortera.core.ui.component.CardIcon
 import com.yasashny.fortera.core.ui.component.GroupCard
 import com.yasashny.fortera.core.ui.component.cardGroupItems
+import com.yasashny.fortera.core.ui.token.tokenIconUrl
 import com.yasashny.fortera.feature.managetokens.ManageTokensContract.TokenItem
 import com.yasashny.fortera.feature.managetokens.R as ManageTokensR
-
-private fun tokenIconUrl(symbol: String): String =
-    "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${symbol.lowercase()}.png"
-
-private val BlockchainNetwork.displayName: String
-    get() = when (this) {
-        BlockchainNetwork.ETHEREUM -> "Ethereum"
-        BlockchainNetwork.BITCOIN -> "Bitcoin"
-    }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

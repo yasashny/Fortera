@@ -4,7 +4,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
-import com.yasashny.fortera.core.domaincrypto.db.TokenDao
+import com.yasashny.fortera.core.domaincrypto.repository.BalanceRepository
 import com.yasashny.fortera.core.mvi.MviViewModel
 import com.yasashny.fortera.core.network.environment.AppEnvironment
 import com.yasashny.fortera.core.network.environment.EnvironmentRepository
@@ -15,7 +15,7 @@ import com.yasashny.fortera.feature.settings.SettingsContract.State
 class SettingsViewModel(
     private val dataStore: DataStore<Preferences>,
     private val environmentRepository: EnvironmentRepository,
-    private val tokenDao: TokenDao,
+    private val balanceRepository: BalanceRepository,
 ) : MviViewModel<State, Intent, Effect>(State()) {
 
     companion object {
@@ -55,7 +55,7 @@ class SettingsViewModel(
             is Intent.SelectEnvironment -> intent {
                 if (intent.env != currentState.environment) {
                     environmentRepository.set(intent.env)
-                    tokenDao.clearAllCachedBalances()
+                    balanceRepository.clearAllCaches()
                 }
                 reduce(currentState.copy(isEnvSheetOpen = false))
             }

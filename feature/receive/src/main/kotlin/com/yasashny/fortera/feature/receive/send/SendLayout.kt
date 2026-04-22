@@ -43,11 +43,9 @@ import androidx.compose.ui.unit.dp
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 import com.yasashny.fortera.core.ui.component.CardIcon
 import com.yasashny.fortera.core.ui.component.TokenIcon
+import com.yasashny.fortera.core.ui.token.tokenIconUrl
 import com.yasashny.fortera.feature.receive.R as ReceiveR
 import java.math.BigDecimal
-
-private fun tokenIconUrl(symbol: String): String =
-    "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${symbol.lowercase()}.png"
 
 private fun formatBalance(balance: BigDecimal, symbol: String): String {
     val plain = balance.toPlainString()

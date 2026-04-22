@@ -13,9 +13,9 @@ import com.yasashny.fortera.core.domaincrypto.model.TokenBalance
 import com.yasashny.fortera.core.ui.component.CardIcon
 import com.yasashny.fortera.core.ui.component.CardPosition
 import com.yasashny.fortera.core.ui.component.GroupCard
-import com.yasashny.fortera.feature.main.ui.format.formatCrypto
-import com.yasashny.fortera.feature.main.ui.format.iconUrl
-import com.yasashny.fortera.feature.main.ui.format.networkBadgeUrlFor
+import com.yasashny.fortera.core.ui.format.formatCrypto
+import com.yasashny.fortera.core.ui.token.tokenIconUrl
+import com.yasashny.fortera.core.ui.token.networkBadgeUrlFor
 import java.util.Locale
 
 private val ChangePositive = Color(0xFF02A64C)
@@ -41,7 +41,7 @@ internal fun TokenRow(
         title = tokenBalance.token.name,
         subtitle = String.format(Locale.US, "%+.2f%%", change),
         subtitleColor = changeColor.copy(alpha = staleAlpha),
-        iconUrl = iconUrl(tokenBalance.token.symbol),
+        iconUrl = tokenIconUrl(tokenBalance.token.symbol),
         icon = CardIcon.Letter(tokenBalance.token.symbol.first()),
         badgeIconUrl = networkBadgeUrlFor(tokenBalance.token),
         trailing = {

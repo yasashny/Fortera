@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.yasashny.fortera.core.ui.component.ShimmerBox
 import com.yasashny.fortera.feature.main.R
 import com.yasashny.fortera.feature.main.presentation.BalancesState
-import com.yasashny.fortera.feature.main.ui.format.formatUsd
+import com.yasashny.fortera.core.ui.format.formatUsd
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

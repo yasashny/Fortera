@@ -3,6 +3,7 @@ package com.yasashny.fortera.feature.walletselector.main.ui
 import androidx.compose.runtime.Composable
 import com.yasashny.fortera.core.mvi.MviContainer
 import com.yasashny.fortera.core.navigation.LocalAppNavigator
+import com.yasashny.fortera.core.ui.LocalSnackbarHostState
 import com.yasashny.fortera.feature.createwallet.CreateWallet
 import com.yasashny.fortera.feature.importwallet.ImportWallet
 import com.yasashny.fortera.feature.walletselector.WalletSettings
@@ -16,17 +17,25 @@ fun WalletSelectorSheet(
     viewModel: WalletSelectorViewModel = koinViewModel(),
 ) {
     val navigator = LocalAppNavigator.current
+    val snackbarHostState = LocalSnackbarHostState.current
 
     MviContainer(
         viewModel = viewModel,
         onEffect = { effect ->
-            onDismiss()
             when (effect) {
-                Effect.NavigateToCreateWallet -> navigator.navigate(CreateWallet)
-                Effect.NavigateToImportWallet -> navigator.navigate(ImportWallet)
-                is Effect.NavigateToSettings -> navigator.navigate(WalletSettings(effect.walletId))
-                is Effect.ShowError -> { /* snackbar not available here, ignore */
+                Effect.NavigateToCreateWallet -> {
+                    onDismiss()
+                    navigator.navigate(CreateWallet)
                 }
+                Effect.NavigateToImportWallet -> {
+                    onDismiss()
+                    navigator.navigate(ImportWallet)
+                }
+                is Effect.NavigateToSettings -> {
+                    onDismiss()
+                    navigator.navigate(WalletSettings(effect.walletId))
+                }
+                is Effect.ShowError -> snackbarHostState.showSnackbar(effect.message)
             }
         },
     ) { state, onIntent ->

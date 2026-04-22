@@ -71,7 +71,7 @@ abstract class MviViewModel<S : UiState, I : UiIntent, E : UiEffect>(
      */
     protected fun intent(block: suspend IntentScope<S, E>.() -> Unit): Job =
         viewModelScope.launch(errorHandler) {
-            IntentScope<S, E>(
+            IntentScope(
                 stateProvider = { currentState },
                 stateUpdater = ::updateState,
                 stateReducer = ::reduce,

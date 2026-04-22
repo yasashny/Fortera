@@ -41,9 +41,11 @@ android {
 dependencies {
     // Core modules
     implementation(projects.core.domainCrypto)
+    implementation(projects.core.dataCrypto)
     implementation(projects.core.network)
     implementation(projects.core.database)
     implementation(projects.core.domainWallet)
+    implementation(projects.core.walletBalances)
     implementation(projects.core.designsystem)
     implementation(projects.core.common)
     implementation(projects.core.ui)

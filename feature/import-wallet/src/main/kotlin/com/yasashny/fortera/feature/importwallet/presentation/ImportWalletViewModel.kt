@@ -14,7 +14,6 @@ class ImportWalletViewModel(
         when (intent) {
             is Intent.NameChanged -> onNameChanged(intent.value)
             is Intent.SeedPhraseChanged -> onSeedPhraseChanged(intent.value)
-            Intent.PasteClicked -> onPasteClicked()
             Intent.ImportClicked -> onImportClicked()
             Intent.BackClicked -> onBackClicked()
         }
@@ -30,10 +29,6 @@ class ImportWalletViewModel(
         updateState { state ->
             (state as? State.Content)?.copy(seedPhrase = value, seedPhraseError = null) ?: state
         }
-    }
-
-    private fun onPasteClicked() = intent {
-        sendEffect(Effect.RequestPaste)
     }
 
     private fun onImportClicked() = intent {

@@ -9,6 +9,7 @@ android {
 
 dependencies {
     api(projects.core.designsystem)
+    api(projects.core.domainCrypto)
 
     // Coil for image loading
     api(libs.coil.compose)

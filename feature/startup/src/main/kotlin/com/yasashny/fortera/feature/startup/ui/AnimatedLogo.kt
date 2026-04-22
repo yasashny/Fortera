@@ -35,15 +35,15 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.graphics.shapes.Morph
 import androidx.graphics.shapes.RoundedPolygon
-import com.yasashny.fortera.core.common.vibration
+import com.yasashny.fortera.core.common.Haptics
 import com.yasashny.fortera.feature.startup.R
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 import kotlin.math.max
 import kotlin.math.min
 
@@ -99,14 +99,14 @@ private fun ClickToMorphShapes(
         mutableFloatStateOf(calculateScaleFactor(polygons))
     }
     val interactionSource = remember { MutableInteractionSource() }
-    val context = LocalContext.current
+    val haptics = koinInject<Haptics>()
     Box(
         modifier
             .clickable(
                 interactionSource = interactionSource,
                 indication = null
             ) {
-                vibration(context)
+                haptics.click()
                 if (progress.isRunning) return@clickable
                 scope.launch {
                     progress.animateTo(

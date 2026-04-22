@@ -73,13 +73,12 @@ import java.math.BigDecimal
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.yasashny.fortera.core.ui.format.formatCrypto
+import com.yasashny.fortera.core.ui.token.tokenIconUrl
 import com.yasashny.fortera.feature.tokendetails.R as TokenDetailsR
 
 private val ChangePositive = Color(0xFF02A64C)
 private val ChangeNegative = Color(0xFFD0081C)
-
-private fun tokenIconUrl(symbol: String): String =
-    "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${symbol.lowercase()}.png"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -439,13 +438,6 @@ private fun ActionButton(
             )
         }
     }
-}
-
-private fun formatCrypto(amount: BigDecimal): String {
-    val plain = amount.toPlainString()
-    val dotIndex = plain.indexOf('.')
-    return if (dotIndex == -1 || plain.length - dotIndex <= 7) plain
-    else plain.substring(0, dotIndex + 7)
 }
 
 @Preview(showBackground = true)

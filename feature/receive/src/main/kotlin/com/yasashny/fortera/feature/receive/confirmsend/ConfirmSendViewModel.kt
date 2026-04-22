@@ -6,10 +6,11 @@ import com.yasashny.fortera.core.domaincrypto.model.FeeEstimates
 import com.yasashny.fortera.core.domaincrypto.model.FeeSpeed
 import com.yasashny.fortera.core.domaincrypto.model.TokenDefinition
 import com.yasashny.fortera.core.domaincrypto.repository.PriceRepository
-import com.yasashny.fortera.core.domaincrypto.repository.SendTransactionRepository
 import com.yasashny.fortera.core.domaincrypto.repository.TokenRepository
 import androidx.lifecycle.viewModelScope
 import com.yasashny.fortera.core.mvi.MviViewModel
+import com.yasashny.fortera.core.ui.format.formatUsd as sharedFormatUsd
+import com.yasashny.fortera.core.walletbalances.WalletTransactionSender
 import com.yasashny.fortera.feature.receive.confirmsend.ConfirmSendContract.CommissionInfo
 import com.yasashny.fortera.feature.receive.confirmsend.ConfirmSendContract.Effect
 import com.yasashny.fortera.feature.receive.confirmsend.ConfirmSendContract.Intent
@@ -28,7 +29,7 @@ internal class ConfirmSendViewModel(
     private val walletInteractor: WalletInteractor,
     private val priceRepository: PriceRepository,
     private val tokenRepository: TokenRepository,
-    private val sendTransactionRepository: SendTransactionRepository,
+    private val transactionSender: WalletTransactionSender,
 ) : MviViewModel<State, Intent, Effect>(State()) {
 
     private var token: TokenDefinition? = null
@@ -55,7 +56,7 @@ internal class ConfirmSendViewModel(
                 BlockchainNetwork.BITCOIN -> "bitcoin"
             }
 
-            val prices = priceRepository.getPricesLocalOrRemote(
+            val prices = priceRepository.getPrices(
                 listOf(tokenId, nativeTokenId).distinct(),
             )
             tokenPriceUsd = prices[tokenId]?.priceUsd ?: 0.0
@@ -133,7 +134,7 @@ internal class ConfirmSendViewModel(
     }
 
     private suspend fun refreshFees(forToken: TokenDefinition) {
-        val result = sendTransactionRepository.estimateFees(forToken)
+        val result = transactionSender.estimateFees(forToken)
         val estimates = result.getOrNull()
         intent {
             if (estimates == null) {
@@ -184,14 +185,9 @@ internal class ConfirmSendViewModel(
                 reduce(currentState.copy(isSending = false, errorMessage = "No active wallet"))
                 return@intent
             }
-            val seed = walletInteractor.getSeedPhrase(wallet.id).getOrNull()?.toDisplayString()
-            if (seed.isNullOrBlank()) {
-                reduce(currentState.copy(isSending = false, errorMessage = "Seed unavailable"))
-                return@intent
-            }
 
-            val result = sendTransactionRepository.send(
-                mnemonic = seed,
+            val result = transactionSender.send(
+                walletId = wallet.id,
                 token = activeToken,
                 toAddress = address,
                 amount = amount.toBigDecimalOrNull() ?: BigDecimal.ZERO,
@@ -231,8 +227,12 @@ internal class ConfirmSendViewModel(
     }
 }
 
+/**
+ * Trimmed crypto amount with no trailing zeros — the review screen prefers
+ * `0.05` over `0.050000`, different from [sharedFormatCrypto]'s fixed-precision.
+ */
 private fun formatCrypto(value: Double): String =
     String.format(Locale.US, "%.6f", value).trimEnd('0').trimEnd('.')
 
-private fun formatUsd(value: Double): String =
-    "≈ $${String.format(Locale.US, "%.2f", value)}"
+/** Fees and totals are approximate — prefix with "≈ " over the shared US-grouped format. */
+private fun formatUsd(value: Double): String = "≈ ${sharedFormatUsd(value)}"
