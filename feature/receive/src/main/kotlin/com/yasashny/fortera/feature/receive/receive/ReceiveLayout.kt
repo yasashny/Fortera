@@ -7,14 +7,17 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -23,10 +26,9 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.twotone.Warning
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -36,35 +38,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Matrix
-import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.graphics.shapes.toPath
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import com.google.zxing.qrcode.encoder.Encoder
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 import com.yasashny.fortera.core.ui.component.CardIcon
-import com.yasashny.fortera.core.ui.component.TokenIcon
+import com.yasashny.fortera.core.ui.component.CardPosition
+import com.yasashny.fortera.core.ui.component.GroupCard
 import com.yasashny.fortera.core.ui.token.tokenIconUrl
 import com.yasashny.fortera.feature.receive.R as ReceiveR
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-private val QrExpressiveShape = GenericShape { size, _ ->
-    val polygonPath = MaterialShapes.Ghostish.normalized().toPath().asComposePath()
-    val matrix = Matrix()
-    matrix.scale(size.width, size.height)
-    polygonPath.transform(matrix)
-    addPath(polygonPath)
-}
 
 @Composable
 private fun QrCodeDots(
@@ -99,47 +86,7 @@ private fun QrCodeDots(
     }
 }
 
-@Composable
-private fun chunkedAddress(address: String): AnnotatedString {
-    val accent = MaterialTheme.colorScheme.primary
-    val body = MaterialTheme.colorScheme.onSurface
-    return buildAnnotatedString {
-        if (address.isEmpty()) return@buildAnnotatedString
-        val hasHexPrefix = address.startsWith("0x")
-        val prefix = if (hasHexPrefix) "0x" else ""
-        val rest = if (hasHexPrefix) address.drop(2) else address
-        val groups = rest.chunked(4)
-        val headCount = minOf(2, groups.size)
-        val tailCount = minOf(2, (groups.size - headCount).coerceAtLeast(0))
-        val midCount = (groups.size - headCount - tailCount).coerceAtLeast(0)
-
-        if (prefix.isNotEmpty()) {
-            withStyle(SpanStyle(color = accent, fontWeight = FontWeight.SemiBold)) {
-                append(prefix)
-            }
-            append(' ')
-        }
-        val head = groups.take(headCount).joinToString(" ")
-        val mid = groups.drop(headCount).take(midCount).joinToString(" ")
-        val tail = groups.takeLast(tailCount).joinToString(" ")
-
-        withStyle(SpanStyle(color = body)) {
-            append(head)
-            if (mid.isNotEmpty()) {
-                append(' ')
-                append(mid)
-            }
-        }
-        if (tail.isNotEmpty()) {
-            append(' ')
-            withStyle(SpanStyle(color = accent, fontWeight = FontWeight.SemiBold)) {
-                append(tail)
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 internal fun ReceiveLayout(
     state: ReceiveContract.State,
@@ -171,133 +118,222 @@ internal fun ReceiveLayout(
             modifier = Modifier
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                .padding(horizontal = 20.dp),
         ) {
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(4.dp))
 
-            TokenIcon(
-                iconUrl = tokenIconUrl(state.tokenSymbol),
-                icon = CardIcon.Letter(state.tokenSymbol.firstOrNull() ?: '?'),
-                badgeIconUrl = state.networkIconUrl,
-                size = 56.dp,
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = "${state.tokenName} ${state.tokenSymbol}",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
+            TokenStripCard(
+                tokenName = state.tokenName,
+                tokenSymbol = state.tokenSymbol,
+                networkName = state.networkName,
+                networkIconUrl = state.networkIconUrl,
             )
 
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(16.dp))
 
             Box(
                 modifier = Modifier
-                    .size(300.dp)
-                    .clip(QrExpressiveShape)
-                    .background(MaterialTheme.colorScheme.primary),
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(28.dp))
+                    .background(MaterialTheme.colorScheme.primary)
+                    .padding(24.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 QrCodeDots(
                     content = state.address,
-                    dotColor = MaterialTheme.colorScheme.inverseOnSurface,
-                    modifier = Modifier.size(180.dp),
+                    dotColor = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f),
                 )
             }
 
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(18.dp))
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .padding(horizontal = 14.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.TwoTone.Warning,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.secondary,
-                    modifier = Modifier.size(18.dp),
-                )
-                Text(
-                    text = stringResource(
-                        ReceiveR.string.receive_network_warning,
-                        state.tokenSymbol,
-                        state.networkName,
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                )
-            }
+            NetworkWarningCard(
+                tokenSymbol = state.tokenSymbol,
+                networkName = state.networkName,
+            )
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(14.dp))
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp),
-            ) {
-                Text(
-                    text = stringResource(ReceiveR.string.receive_wallet_address_label),
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        letterSpacing = 0.8.sp,
-                        fontWeight = FontWeight.Medium,
-                    ),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            Text(
+                text = stringResource(ReceiveR.string.receive_wallet_address_label).uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                letterSpacing = 1.2.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(horizontal = 4.dp),
+            )
 
             Spacer(Modifier.height(8.dp))
 
-            Row(
+            AddressCard(
+                address = state.address,
+                onCopyAddress = onCopyAddress,
+            )
+
+            Spacer(Modifier.height(16.dp))
+        }
+    }
+}
+
+@Composable
+private fun TokenStripCard(
+    tokenName: String,
+    tokenSymbol: String,
+    networkName: String,
+    networkIconUrl: String?,
+) {
+    GroupCard(
+        position = CardPosition.Single,
+        onClick = {},
+        title = tokenName,
+        subtitle = networkName,
+        iconUrl = tokenIconUrl(tokenSymbol),
+        icon = CardIcon.Letter(tokenSymbol.firstOrNull() ?: '?'),
+        badgeIconUrl = networkIconUrl,
+        trailing = {
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                    .clickable(onClick = onCopyAddress)
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+                    .padding(horizontal = 10.dp, vertical = 4.dp),
             ) {
                 Text(
-                    text = chunkedAddress(state.address),
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontFamily = FontFamily.Monospace,
-                        letterSpacing = 0.25.sp,
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f),
+                    text = tokenSymbol,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.8.sp,
                 )
-                Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(10.dp))
-                        .border(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.outline,
-                            shape = RoundedCornerShape(10.dp),
-                        )
-                        .padding(horizontal = 10.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ContentCopy,
-                        contentDescription = stringResource(ReceiveR.string.receive_copy_address),
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(16.dp),
-                    )
-                    Text(
-                        text = stringResource(ReceiveR.string.receive_copy),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                }
             }
+        },
+    )
+}
 
-            Spacer(Modifier.height(32.dp))
+@Composable
+private fun NetworkWarningCard(
+    tokenSymbol: String,
+    networkName: String,
+) {
+    val shape = RoundedCornerShape(12.dp)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.22f), shape)
+            .padding(horizontal = 12.dp, vertical = 9.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = Icons.TwoTone.Warning,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(15.dp),
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = stringResource(
+                ReceiveR.string.receive_network_warning,
+                tokenSymbol,
+                networkName,
+            ),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun AddressCard(
+    address: String,
+    onCopyAddress: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .padding(horizontal = 14.dp, vertical = 14.dp),
+    ) {
+        AddressChunks(address = address)
+
+        Spacer(Modifier.height(10.dp))
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(10.dp))
+                .clickable(onClick = onCopyAddress)
+                .padding(vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Default.ContentCopy,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(16.dp),
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = stringResource(ReceiveR.string.receive_copy_address),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Medium,
+                letterSpacing = 0.2.sp,
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun AddressChunks(address: String) {
+    if (address.isEmpty()) return
+    val hasHexPrefix = address.startsWith("0x")
+    val rest = if (hasHexPrefix) address.drop(2) else address
+    val groups = rest.chunked(4)
+
+    val accent = MaterialTheme.colorScheme.primary
+    val deep = MaterialTheme.colorScheme.inversePrimary
+    val body = MaterialTheme.colorScheme.onSurface
+    val chunkStyle = MaterialTheme.typography.bodyMedium.copy(
+        fontFamily = FontFamily.Monospace,
+        letterSpacing = 0.8.sp,
+    )
+
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        if (hasHexPrefix) {
+            Text(
+                text = "0x",
+                style = chunkStyle,
+                color = accent,
+                fontWeight = FontWeight.Medium,
+            )
+        }
+        groups.forEachIndexed { index, chunk ->
+            val color = when (index) {
+                groups.lastIndex -> deep
+                groups.lastIndex - 1 -> accent
+                else -> body
+            }
+            val weight = if (index >= groups.lastIndex - 1) FontWeight.Medium else FontWeight.Normal
+            Text(
+                text = chunk,
+                style = chunkStyle,
+                color = color,
+                fontWeight = weight,
+            )
         }
     }
 }
@@ -308,10 +344,10 @@ private fun ReceiveLayoutPreview() {
     ForteraTheme {
         ReceiveLayout(
             state = ReceiveContract.State(
-                tokenName = "Ethereum",
-                tokenSymbol = "ETH",
-                networkName = "Ethereum (ERC-20)",
-                address = "0x1234567890abcdef1234567890abcdef12345678",
+                tokenName = "USD Coin",
+                tokenSymbol = "USDC",
+                networkName = "Ethereum · ERC-20",
+                address = "0x27b47f0b3bb3f081e3f029a60424b8fd355dc4c2",
                 isLoading = false,
             ),
             onBackClick = {},
