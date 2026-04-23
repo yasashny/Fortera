@@ -29,7 +29,8 @@ internal fun ConfirmSendScreen(
         onEffect = { effect ->
             when (effect) {
                 ConfirmSendContract.Effect.NavigateBack -> navigator.back()
-                ConfirmSendContract.Effect.NavigateToSuccess -> navigator.navigate(SendSuccess(tokenId))
+                is ConfirmSendContract.Effect.NavigateToSuccess ->
+                    navigator.navigate(SendSuccess(tokenId, effect.amount, effect.symbol))
             }
         },
     ) { state, sendIntent ->

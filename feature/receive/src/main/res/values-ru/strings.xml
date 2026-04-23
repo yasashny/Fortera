@@ -44,6 +44,5 @@
     <string name="send_confirm_speed_slow_eta">~10 мин</string>
     <string name="send_confirm_speed_fast_eta">~2 мин</string>
     <string name="send_confirm_speed_instant_eta">~30 с</string>
-    <string name="send_success">Отправка выполнена</string>
     <string name="send_close">Закрыть</string>
 </resources>

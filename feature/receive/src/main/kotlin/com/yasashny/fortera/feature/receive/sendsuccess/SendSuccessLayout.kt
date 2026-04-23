@@ -1,11 +1,14 @@
 package com.yasashny.fortera.feature.receive.sendsuccess
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.EaseOutBack
 import androidx.compose.animation.core.EaseOutCubic
+import androidx.compose.animation.core.InfiniteTransition
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.StartOffset
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -36,31 +39,33 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.yasashny.fortera.core.common.Haptics
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 import org.koin.compose.koinInject
 import com.yasashny.fortera.feature.receive.R as ReceiveR
 import kotlin.math.PI
-import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.sin
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SendSuccessLayout(
+    amount: String,
+    symbol: String,
     onCloseClick: () -> Unit,
 ) {
     Scaffold(
@@ -89,7 +94,7 @@ internal fun SendSuccessLayout(
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center,
             ) {
-                SuccessAnimation()
+                SuccessAnimation(amount = amount, symbol = symbol)
             }
 
             Button(
@@ -115,16 +120,15 @@ internal fun SendSuccessLayout(
 }
 
 private const val TIMELINE_MS = 1400
-private val ShapeSize = 140.dp
-private val StageSize = 200.dp
+private const val RING_DURATION_MS = 2400
+private val ShapeSize = 116.dp
+private val StageSize = 240.dp
+private val HaloRingEasing = CubicBezierEasing(0.2f, 0.6f, 0.2f, 1f)
 
 @Composable
-private fun SuccessAnimation() {
+private fun SuccessAnimation(amount: String, symbol: String) {
     val primary = MaterialTheme.colorScheme.primary
-    val tertiary = MaterialTheme.colorScheme.tertiary
-    val inversePrimary = MaterialTheme.colorScheme.inversePrimary
     val onPrimary = MaterialTheme.colorScheme.onPrimary
-    val onSurface = MaterialTheme.colorScheme.onSurface
 
     val haptics = koinInject<Haptics>()
 
@@ -137,8 +141,8 @@ private fun SuccessAnimation() {
         )
     }
 
-    val breathing = rememberInfiniteTransition(label = "breathing")
-    val breatheScale by breathing.animateFloat(
+    val infinite = rememberInfiniteTransition(label = "success")
+    val breatheScale by infinite.animateFloat(
         initialValue = 1f,
         targetValue = 1.02f,
         animationSpec = infiniteRepeatable(
@@ -147,19 +151,13 @@ private fun SuccessAnimation() {
         ),
         label = "breathe",
     )
-
-    val particles = remember {
-        List(10) { i ->
-            val angle = (i.toFloat() / 10f) * (2f * PI.toFloat()) +
-                if (i % 2 == 0) -0.18f else 0.18f
-            val distanceDp = 88f + (i % 3) * 14f
-            Particle(angle = angle, distanceDp = distanceDp, colorIndex = i % 3)
-        }
-    }
+    val ring1Phase by infinite.haloRingPhase(delayMs = 0, label = "ring1")
+    val ring2Phase by infinite.haloRingPhase(delayMs = 800, label = "ring2")
+    val ring3Phase by infinite.haloRingPhase(delayMs = 1600, label = "ring3")
 
     val t = timeline.value
-    val shapeProg = mapRange(t, 0.05f, 0.55f, EaseOutBack)
-    val shapeBaseScale = 0.6f + 0.4f * shapeProg
+    val revealProg = mapRange(t, 0.05f, 0.55f, EaseOutBack)
+    val shapeBaseScale = 0.6f + 0.4f * revealProg
     val shapeScale = shapeBaseScale * if (t >= 1f) breatheScale else 1f
 
     val morphT = mapRange(t, 0.40f, 1.00f, null)
@@ -167,69 +165,36 @@ private fun SuccessAnimation() {
     val cornerDp = (ShapeSize.value * 0.5f - (ShapeSize.value * 0.5f - ShapeSize.value * 0.38f) * morphFactor).dp
 
     val checkProg = mapRange(t, 0.30f, 0.75f, EaseOutCubic)
-
-    val ring1Prog = mapRange(t, 0.35f, 1.00f, EaseOutCubic)
-    val ring1Scale = 0.4f + 1.4f * ring1Prog
-    val ring1Alpha = 0.35f * (1f - ring1Prog)
-
-    val ring2Prog = mapRange(t, 0.55f, 1.00f, EaseOutCubic)
-    val ring2Scale = 0.4f + 1.4f * ring2Prog
-    val ring2Alpha = 0.30f * (1f - ring2Prog)
-
-    val partProg = mapRange(t, 0.45f, 1.00f, EaseOutCubic)
-    val partFade = mapRange(t, 0.45f, 1.00f, null)
-    val partAlpha = 1f - partFade
-    val partScale = 0.4f + 0.6f * partProg
-
-    val titleProg = mapRange(t, 0.60f, 0.95f, EaseOutCubic)
+    val amountProg = mapRange(t, 0.60f, 0.95f, EaseOutCubic)
+    val haloReveal = mapRange(t, 0.00f, 0.35f, EaseOutCubic)
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             modifier = Modifier.size(StageSize),
             contentAlignment = Alignment.Center,
         ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer { alpha = haloReveal }
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                primary.copy(alpha = 0.18f),
+                                primary.copy(alpha = 0f),
+                            ),
+                        ),
+                    ),
+            )
+
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val center = Offset(size.width / 2f, size.height / 2f)
-                val shapeRadiusPx = ShapeSize.toPx() / 2f
-                val strokePx = 2.dp.toPx()
+                val baseRadiusPx = ShapeSize.toPx() / 2f
+                val strokePx = 1.dp.toPx()
 
-                if (ring1Alpha > 0.001f) {
-                    drawCircle(
-                        color = primary.copy(alpha = ring1Alpha),
-                        radius = shapeRadiusPx * ring1Scale,
-                        center = center,
-                        style = Stroke(width = strokePx),
-                    )
-                }
-                if (ring2Alpha > 0.001f) {
-                    drawCircle(
-                        color = primary.copy(alpha = ring2Alpha),
-                        radius = shapeRadiusPx * ring2Scale,
-                        center = center,
-                        style = Stroke(width = strokePx),
-                    )
-                }
-
-                if (partAlpha > 0.001f) {
-                    val particleSizePx = 10.dp.toPx() * partScale
-                    val cornerPx = 3.dp.toPx()
-                    particles.forEach { p ->
-                        val dist = p.distanceDp.dp.toPx() * partProg
-                        val px = center.x + cos(p.angle) * dist
-                        val py = center.y + sin(p.angle) * dist
-                        val col = when (p.colorIndex) {
-                            0 -> primary
-                            1 -> tertiary
-                            else -> inversePrimary
-                        }.copy(alpha = partAlpha)
-                        drawRoundRect(
-                            color = col,
-                            topLeft = Offset(px - particleSizePx / 2f, py - particleSizePx / 2f),
-                            size = Size(particleSizePx, particleSizePx),
-                            cornerRadius = CornerRadius(cornerPx, cornerPx),
-                        )
-                    }
-                }
+                drawHaloRing(center, baseRadiusPx, strokePx, ring1Phase, primary, haloReveal)
+                drawHaloRing(center, baseRadiusPx, strokePx, ring2Phase, primary, haloReveal)
+                drawHaloRing(center, baseRadiusPx, strokePx, ring3Phase, primary, haloReveal)
             }
 
             Box(
@@ -244,24 +209,64 @@ private fun SuccessAnimation() {
             }
         }
 
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(48.dp))
 
         Text(
-            text = stringResource(ReceiveR.string.send_success),
-            style = MaterialTheme.typography.headlineSmall,
-            color = onSurface,
+            text = "$amount $symbol",
+            color = primary,
+            fontSize = 38.sp,
+            lineHeight = 44.sp,
             fontWeight = FontWeight.Medium,
+            letterSpacing = (-0.8).sp,
             modifier = Modifier.graphicsLayer {
-                translationY = (1f - titleProg) * 16.dp.toPx()
-                alpha = titleProg
+                translationY = (1f - amountProg) * 16.dp.toPx()
+                alpha = amountProg
             },
         )
     }
 }
 
 @Composable
+private fun InfiniteTransition.haloRingPhase(
+    delayMs: Int,
+    label: String,
+) = animateFloat(
+    initialValue = 0f,
+    targetValue = 1f,
+    animationSpec = infiniteRepeatable(
+        animation = tween(durationMillis = RING_DURATION_MS, easing = HaloRingEasing),
+        repeatMode = RepeatMode.Restart,
+        initialStartOffset = StartOffset(offsetMillis = delayMs),
+    ),
+    label = label,
+)
+
+private fun DrawScope.drawHaloRing(
+    center: Offset,
+    baseRadiusPx: Float,
+    strokePx: Float,
+    phase: Float,
+    color: Color,
+    reveal: Float,
+) {
+    if (reveal <= 0.001f) return
+    val scale = 1.05f + 0.55f * phase
+    val alpha = when {
+        phase < 0.2f -> (phase / 0.2f) * 0.35f
+        else -> 0.35f * (1f - (phase - 0.2f) / 0.8f)
+    } * reveal
+    if (alpha <= 0.001f) return
+    drawCircle(
+        color = color.copy(alpha = alpha),
+        radius = baseRadiusPx * scale,
+        center = center,
+        style = Stroke(width = strokePx),
+    )
+}
+
+@Composable
 private fun AnimatedCheck(progress: Float, color: Color) {
-    Canvas(modifier = Modifier.size(80.dp)) {
+    Canvas(modifier = Modifier.size(58.dp)) {
         val w = size.width
         val h = size.height
         val start = Offset(0.22f * w, 0.52f * h)
@@ -289,19 +294,13 @@ private fun AnimatedCheck(progress: Float, color: Color) {
             path = path,
             color = color,
             style = Stroke(
-                width = 7.dp.toPx(),
+                width = 6.dp.toPx(),
                 cap = StrokeCap.Round,
                 join = StrokeJoin.Round,
             ),
         )
     }
 }
-
-private data class Particle(
-    val angle: Float,
-    val distanceDp: Float,
-    val colorIndex: Int,
-)
 
 private fun mapRange(t: Float, start: Float, end: Float, easing: Easing?): Float {
     val raw = ((t - start) / (end - start)).coerceIn(0f, 1f)
@@ -313,6 +312,8 @@ private fun mapRange(t: Float, start: Float, end: Float, easing: Easing?): Float
 private fun SendSuccessLayoutPreview() {
     ForteraTheme {
         SendSuccessLayout(
+            amount = "0.000345",
+            symbol = "ETH",
             onCloseClick = {},
         )
     }

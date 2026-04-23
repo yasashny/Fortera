@@ -268,7 +268,12 @@ internal class ConfirmSendViewModel(
             ).fold(
                 onSuccess = {
                     reduce(currentState.copy(isSending = false))
-                    sendEffect(Effect.NavigateToSuccess)
+                    sendEffect(
+                        Effect.NavigateToSuccess(
+                            amount = formatCrypto(amountDouble),
+                            symbol = activeToken.symbol,
+                        )
+                    )
                 },
                 onFailure = { throwable ->
                     reduce(currentState.copy(isSending = false, errorMessage = mapSendError(throwable)))

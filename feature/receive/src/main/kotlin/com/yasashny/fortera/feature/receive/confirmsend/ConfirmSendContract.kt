@@ -52,6 +52,6 @@ internal object ConfirmSendContract {
 
     sealed interface Effect : UiEffect {
         data object NavigateBack : Effect
-        data object NavigateToSuccess : Effect
+        data class NavigateToSuccess(val amount: String, val symbol: String) : Effect
     }
 }
