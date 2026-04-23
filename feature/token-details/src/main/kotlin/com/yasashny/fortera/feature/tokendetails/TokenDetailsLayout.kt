@@ -93,7 +93,11 @@ internal fun TokenDetailsLayout(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(text = "${state.tokenName} ${state.tokenSymbol}")
+                    Text(
+                        text = "${state.tokenName} ${state.tokenSymbol}",
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Medium,
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {

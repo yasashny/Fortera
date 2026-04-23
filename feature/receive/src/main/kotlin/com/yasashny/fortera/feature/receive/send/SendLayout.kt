@@ -80,7 +80,11 @@ internal fun SendLayout(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(text = stringResource(ReceiveR.string.send_title), fontWeight = FontWeight.Bold)
+                    Text(
+                        text = stringResource(ReceiveR.string.send_title),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Medium,
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {

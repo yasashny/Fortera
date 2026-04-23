@@ -150,7 +150,11 @@ internal fun ReceiveLayout(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(text = stringResource(ReceiveR.string.receive_title))
+                    Text(
+                        text = stringResource(ReceiveR.string.receive_title),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Medium,
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {

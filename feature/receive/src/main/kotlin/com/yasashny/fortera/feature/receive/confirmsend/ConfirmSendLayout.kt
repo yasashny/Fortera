@@ -85,7 +85,11 @@ internal fun ConfirmSendLayout(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(text = stringResource(ReceiveR.string.send_confirm_title))
+                    Text(
+                        text = stringResource(ReceiveR.string.send_confirm_title),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Medium,
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {

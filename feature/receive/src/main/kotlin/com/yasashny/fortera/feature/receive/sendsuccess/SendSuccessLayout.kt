@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
@@ -33,7 +34,11 @@ internal fun SendSuccessLayout(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(text = stringResource(ReceiveR.string.send_title))
+                    Text(
+                        text = stringResource(ReceiveR.string.send_title),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Medium,
+                    )
                 },
             )
         },
