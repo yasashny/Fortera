@@ -103,20 +103,21 @@ sealed interface CardIcon {
 @Composable
 fun cardShapeForPosition(
     position: CardPosition,
-    cornerRadius: Dp = 16.dp
+    cornerRadius: Dp = 16.dp,
+    innerRadius: Dp = 0.dp,
 ): Shape {
     return when (position) {
         CardPosition.Single -> RoundedCornerShape(cornerRadius)
         CardPosition.First -> RoundedCornerShape(
             topStart = cornerRadius,
             topEnd = cornerRadius,
-            bottomStart = 0.dp,
-            bottomEnd = 0.dp
+            bottomStart = innerRadius,
+            bottomEnd = innerRadius
         )
-        CardPosition.Middle -> RoundedCornerShape(0.dp)
+        CardPosition.Middle -> RoundedCornerShape(innerRadius)
         CardPosition.Last -> RoundedCornerShape(
-            topStart = 0.dp,
-            topEnd = 0.dp,
+            topStart = innerRadius,
+            topEnd = innerRadius,
             bottomStart = cornerRadius,
             bottomEnd = cornerRadius
         )
@@ -149,12 +150,13 @@ fun GroupCard(
     icon: CardIcon? = null,
     badgeIconUrl: String? = null,
     cornerRadius: Dp = 16.dp,
+    innerRadius: Dp = 0.dp,
     trailing: @Composable (() -> Unit)? = null
 ) {
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        shape = cardShapeForPosition(position, cornerRadius),
+        shape = cardShapeForPosition(position, cornerRadius, innerRadius),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )

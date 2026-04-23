@@ -164,34 +164,6 @@ internal fun TokenDetailsLayout(
 
             Spacer(Modifier.height(16.dp))
 
-            // Send / Receive buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                ActionButton(
-                    icon = Icons.AutoMirrored.Filled.Send,
-                    label = stringResource(TokenDetailsR.string.token_details_send),
-                    shape = RoundedCornerShape(
-                        topStart = 18.dp, topEnd = 4.dp,
-                        bottomStart = 18.dp, bottomEnd = 4.dp,
-                    ),
-                    onClick = onSendClick,
-                )
-                Spacer(Modifier.width(4.dp))
-                ActionButton(
-                    icon = Icons.Default.QrCodeScanner,
-                    label = stringResource(TokenDetailsR.string.token_details_receive),
-                    shape = RoundedCornerShape(
-                        topStart = 4.dp, topEnd = 18.dp,
-                        bottomStart = 4.dp, bottomEnd = 18.dp,
-                    ),
-                    onClick = onReceiveClick,
-                )
-            }
-
-            Spacer(Modifier.height(24.dp))
-
             // Token card
             val badgeUrl = if (state.tokenContractAddress != null) {
                 tokenIconUrl("eth")
@@ -201,7 +173,8 @@ internal fun TokenDetailsLayout(
             val fiatBalance = state.balance.toDouble() * state.priceUsd
             GroupCard(
                 modifier = Modifier.padding(horizontal = 16.dp),
-                position = CardPosition.Single,
+                position = CardPosition.First,
+                innerRadius = 4.dp,
                 onClick = {},
                 title = stringResource(TokenDetailsR.string.token_details_your_balance),
                 subtitle = state.tokenName,
@@ -231,6 +204,37 @@ internal fun TokenDetailsLayout(
                     }
                 },
             )
+
+            Spacer(Modifier.height(4.dp))
+
+            // Send / Receive buttons
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+            ) {
+                ActionButton(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.AutoMirrored.Filled.Send,
+                    label = stringResource(TokenDetailsR.string.token_details_send),
+                    shape = RoundedCornerShape(
+                        topStart = 4.dp, topEnd = 4.dp,
+                        bottomStart = 16.dp, bottomEnd = 4.dp,
+                    ),
+                    onClick = onSendClick,
+                )
+                Spacer(Modifier.width(4.dp))
+                ActionButton(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Default.QrCodeScanner,
+                    label = stringResource(TokenDetailsR.string.token_details_receive),
+                    shape = RoundedCornerShape(
+                        topStart = 4.dp, topEnd = 4.dp,
+                        bottomStart = 4.dp, bottomEnd = 16.dp,
+                    ),
+                    onClick = onReceiveClick,
+                )
+            }
 
             Spacer(Modifier.height(16.dp))
 
@@ -290,18 +294,20 @@ private fun TransactionsSection(
             }
         }
     } else {
-        transactions.forEachIndexed { index, tx ->
-            val position = when {
-                transactions.size == 1 -> CardPosition.Single
-                index == 0 -> CardPosition.First
-                index == transactions.lastIndex -> CardPosition.Last
-                else -> CardPosition.Middle
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            transactions.forEachIndexed { index, tx ->
+                val position = when {
+                    transactions.size == 1 -> CardPosition.Single
+                    index == 0 -> CardPosition.First
+                    index == transactions.lastIndex -> CardPosition.Last
+                    else -> CardPosition.Middle
+                }
+                TransactionCard(
+                    transaction = tx,
+                    position = position,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
             }
-            TransactionCard(
-                transaction = tx,
-                position = position,
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
         }
     }
 }
@@ -313,7 +319,7 @@ private fun ShimmerTransactionCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = cardShapeForPosition(position),
+        shape = cardShapeForPosition(position, innerRadius = 4.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ),
@@ -401,6 +407,7 @@ private fun TransactionCard(
     GroupCard(
         modifier = modifier,
         position = position,
+        innerRadius = 4.dp,
         onClick = {},
         title = if (transaction.isIncoming) {
             stringResource(TokenDetailsR.string.token_details_tx_received)
@@ -628,18 +635,20 @@ private fun ActionButton(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
         onClick = onClick,
     ) {
-        Column(
-            modifier = Modifier.size(100.dp, 78.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(64.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(20.dp),
             )
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.width(8.dp))
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelLarge,
