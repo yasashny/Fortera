@@ -22,7 +22,7 @@ internal class ReceiveNavProvider : FeatureNavProvider {
         is SelectTokenForSend -> NavEntry(key) { SelectTokenForSendScreen() }
         is SendToken -> NavEntry(key) { SendScreen(tokenId = key.tokenId) }
         is ConfirmSend -> NavEntry(key) { ConfirmSendScreen(tokenId = key.tokenId, amount = key.amount, address = key.address) }
-        is SendSuccess -> NavEntry(key) { SendSuccessScreen() }
+        is SendSuccess -> NavEntry(key) { SendSuccessScreen(tokenId = key.tokenId) }
         else -> null
     }
 }

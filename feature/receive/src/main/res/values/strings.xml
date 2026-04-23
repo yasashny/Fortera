@@ -32,6 +32,10 @@
     <string name="send_confirm_error_no_utxos">No confirmed UTXOs available — wait for incoming transaction to confirm.</string>
     <string name="send_confirm_error_insufficient_funds">Not enough balance to cover the amount + network fee.</string>
     <string name="send_confirm_send">Confirm &amp; send</string>
+    <string name="send_confirm_slide_to_confirm">Slide to confirm</string>
+    <string name="send_confirm_recipient_title">Recipient</string>
+    <string name="send_confirm_recipient_subtitle">Full address and network</string>
+    <string name="send_confirm_address_copied">Address copied</string>
     <string name="send_confirm_speed_title">Transaction speed</string>
     <string name="send_confirm_speed_subtitle">Pick how fast your transaction gets confirmed</string>
     <string name="send_confirm_speed_slow">Slow</string>

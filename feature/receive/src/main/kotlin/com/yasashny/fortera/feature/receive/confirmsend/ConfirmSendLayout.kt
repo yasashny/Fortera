@@ -1,33 +1,40 @@
 package com.yasashny.fortera.feature.receive.confirmsend
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Bolt
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.HourglassBottom
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.twotone.Warning
-import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -40,11 +47,21 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -52,11 +69,20 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.yasashny.fortera.core.common.Haptics
+import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
+import kotlin.math.roundToInt
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
+import com.yasashny.fortera.core.ui.component.CardGroup
 import com.yasashny.fortera.core.ui.component.CardIcon
+import com.yasashny.fortera.core.ui.component.GroupCard
+import com.yasashny.fortera.core.ui.component.ShimmerBox
 import com.yasashny.fortera.core.ui.component.TokenIcon
+import com.yasashny.fortera.core.ui.component.cardShapeForPosition
 import com.yasashny.fortera.core.ui.token.tokenIconUrl
 import com.yasashny.fortera.core.domaincrypto.model.FeeEstimate
 import com.yasashny.fortera.core.domaincrypto.model.FeeSpeed
@@ -80,6 +106,9 @@ internal fun ConfirmSendLayout(
     onSpeedClick: () -> Unit,
     onDismissSpeedSheet: () -> Unit,
     onSelectSpeed: (FeeSpeed) -> Unit,
+    onAddressClick: () -> Unit,
+    onDismissAddressSheet: () -> Unit,
+    onCopyAddress: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -102,36 +131,21 @@ internal fun ConfirmSendLayout(
             )
         },
         bottomBar = {
-            Button(
-                onClick = onSendClick,
-                enabled = !state.isSending
-                    && !state.isLoading
-                    && state.commissions.isNotEmpty()
-                    && !state.insufficientGas,
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp)
-                    .height(59.dp),
-                shape = RoundedCornerShape(20.dp),
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
             ) {
-                if (state.isSending) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(22.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        strokeWidth = 2.dp,
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Send,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Spacer(Modifier.width(10.dp))
-                    Text(
-                        text = stringResource(ReceiveR.string.send_confirm_send),
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                }
+                SlideToConfirmButton(
+                    text = stringResource(ReceiveR.string.send_confirm_slide_to_confirm),
+                    enabled = !state.isLoading
+                        && state.commissions.isNotEmpty()
+                        && !state.insufficientGas
+                        && !state.isSending,
+                    isSending = state.isSending,
+                    onConfirm = onSendClick,
+                )
             }
         },
     ) { paddingValues ->
@@ -150,6 +164,7 @@ internal fun ConfirmSendLayout(
             SummaryCard(
                 state = state,
                 onSpeedClick = onSpeedClick,
+                onAddressClick = onAddressClick,
             )
 
             TotalCard(
@@ -183,35 +198,65 @@ internal fun ConfirmSendLayout(
             )
         }
     }
+
+    if (state.isAddressSheetOpen) {
+        val sheetState = rememberModalBottomSheetState()
+        ModalBottomSheet(
+            onDismissRequest = onDismissAddressSheet,
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        ) {
+            AddressSheetContent(
+                state = state,
+                onCopyAddress = onCopyAddress,
+            )
+        }
+    }
 }
 
 @Composable
 private fun HeroCard(state: ConfirmSendContract.State) {
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(MaterialTheme.colorScheme.inverseSurface)
+            .background(MaterialTheme.colorScheme.primaryContainer)
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                shape = RoundedCornerShape(24.dp),
+            )
             .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            if (state.isLoading) {
+                ShimmerBox(
+                    modifier = Modifier.size(44.dp),
+                    shape = CircleShape,
+                )
+            } else {
                 TokenIcon(
                     iconUrl = tokenIconUrl(state.tokenSymbol),
                     icon = CardIcon.Letter(state.tokenSymbol.firstOrNull() ?: '?'),
                     size = 44.dp,
                 )
-                Column {
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                if (state.isLoading) {
+                    ShimmerBox(modifier = Modifier.size(width = 120.dp, height = 12.dp))
+                    ShimmerBox(modifier = Modifier.size(width = 100.dp, height = 16.dp))
+                } else {
                     Text(
                         text = "${state.tokenName} · ${state.tokenSymbol}",
                         style = MaterialTheme.typography.labelSmall.copy(
                             letterSpacing = 0.6.sp,
-                            fontWeight = FontWeight.Medium,
+                            fontWeight = FontWeight.SemiBold,
                         ),
-                        color = MaterialTheme.colorScheme.inverseOnSurface.copy(alpha = 0.7f),
+                        color = MaterialTheme.colorScheme.primary,
                     )
                     val displayWalletName = state.walletName.ifBlank {
                         stringResource(ReceiveR.string.send_confirm_default_wallet_name)
@@ -221,45 +266,34 @@ private fun HeroCard(state: ConfirmSendContract.State) {
                             ReceiveR.string.send_confirm_from_wallet,
                             displayWalletName,
                         ),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.inverseOnSurface,
-                    )
-                }
-            }
-
-            Column {
-                Text(
-                    text = state.amount,
-                    style = MaterialTheme.typography.displaySmall.copy(
-                        fontWeight = FontWeight.Medium,
-                        letterSpacing = (-0.5).sp,
-                    ),
-                    color = MaterialTheme.colorScheme.inversePrimary,
-                )
-                if (state.amountUsd.isNotEmpty()) {
-                    Text(
-                        text = state.amountUsd,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.inverseOnSurface.copy(alpha = 0.7f),
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
                 }
             }
         }
 
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .size(30.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.inversePrimary.copy(alpha = 0.18f)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.Send,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.inversePrimary,
-                modifier = Modifier.size(16.dp),
-            )
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            if (state.isLoading) {
+                ShimmerBox(modifier = Modifier.size(width = 200.dp, height = 36.dp))
+                ShimmerBox(modifier = Modifier.size(width = 80.dp, height = 16.dp))
+            } else {
+                Text(
+                    text = state.amount,
+                    style = MaterialTheme.typography.displaySmall.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = (-0.5).sp,
+                    ),
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+                if (state.amountUsd.isNotEmpty()) {
+                    Text(
+                        text = state.amountUsd,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
         }
     }
 }
@@ -268,6 +302,7 @@ private fun HeroCard(state: ConfirmSendContract.State) {
 private fun SummaryCard(
     state: ConfirmSendContract.State,
     onSpeedClick: () -> Unit,
+    onAddressClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -276,17 +311,9 @@ private fun SummaryCard(
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .padding(horizontal = 16.dp),
     ) {
-        SummaryRow(label = stringResource(ReceiveR.string.send_confirm_to)) {
-            RecipientChip(address = state.address)
-        }
-        SummaryDivider()
-        SummaryRow(label = stringResource(ReceiveR.string.send_confirm_network)) {
-            NetworkValue(networkName = state.networkName)
-        }
-        SummaryDivider()
         SummaryRow(
-            label = stringResource(ReceiveR.string.send_confirm_fee),
-            onClick = onSpeedClick,
+            label = stringResource(ReceiveR.string.send_confirm_to),
+            onClick = onAddressClick.takeUnless { state.isLoading },
             trailing = {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
@@ -296,7 +323,47 @@ private fun SummaryCard(
                 )
             },
         ) {
-            FeeValue(state = state)
+            if (state.isLoading) {
+                ShimmerBox(
+                    modifier = Modifier.size(width = 140.dp, height = 28.dp),
+                    shape = RoundedCornerShape(999.dp),
+                )
+            } else {
+                RecipientChip(address = state.address)
+            }
+        }
+        SummaryDivider()
+        SummaryRow(label = stringResource(ReceiveR.string.send_confirm_network)) {
+            if (state.isLoading) {
+                ShimmerBox(modifier = Modifier.size(width = 100.dp, height = 16.dp))
+            } else {
+                NetworkValue(networkName = state.networkName)
+            }
+        }
+        SummaryDivider()
+        SummaryRow(
+            label = stringResource(ReceiveR.string.send_confirm_fee),
+            onClick = onSpeedClick.takeUnless { state.isFeesLoading },
+            trailing = {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp),
+                )
+            },
+        ) {
+            if (state.isFeesLoading && state.commission == null) {
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    ShimmerBox(modifier = Modifier.size(width = 140.dp, height = 16.dp))
+                    ShimmerBox(modifier = Modifier.size(width = 60.dp, height = 12.dp))
+                }
+            } else {
+                FeeValue(state = state)
+            }
         }
     }
 }
@@ -498,6 +565,7 @@ private fun SpeedPill(
 
 @Composable
 private fun TotalCard(totalAmount: String, totalAmountUsd: String) {
+    val loading = totalAmount.isEmpty()
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -511,7 +579,10 @@ private fun TotalCard(totalAmount: String, totalAmountUsd: String) {
             .padding(horizontal = 20.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(modifier = Modifier.weight(1f)) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
             Text(
                 text = stringResource(ReceiveR.string.send_confirm_total).uppercase(),
                 style = MaterialTheme.typography.labelSmall.copy(
@@ -520,7 +591,9 @@ private fun TotalCard(totalAmount: String, totalAmountUsd: String) {
                 ),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            if (totalAmountUsd.isNotEmpty()) {
+            if (loading) {
+                ShimmerBox(modifier = Modifier.size(width = 70.dp, height = 12.dp))
+            } else if (totalAmountUsd.isNotEmpty()) {
                 Text(
                     text = totalAmountUsd,
                     style = MaterialTheme.typography.labelSmall,
@@ -528,11 +601,15 @@ private fun TotalCard(totalAmount: String, totalAmountUsd: String) {
                 )
             }
         }
-        Text(
-            text = totalAmount,
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Medium),
-            color = MaterialTheme.colorScheme.onSurface,
-        )
+        if (loading) {
+            ShimmerBox(modifier = Modifier.size(width = 140.dp, height = 22.dp))
+        } else {
+            Text(
+                text = totalAmount,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Medium),
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
     }
 }
 
@@ -596,27 +673,69 @@ private fun SpeedSheetContent(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text(
-            text = stringResource(ReceiveR.string.send_confirm_speed_title),
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        Text(
-            text = stringResource(ReceiveR.string.send_confirm_speed_subtitle),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = stringResource(ReceiveR.string.send_confirm_speed_title),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = stringResource(ReceiveR.string.send_confirm_speed_subtitle),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
 
-        Spacer(Modifier.height(12.dp))
+        CardGroup(items = FeeSpeed.entries) { speed, position ->
+            val commission = commissions[speed]
+            val labelRes = when (speed) {
+                FeeSpeed.SLOW -> ReceiveR.string.send_confirm_speed_slow
+                FeeSpeed.FAST -> ReceiveR.string.send_confirm_speed_fast
+                FeeSpeed.INSTANT -> ReceiveR.string.send_confirm_speed_instant
+            }
+            val etaRes = when (speed) {
+                FeeSpeed.SLOW -> ReceiveR.string.send_confirm_speed_slow_eta
+                FeeSpeed.FAST -> ReceiveR.string.send_confirm_speed_fast_eta
+                FeeSpeed.INSTANT -> ReceiveR.string.send_confirm_speed_instant_eta
+            }
+            val icon: ImageVector = when (speed) {
+                FeeSpeed.SLOW -> Icons.Default.HourglassBottom
+                FeeSpeed.FAST -> Icons.Default.Speed
+                FeeSpeed.INSTANT -> Icons.Default.Bolt
+            }
+            val selected = speed == selectedSpeed
 
-        FeeSpeed.entries.forEach { speed ->
-            SpeedOptionRow(
-                speed = speed,
-                commission = commissions[speed],
-                selected = speed == selectedSpeed,
+            GroupCard(
+                position = position,
                 onClick = { onSelectSpeed(speed) },
+                title = stringResource(labelRes),
+                subtitle = stringResource(etaRes),
+                icon = CardIcon.Vector(icon),
+                modifier = if (selected) {
+                    Modifier.border(
+                        width = 2.dp,
+                        color = MaterialTheme.colorScheme.primary,
+                        shape = cardShapeForPosition(position),
+                    )
+                } else {
+                    Modifier
+                },
+                trailing = {
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = commission?.nativeAmount.orEmpty(),
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            text = commission?.usdAmount.orEmpty(),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                },
             )
         }
 
@@ -625,100 +744,201 @@ private fun SpeedSheetContent(
 }
 
 @Composable
-private fun SpeedOptionRow(
-    speed: FeeSpeed,
-    commission: ConfirmSendContract.CommissionInfo?,
-    selected: Boolean,
-    onClick: () -> Unit,
+private fun SlideToConfirmButton(
+    text: String,
+    enabled: Boolean,
+    isSending: Boolean,
+    onConfirm: () -> Unit,
 ) {
-    val labelRes = when (speed) {
-        FeeSpeed.SLOW -> ReceiveR.string.send_confirm_speed_slow
-        FeeSpeed.FAST -> ReceiveR.string.send_confirm_speed_fast
-        FeeSpeed.INSTANT -> ReceiveR.string.send_confirm_speed_instant
-    }
-    val etaRes = when (speed) {
-        FeeSpeed.SLOW -> ReceiveR.string.send_confirm_speed_slow_eta
-        FeeSpeed.FAST -> ReceiveR.string.send_confirm_speed_fast_eta
-        FeeSpeed.INSTANT -> ReceiveR.string.send_confirm_speed_instant_eta
-    }
-    val icon: ImageVector = when (speed) {
-        FeeSpeed.SLOW -> Icons.Default.HourglassBottom
-        FeeSpeed.FAST -> Icons.Default.Speed
-        FeeSpeed.INSTANT -> Icons.Default.Bolt
+    val density = LocalDensity.current
+    val haptics = koinInject<Haptics>()
+    val scope = rememberCoroutineScope()
+
+    val trackHeight = 59.dp
+    val trackPadding = 5.dp
+    val thumbSize = trackHeight - trackPadding * 2
+
+    val trackPaddingPx = with(density) { trackPadding.toPx() }
+    val thumbSizePx = with(density) { thumbSize.toPx() }
+
+    var trackWidthPx by remember { mutableIntStateOf(0) }
+    val offset = remember { Animatable(0f) }
+
+    val maxOffsetPx = (trackWidthPx - thumbSizePx - trackPaddingPx * 2).coerceAtLeast(0f)
+
+    LaunchedEffect(isSending, maxOffsetPx) {
+        if (maxOffsetPx <= 0f) return@LaunchedEffect
+        val target = if (isSending) maxOffsetPx else 0f
+        if (offset.value != target) offset.animateTo(target, spring())
     }
 
-    val borderColor = if (selected) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.outlineVariant
-    }
-    val background = if (selected) {
-        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
-    } else {
-        MaterialTheme.colorScheme.surfaceContainerHigh
-    }
+    val isDisabled = !enabled && !isSending
+    val disabledContainer = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+    val disabledContent = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
 
-    Row(
+    val trackBg = if (isDisabled) disabledContainer else MaterialTheme.colorScheme.onPrimary
+    val thumbBg = if (isDisabled) disabledContainer else MaterialTheme.colorScheme.primary
+    val thumbContent = if (isDisabled) disabledContent else MaterialTheme.colorScheme.onPrimary
+    val hintColor = if (isDisabled) disabledContent else MaterialTheme.colorScheme.primary
+    val fillTint = if (isDisabled) disabledContent else MaterialTheme.colorScheme.primary
+
+    val progress = if (maxOffsetPx > 0f) (offset.value / maxOffsetPx).coerceIn(0f, 1f) else 0f
+    val fillBrush = Brush.horizontalGradient(
+        0f to fillTint.copy(alpha = 0.18f),
+        1f to fillTint.copy(alpha = 0f),
+    )
+
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(background)
-            .border(
-                width = if (selected) 1.5.dp else 1.dp,
-                color = borderColor,
-                shape = RoundedCornerShape(16.dp),
-            )
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+            .height(trackHeight)
+            .clip(RoundedCornerShape(20.dp))
+            .background(trackBg)
+            .onSizeChanged { trackWidthPx = it.width },
     ) {
         Box(
             modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                .fillMaxHeight()
+                .width(
+                    with(density) {
+                        (offset.value + thumbSizePx + trackPaddingPx * 2).toDp()
+                    },
+                )
+                .background(fillBrush),
+        )
+
+        Text(
+            text = text,
+            style = MaterialTheme.typography.titleMedium,
+            color = hintColor.copy(alpha = 1f - progress * 0.8f),
+            modifier = Modifier.align(Alignment.Center),
+        )
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .offset {
+                    IntOffset(
+                        x = (offset.value + trackPaddingPx).roundToInt(),
+                        y = 0,
+                    )
+                }
+                .size(thumbSize)
+                .clip(RoundedCornerShape(16.dp))
+                .background(thumbBg)
+                .pointerInput(enabled, maxOffsetPx) {
+                    if (!enabled || maxOffsetPx <= 0f) return@pointerInput
+                    detectHorizontalDragGestures(
+                        onDragEnd = {
+                            scope.launch {
+                                if (offset.value >= maxOffsetPx * 0.95f) {
+                                    offset.animateTo(maxOffsetPx, spring())
+                                    haptics.click()
+                                    onConfirm()
+                                } else {
+                                    offset.animateTo(0f, spring())
+                                }
+                            }
+                        },
+                        onDragCancel = {
+                            scope.launch { offset.animateTo(0f, spring()) }
+                        },
+                        onHorizontalDrag = { _, delta ->
+                            scope.launch {
+                                offset.snapTo(
+                                    (offset.value + delta).coerceIn(0f, maxOffsetPx),
+                                )
+                            }
+                        },
+                    )
+                },
             contentAlignment = Alignment.Center,
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(18.dp),
-            )
+            if (isSending) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(22.dp),
+                    color = thumbContent,
+                    strokeWidth = 2.dp,
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = null,
+                    tint = thumbContent,
+                    modifier = Modifier.size(22.dp),
+                )
+            }
         }
-        Column(modifier = Modifier.weight(1f)) {
+    }
+}
+
+@Composable
+private fun AddressSheetContent(
+    state: ConfirmSendContract.State,
+    onCopyAddress: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    shape = RoundedCornerShape(16.dp),
+                )
+                .clickable(onClick = onCopyAddress)
+                .padding(start = 16.dp, top = 14.dp, bottom = 14.dp, end = 8.dp),
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
             Text(
-                text = stringResource(labelRes),
-                style = MaterialTheme.typography.titleMedium,
+                text = fullAddress(state.address),
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontFamily = FontFamily.Monospace,
+                    letterSpacing = 0.2.sp,
+                ),
                 color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f),
             )
-            Text(
-                text = stringResource(etaRes),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerLowest),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ContentCopy,
+                    contentDescription = stringResource(ReceiveR.string.receive_copy),
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
         }
-        Column(horizontalAlignment = Alignment.End) {
-            Text(
-                text = commission?.nativeAmount.orEmpty(),
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Text(
-                text = commission?.usdAmount.orEmpty(),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        if (selected) {
-            Icon(
-                imageVector = Icons.Default.Check,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp),
-            )
-        }
+
+        Spacer(Modifier.height(8.dp))
+    }
+}
+
+@Composable
+private fun fullAddress(address: String) = buildAnnotatedString {
+    if (address.startsWith("0x")) {
+        withStyle(
+            SpanStyle(
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.SemiBold,
+            ),
+        ) { append("0x") }
+        append(address.drop(2))
+    } else {
+        append(address)
     }
 }
 
@@ -750,6 +970,9 @@ private fun ConfirmSendLayoutPreview() {
             onSpeedClick = {},
             onDismissSpeedSheet = {},
             onSelectSpeed = {},
+            onAddressClick = {},
+            onDismissAddressSheet = {},
+            onCopyAddress = {},
         )
     }
 }

@@ -30,6 +30,7 @@ internal object ConfirmSendContract {
         val totalAmountUsd: String = "",
         val isFeesLoading: Boolean = true,
         val isSpeedSheetOpen: Boolean = false,
+        val isAddressSheetOpen: Boolean = false,
         val isSending: Boolean = false,
         val isLoading: Boolean = true,
         val insufficientGas: Boolean = false,
@@ -43,6 +44,8 @@ internal object ConfirmSendContract {
         data object Send : Intent
         data object OpenSpeedSheet : Intent
         data object DismissSpeedSheet : Intent
+        data object OpenAddressSheet : Intent
+        data object DismissAddressSheet : Intent
         data class SelectSpeed(val speed: FeeSpeed) : Intent
         data object DismissError : Intent
     }

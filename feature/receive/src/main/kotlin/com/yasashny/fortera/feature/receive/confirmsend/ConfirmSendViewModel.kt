@@ -113,6 +113,9 @@ internal class ConfirmSendViewModel(
             Intent.OpenSpeedSheet -> updateState { it.copy(isSpeedSheetOpen = true) }
             Intent.DismissSpeedSheet -> updateState { it.copy(isSpeedSheetOpen = false) }
 
+            Intent.OpenAddressSheet -> updateState { it.copy(isAddressSheetOpen = true) }
+            Intent.DismissAddressSheet -> updateState { it.copy(isAddressSheetOpen = false) }
+
             is Intent.SelectSpeed -> intent {
                 val commission = currentState.commissions[intent.speed] ?: return@intent
                 val (totalAmount, totalAmountUsd) = computeTotal(

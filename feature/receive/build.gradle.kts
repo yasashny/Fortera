@@ -12,6 +12,7 @@ dependencies {
     implementation(projects.core.walletBalances)
     implementation(projects.feature.receiveApi)
     implementation(projects.feature.mainApi)
+    implementation(projects.feature.tokenDetailsApi)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.zxing.core)
 }

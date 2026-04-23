@@ -10,8 +10,8 @@ class AppNavigator(initialDestination: Any) {
 
     fun back() { backStack.removeLastOrNull() }
 
-    fun clearAndNavigate(destination: Any) {
+    fun clearAndNavigate(vararg destinations: Any) {
         backStack.clear()
-        backStack.add(destination)
+        destinations.forEach { backStack.add(it) }
     }
 }

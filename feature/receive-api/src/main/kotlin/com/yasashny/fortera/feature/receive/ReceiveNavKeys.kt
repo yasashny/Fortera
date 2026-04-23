@@ -22,4 +22,4 @@ data class ConfirmSend(
 )
 
 @Serializable
-data object SendSuccess
+data class SendSuccess(val tokenId: String)
