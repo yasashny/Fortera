@@ -1,5 +1,6 @@
 package com.yasashny.fortera.feature.tokendetails
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -18,6 +20,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.automirrored.filled.CallMade
 import androidx.compose.material.icons.automirrored.filled.CallReceived
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Card
@@ -35,6 +39,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.toArgb
@@ -44,11 +49,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.tradingview.lightweightcharts.api.chart.models.color.surface.SolidColor
 import com.tradingview.lightweightcharts.api.chart.models.color.toIntColor
 import com.tradingview.lightweightcharts.api.interfaces.SeriesApi
 import com.tradingview.lightweightcharts.api.options.models.areaSeriesOptions
+import com.tradingview.lightweightcharts.api.options.models.crosshairLineOptions
 import com.tradingview.lightweightcharts.api.options.models.crosshairOptions
 import com.tradingview.lightweightcharts.api.options.models.gridLineOptions
 import com.tradingview.lightweightcharts.api.options.models.gridOptions
@@ -56,6 +63,7 @@ import com.tradingview.lightweightcharts.api.options.models.layoutOptions
 import com.tradingview.lightweightcharts.api.options.models.priceScaleOptions
 import com.tradingview.lightweightcharts.api.options.models.timeScaleOptions
 import com.tradingview.lightweightcharts.api.series.enums.CrosshairMode
+import com.tradingview.lightweightcharts.api.series.enums.LineStyle
 import com.tradingview.lightweightcharts.api.series.enums.LineWidth
 import com.tradingview.lightweightcharts.api.series.models.AreaData
 import com.tradingview.lightweightcharts.api.series.models.Time
@@ -69,13 +77,17 @@ import com.yasashny.fortera.core.domaincrypto.model.Transaction
 import com.yasashny.fortera.core.ui.component.CardIcon
 import com.yasashny.fortera.core.ui.component.CardPosition
 import com.yasashny.fortera.core.ui.component.GroupCard
+import com.yasashny.fortera.core.ui.component.ShimmerBox
+import com.yasashny.fortera.core.ui.component.cardShapeForPosition
 import java.math.BigDecimal
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import com.yasashny.fortera.core.ui.format.formatCrypto
+import com.yasashny.fortera.core.ui.format.formatUsd
 import com.yasashny.fortera.core.ui.token.tokenIconUrl
 import com.yasashny.fortera.feature.tokendetails.R as TokenDetailsR
+import kotlin.math.abs
 
 private val ChangePositive = Color(0xFF02A64C)
 private val ChangeNegative = Color(0xFFD0081C)
@@ -112,11 +124,21 @@ internal fun TokenDetailsLayout(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState()),
         ) {
+            PriceHero(
+                priceUsd = state.priceUsd,
+                changePercent = state.changePercent24h,
+                isLoading = state.isLoading,
+            )
+
+            Spacer(Modifier.height(16.dp))
+
             PriceChart(
                 priceHistory = state.priceHistory,
+                changePercent = state.changePercent24h,
+                isLoading = state.isLoading || state.isChartLoading,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(350.dp),
+                    .height(240.dp),
             )
 
             Spacer(Modifier.height(8.dp))
@@ -157,33 +179,42 @@ internal fun TokenDetailsLayout(
             Spacer(Modifier.height(24.dp))
 
             // Token card
-            val change = state.changePercent24h
-            val changeColor = when {
-                change > 0 -> ChangePositive
-                change < 0 -> ChangeNegative
-                else -> MaterialTheme.colorScheme.onSurfaceVariant
-            }
             val badgeUrl = if (state.tokenContractAddress != null) {
                 tokenIconUrl("eth")
             } else {
                 null
             }
+            val fiatBalance = state.balance.toDouble() * state.priceUsd
             GroupCard(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 position = CardPosition.Single,
                 onClick = {},
-                title = state.tokenName,
-                subtitle = String.format(Locale.US, "%+.2f%%", change),
-                subtitleColor = changeColor,
+                title = stringResource(TokenDetailsR.string.token_details_your_balance),
+                subtitle = state.tokenName,
                 iconUrl = tokenIconUrl(state.tokenSymbol),
                 icon = state.tokenSymbol.firstOrNull()?.let { CardIcon.Letter(it) },
                 badgeIconUrl = badgeUrl,
                 trailing = {
-                    Text(
-                        text = "${formatCrypto(state.balance)} ${state.tokenSymbol}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        if (state.isLoading) {
+                            ShimmerBox(modifier = Modifier.size(width = 90.dp, height = 16.dp))
+                            ShimmerBox(modifier = Modifier.size(width = 60.dp, height = 12.dp))
+                        } else {
+                            Text(
+                                text = "${formatCrypto(state.balance)} ${state.tokenSymbol}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                            )
+                            Text(
+                                text = "≈ ${formatUsd(fiatBalance)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
                 },
             )
 
@@ -192,7 +223,7 @@ internal fun TokenDetailsLayout(
             // Transactions
             TransactionsSection(
                 transactions = state.transactions,
-                isLoading = state.isTransactionsLoading,
+                isLoading = state.isLoading || state.isTransactionsLoading,
             )
 
             Spacer(Modifier.height(32.dp))
@@ -229,11 +260,21 @@ private fun TransactionsSection(
     Spacer(Modifier.height(8.dp))
 
     if (isLoading) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(100.dp),
-        )
+        val shimmerCount = 3
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            repeat(shimmerCount) { index ->
+                val position = when {
+                    shimmerCount == 1 -> CardPosition.Single
+                    index == 0 -> CardPosition.First
+                    index == shimmerCount - 1 -> CardPosition.Last
+                    else -> CardPosition.Middle
+                }
+                ShimmerTransactionCard(
+                    position = position,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            }
+        }
     } else {
         transactions.forEachIndexed { index, tx ->
             val position = when {
@@ -247,6 +288,48 @@ private fun TransactionsSection(
                 position = position,
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
+        }
+    }
+}
+
+@Composable
+private fun ShimmerTransactionCard(
+    position: CardPosition,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = cardShapeForPosition(position),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        ),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp, horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            ShimmerBox(
+                modifier = Modifier.size(40.dp),
+                shape = CircleShape,
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                ShimmerBox(modifier = Modifier.size(width = 100.dp, height = 16.dp))
+                ShimmerBox(modifier = Modifier.size(width = 140.dp, height = 12.dp))
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                ShimmerBox(modifier = Modifier.size(width = 80.dp, height = 14.dp))
+                ShimmerBox(modifier = Modifier.size(width = 50.dp, height = 12.dp))
+            }
         }
     }
 }
@@ -338,18 +421,99 @@ private fun shortenAddress(address: String): String {
 }
 
 @Composable
+private fun PriceHero(
+    priceUsd: Double,
+    changePercent: Double,
+    isLoading: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalAlignment = Alignment.Start,
+    ) {
+        if (isLoading) {
+            ShimmerBox(modifier = Modifier.size(width = 180.dp, height = 40.dp))
+            ShimmerBox(
+                modifier = Modifier.size(width = 140.dp, height = 22.dp),
+                shape = RoundedCornerShape(50),
+            )
+            return@Column
+        }
+
+        Text(
+            text = formatUsd(priceUsd),
+            color = MaterialTheme.colorScheme.onSurface,
+            fontSize = 34.sp,
+            lineHeight = 40.sp,
+            fontWeight = FontWeight.Medium,
+            letterSpacing = (-0.5).sp,
+        )
+
+        if (priceUsd > 0.0) {
+            val isUp = changePercent >= 0
+            val color = if (isUp) ChangePositive else ChangeNegative
+            val deltaAbs = abs(priceUsd * changePercent / (100.0 + changePercent))
+            val sign = if (isUp) "+" else "−"
+            val pctFormatted = String.format(Locale.US, "%.2f", abs(changePercent))
+            val deltaFormatted = formatUsd(deltaAbs)
+
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(color.copy(alpha = 0.12f))
+                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Icon(
+                    imageVector = if (isUp) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown,
+                    contentDescription = null,
+                    tint = color,
+                    modifier = Modifier.size(16.dp),
+                )
+                Text(
+                    text = "$sign$pctFormatted% · $sign$deltaFormatted",
+                    color = color,
+                    fontSize = 12.sp,
+                    lineHeight = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun PriceChart(
     priceHistory: List<PricePoint>,
+    changePercent: Double,
+    isLoading: Boolean,
     modifier: Modifier = Modifier,
 ) {
     if (priceHistory.isEmpty()) {
-        Box(modifier = modifier)
+        if (isLoading) {
+            ShimmerBox(
+                modifier = modifier.padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(16.dp),
+            )
+        } else {
+            Box(modifier = modifier)
+        }
         return
     }
 
     val bgColor = MaterialTheme.colorScheme.background.toArgb()
     val textColor = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
     val gridColor = MaterialTheme.colorScheme.outlineVariant.toArgb()
+    val surfaceColor = MaterialTheme.colorScheme.surface.toArgb()
+
+    val isUp = changePercent >= 0
+    val trendColor = if (isUp) ChangePositive else ChangeNegative
+    val trendArgb = trendColor.toArgb()
+    val trendFillTopArgb = trendColor.copy(alpha = 0.24f).toArgb()
 
     val seriesRef = remember { arrayOfNulls<SeriesApi>(1) }
     val chartData = remember(priceHistory) {
@@ -359,6 +523,23 @@ private fun PriceChart(
                 value = point.priceUsd.toFloat(),
             )
         }
+    }
+
+    fun seriesOptions() = areaSeriesOptions {
+        topColor = trendFillTopArgb.toIntColor()
+        bottomColor = Color.Transparent.toArgb().toIntColor()
+        lineColor = trendArgb.toIntColor()
+        lineWidth = LineWidth.TWO
+        priceLineVisible = true
+        priceLineStyle = LineStyle.DASHED
+        priceLineWidth = LineWidth.ONE
+        priceLineColor = trendArgb.toIntColor()
+        baseLineVisible = false
+        crosshairMarkerVisible = true
+        crosshairMarkerRadius = 5f
+        crosshairMarkerBorderWidth = 2f
+        crosshairMarkerBorderColor = surfaceColor.toIntColor()
+        crosshairMarkerBackgroundColor = trendArgb.toIntColor()
     }
 
     AndroidView(
@@ -373,6 +554,7 @@ private fun PriceChart(
                         vertLines = gridLineOptions { visible = false }
                         horzLines = gridLineOptions {
                             color = gridColor.toIntColor()
+                            style = LineStyle.SOLID
                         }
                     }
                     rightPriceScale = priceScaleOptions {
@@ -385,16 +567,21 @@ private fun PriceChart(
                         timeVisible = true
                     }
                     crosshair = crosshairOptions {
-                        mode = CrosshairMode.NORMAL
+                        mode = CrosshairMode.MAGNET
+                        vertLine = crosshairLineOptions {
+                            color = trendArgb.toIntColor()
+                            width = LineWidth.ONE
+                            style = LineStyle.DASHED
+                            labelVisible = false
+                        }
+                        horzLine = crosshairLineOptions {
+                            visible = false
+                            labelVisible = false
+                        }
                     }
                 }
                 api.addAreaSeries(
-                    options = areaSeriesOptions {
-                        topColor = Color(0x4002A64C).toArgb().toIntColor()
-                        bottomColor = Color.Transparent.toArgb().toIntColor()
-                        lineColor = ChangePositive.toArgb().toIntColor()
-                        lineWidth = LineWidth.TWO
-                    },
+                    options = seriesOptions(),
                     onSeriesCreated = { series ->
                         seriesRef[0] = series
                         series.setData(chartData)
@@ -403,7 +590,10 @@ private fun PriceChart(
             }
         },
         update = { _ ->
-            seriesRef[0]?.setData(chartData)
+            seriesRef[0]?.let { series ->
+                series.applyOptions(seriesOptions())
+                series.setData(chartData)
+            }
         },
         modifier = modifier,
     )

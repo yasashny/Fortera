@@ -2,6 +2,7 @@
 <resources>
     <string name="token_details_send">Отправить</string>
     <string name="token_details_receive">Получить</string>
+    <string name="token_details_your_balance">Ваш баланс</string>
     <string name="token_details_transactions">Транзакции</string>
     <string name="token_details_no_transactions">Транзакций пока нет</string>
     <string name="token_details_tx_received">Получено</string>
