@@ -8,10 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -152,13 +150,9 @@ private fun ImportWalletContent(
         Button(
             onClick = onImportClick,
             modifier = Modifier
-                .width(202.dp)
+                .fillMaxWidth()
                 .height(59.dp),
-            shape = RoundedCornerShape(91.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ),
+            shape = RoundedCornerShape(20.dp),
             enabled = !state.isLoading && state.name.isNotBlank() && state.seedPhrase.isNotBlank()
         ) {
             if (state.isLoading) {
@@ -171,7 +165,6 @@ private fun ImportWalletContent(
                 Text(
                     text = stringResource(ImportWalletR.string.import_wallet_import_button),
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium
                 )
             }
         }

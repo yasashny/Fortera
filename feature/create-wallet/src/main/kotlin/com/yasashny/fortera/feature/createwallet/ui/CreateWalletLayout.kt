@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -182,13 +181,9 @@ private fun ShowSeedPhraseContent(
             onClick = onCreateClick,
             enabled = !state.isCreating,
             modifier = Modifier
-                .width(202.dp)
+                .fillMaxWidth()
                 .height(59.dp),
-            shape = RoundedCornerShape(91.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
+            shape = RoundedCornerShape(20.dp),
         ) {
             if (state.isCreating) {
                 CircularProgressIndicator(
@@ -202,7 +197,6 @@ private fun ShowSeedPhraseContent(
                         CreateWalletR.string.create_wallet_create_button
                     ),
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium
                 )
             }
         }
