@@ -36,7 +36,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -66,6 +69,7 @@ import com.tradingview.lightweightcharts.api.series.enums.CrosshairMode
 import com.tradingview.lightweightcharts.api.series.enums.LineStyle
 import com.tradingview.lightweightcharts.api.series.enums.LineWidth
 import com.tradingview.lightweightcharts.api.series.models.AreaData
+import com.tradingview.lightweightcharts.api.series.models.MouseEventParams
 import com.tradingview.lightweightcharts.api.series.models.Time
 import com.tradingview.lightweightcharts.view.ChartsView
 import androidx.compose.ui.semantics.Role
@@ -119,14 +123,23 @@ internal fun TokenDetailsLayout(
             )
         },
     ) { paddingValues ->
+        var hoveredPrice by remember { mutableStateOf<Double?>(null) }
+        val basePrice = state.priceHistory.firstOrNull()?.priceUsd
+
         Column(
             modifier = Modifier
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState()),
         ) {
+            val shownPrice = hoveredPrice ?: state.priceUsd
+            val shownChange = if (hoveredPrice != null && basePrice != null && basePrice > 0.0) {
+                (hoveredPrice!! - basePrice) / basePrice * 100.0
+            } else {
+                state.changePercent24h
+            }
             PriceHero(
-                priceUsd = state.priceUsd,
-                changePercent = state.changePercent24h,
+                priceUsd = shownPrice,
+                changePercent = shownChange,
                 isLoading = state.isLoading,
             )
 
@@ -136,9 +149,10 @@ internal fun TokenDetailsLayout(
                 priceHistory = state.priceHistory,
                 changePercent = state.changePercent24h,
                 isLoading = state.isLoading || state.isChartLoading,
+                onHoverChange = { hoveredPrice = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(240.dp),
+                    .height(340.dp),
             )
 
             Spacer(Modifier.height(8.dp))
@@ -434,6 +448,7 @@ private fun PriceHero(
         verticalArrangement = Arrangement.spacedBy(6.dp),
         horizontalAlignment = Alignment.Start,
     ) {
+        Spacer(modifier = Modifier.height(16.dp))
         if (isLoading) {
             ShimmerBox(modifier = Modifier.size(width = 180.dp, height = 40.dp))
             ShimmerBox(
@@ -491,6 +506,7 @@ private fun PriceChart(
     priceHistory: List<PricePoint>,
     changePercent: Double,
     isLoading: Boolean,
+    onHoverChange: (Double?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (priceHistory.isEmpty()) {
@@ -506,8 +522,6 @@ private fun PriceChart(
     }
 
     val bgColor = MaterialTheme.colorScheme.background.toArgb()
-    val textColor = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
-    val gridColor = MaterialTheme.colorScheme.outlineVariant.toArgb()
     val surfaceColor = MaterialTheme.colorScheme.surface.toArgb()
 
     val isUp = changePercent >= 0
@@ -525,16 +539,21 @@ private fun PriceChart(
         }
     }
 
+    val hoverListener = remember(onHoverChange) {
+        { params: MouseEventParams ->
+            val value = params.seriesData?.firstOrNull()?.prices?.value?.toDouble()
+            onHoverChange(value)
+        }
+    }
+
     fun seriesOptions() = areaSeriesOptions {
         topColor = trendFillTopArgb.toIntColor()
         bottomColor = Color.Transparent.toArgb().toIntColor()
         lineColor = trendArgb.toIntColor()
         lineWidth = LineWidth.TWO
-        priceLineVisible = true
-        priceLineStyle = LineStyle.DASHED
-        priceLineWidth = LineWidth.ONE
-        priceLineColor = trendArgb.toIntColor()
+        priceLineVisible = false
         baseLineVisible = false
+        lastValueVisible = false
         crosshairMarkerVisible = true
         crosshairMarkerRadius = 5f
         crosshairMarkerBorderWidth = 2f
@@ -548,23 +567,18 @@ private fun PriceChart(
                 api.applyOptions {
                     layout = layoutOptions {
                         background = SolidColor(bgColor)
-                        this.textColor = textColor.toIntColor()
                     }
                     grid = gridOptions {
                         vertLines = gridLineOptions { visible = false }
-                        horzLines = gridLineOptions {
-                            color = gridColor.toIntColor()
-                            style = LineStyle.SOLID
-                        }
+                        horzLines = gridLineOptions { visible = false }
                     }
                     rightPriceScale = priceScaleOptions {
-                        visible = true
+                        visible = false
                         borderVisible = false
                     }
                     timeScale = timeScaleOptions {
-                        visible = true
+                        visible = false
                         borderVisible = false
-                        timeVisible = true
                     }
                     crosshair = crosshairOptions {
                         mode = CrosshairMode.MAGNET
@@ -580,6 +594,7 @@ private fun PriceChart(
                         }
                     }
                 }
+                api.subscribeCrosshairMove(hoverListener)
                 api.addAreaSeries(
                     options = seriesOptions(),
                     onSeriesCreated = { series ->
