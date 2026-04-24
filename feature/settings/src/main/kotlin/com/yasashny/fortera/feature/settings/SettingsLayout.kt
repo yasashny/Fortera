@@ -195,10 +195,14 @@ private fun EnvironmentSheetContent(
 
         Spacer(Modifier.height(4.dp))
 
-        AppEnvironment.entries.forEach { env ->
+        CardGroup(
+            items = AppEnvironment.entries,
+            key = { it.name },
+        ) { env, position ->
             val selected = env == current
             GroupCard(
-                position = CardPosition.Single,
+                position = position,
+                innerRadius = 4.dp,
                 onClick = { onSelect(env) },
                 title = env.displayName,
                 subtitle = stringResource(
