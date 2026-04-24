@@ -10,7 +10,6 @@ import com.yasashny.fortera.core.domaincrypto.repository.PriceRepository
 import com.yasashny.fortera.core.domaincrypto.repository.SendTransactionError
 import com.yasashny.fortera.core.domaincrypto.repository.TokenRepository
 import com.yasashny.fortera.core.mvi.MviViewModel
-import com.yasashny.fortera.core.ui.format.formatUsd as sharedFormatUsd
 import com.yasashny.fortera.core.ui.text.UiText
 import com.yasashny.fortera.core.walletbalances.WalletBalances
 import com.yasashny.fortera.core.walletbalances.WalletTransactionSender
@@ -40,6 +39,10 @@ import java.util.Locale
  *
  * At actual send time the underlying sender re-fetches fees again, so the signed transaction is
  * always priced on latest chain state — display values are informational only.
+ *
+ * USD values (amountUsd, feeUsd, totalAmountUsd) are pushed to state as raw `Double`s. The
+ * Layout reads `LocalCurrency` and formats at the leaf — this is what makes switching currency
+ * in Settings update this screen live, without the ViewModel having to listen for currency changes.
  */
 internal class ConfirmSendViewModel(
     private val tokenId: String,
@@ -89,7 +92,7 @@ internal class ConfirmSendViewModel(
                     tokenSymbol = loadedToken.symbol,
                     walletName = wallet?.name?.takeIf { it.isNotBlank() }.orEmpty(),
                     amount = "${formatCrypto(amountDouble)} ${loadedToken.symbol}",
-                    amountUsd = formatUsd(amountDouble * tokenPriceUsd),
+                    amountUsd = amountDouble * tokenPriceUsd,
                     address = address,
                     networkName = loadedToken.network.displayName,
                     isLoading = false,
@@ -194,6 +197,7 @@ internal class ConfirmSendViewModel(
                     totalAmountUsd = totalAmountUsd,
                     insufficientGas = isInsufficientGas(commission),
                     isFeesLoading = false,
+                    amountUsd = amountDouble * tokenPriceUsd,
                 )
             )
         }
@@ -201,18 +205,17 @@ internal class ConfirmSendViewModel(
 
     private fun toCommissions(estimates: FeeEstimates): Map<FeeSpeed, CommissionInfo> =
         estimates.mapValues { (_, estimate) ->
-            val feeUsd = estimate.nativeAmount.toDouble() * nativePriceUsd
             CommissionInfo(
                 estimate = estimate,
                 nativeAmount = "${formatCrypto(estimate.nativeAmount.toDouble())} ${estimate.nativeSymbol}",
-                usdAmount = formatUsd(feeUsd),
+                feeUsd = estimate.nativeAmount.toDouble() * nativePriceUsd,
             )
         }
 
     // ─────────────────── Math ───────────────────
 
     /**
-     * Returns (totalNativeDisplay, totalUsdDisplay). Works in BigDecimal throughout — no string parsing.
+     * Returns (totalNativeDisplay, totalUsd). Works in BigDecimal throughout — no string parsing.
      *
      * If the token being sent IS the fee currency (native ETH / BTC), total = amount + fee.
      * Otherwise (ERC-20 vs ETH fee), the token total is just the amount and fee shows up in
@@ -221,7 +224,7 @@ internal class ConfirmSendViewModel(
     private fun computeTotal(
         tokenSymbol: String,
         commission: CommissionInfo,
-    ): Pair<String, String> {
+    ): Pair<String, Double> {
         val feeNative: BigDecimal = commission.estimate.nativeAmount
         val feeSymbol = commission.estimate.nativeSymbol
         val sameUnit = tokenSymbol.equals(feeSymbol, ignoreCase = true)
@@ -230,7 +233,7 @@ internal class ConfirmSendViewModel(
         val totalUsd: Double =
             amountDecimal.toDouble() * tokenPriceUsd + feeNative.toDouble() * nativePriceUsd
 
-        return "${formatCrypto(totalNative.toDouble())} $tokenSymbol" to formatUsd(totalUsd)
+        return "${formatCrypto(totalNative.toDouble())} $tokenSymbol" to totalUsd
     }
 
     /**
@@ -308,6 +311,3 @@ internal class ConfirmSendViewModel(
  */
 private fun formatCrypto(value: Double): String =
     String.format(Locale.US, "%.6f", value).trimEnd('0').trimEnd('.')
-
-/** Fees and totals are approximate — prefix with "≈ " over the shared US-grouped format. */
-private fun formatUsd(value: Double): String = "≈ ${sharedFormatUsd(value)}"

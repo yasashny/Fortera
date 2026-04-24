@@ -15,4 +15,10 @@
     <string name="settings_language_en">English</string>
     <string name="settings_environment_mainnet">Mainnet</string>
     <string name="settings_environment_testnet">Sepolia / BTC testnet</string>
+    <string name="settings_currency_title">Валюта отображения</string>
+    <string name="settings_currency_hint">Балансы, цены и комиссии показываются в этой валюте по всему приложению.</string>
+    <string name="settings_currency_usd">Доллар США</string>
+    <string name="settings_currency_eur">Евро</string>
+    <string name="settings_currency_rub">Российский рубль</string>
+    <string name="settings_currency_cny">Китайский юань</string>
 </resources>

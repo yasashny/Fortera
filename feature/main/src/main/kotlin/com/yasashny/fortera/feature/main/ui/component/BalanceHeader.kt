@@ -28,9 +28,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.yasashny.fortera.core.ui.component.ShimmerBox
+import com.yasashny.fortera.core.ui.currency.LocalFiat
+import com.yasashny.fortera.core.ui.format.formatFiat
 import com.yasashny.fortera.feature.main.R
 import com.yasashny.fortera.feature.main.presentation.BalancesState
-import com.yasashny.fortera.core.ui.format.formatUsd
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,12 +56,23 @@ internal fun CollapsedBalanceBar(
                             .padding(top = 4.dp)
                             .size(width = 70.dp, height = 14.dp),
                     )
-                    is BalancesState.Ready -> Text(
-                        text = formatUsd(balances.totalUsd),
-                        modifier = Modifier.alpha(staleAlpha),
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.SemiBold,
-                    )
+                    is BalancesState.Ready -> {
+                        val fiatText = formatFiat(balances.totalUsd, LocalFiat.current)
+                        if (fiatText != null) {
+                            Text(
+                                text = fiatText,
+                                modifier = Modifier.alpha(staleAlpha),
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                        } else {
+                            ShimmerBox(
+                                modifier = Modifier
+                                    .padding(top = 4.dp)
+                                    .size(width = 70.dp, height = 14.dp),
+                            )
+                        }
+                    }
                 }
             }
         },
@@ -132,17 +144,34 @@ internal fun ExpandedBalanceHeader(
                     shape = RoundedCornerShape(12.dp),
                 )
             }
-            is BalancesState.Ready -> Text(
-                text = formatUsd(balances.totalUsd),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 80.dp, bottom = 60.dp)
-                    .alpha(staleAlpha),
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.displayLarge,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
+            is BalancesState.Ready -> {
+                val fiatText = formatFiat(balances.totalUsd, LocalFiat.current)
+                if (fiatText != null) {
+                    Text(
+                        text = fiatText,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 80.dp, bottom = 60.dp)
+                            .alpha(staleAlpha),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.displayLarge,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 84.dp, bottom = 68.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        ShimmerBox(
+                            modifier = Modifier.size(width = 200.dp, height = 56.dp),
+                            shape = RoundedCornerShape(12.dp),
+                        )
+                    }
+                }
+            }
         }
     }
 }

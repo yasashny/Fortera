@@ -13,6 +13,11 @@ internal object SendContract {
      * to `.` happens in the ViewModel when parsing to [BigDecimal] and when forwarding to the
      * confirm screen.
      *
+     * [amountUsd] is the USD-canonical equivalent of [amount] (raw `Double`, null when the input
+     * can't be parsed). The Layout formats it with the currently selected currency — ViewModels
+     * don't see currency changes reactively, so storing a pre-formatted string here would go
+     * stale the moment the user changes currency in settings.
+     *
      * [insufficientFunds] — true when parsed amount exceeds [balance]; paints the amount field
      * red and surfaces a hint.
      * [addressError] — non-null only when the user has typed something invalid for the token's
@@ -25,7 +30,7 @@ internal object SendContract {
         val balance: BigDecimal = BigDecimal.ZERO,
         val priceUsd: Double = 0.0,
         val amount: String = "",
-        val amountUsd: String = "",
+        val amountUsd: Double? = null,
         val address: String = "",
         val insufficientFunds: Boolean = false,
         /**

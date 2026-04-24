@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.width
@@ -41,7 +42,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 import com.yasashny.fortera.core.ui.component.CardIcon
+import com.yasashny.fortera.core.ui.component.ShimmerBox
 import com.yasashny.fortera.core.ui.component.TokenIcon
+import com.yasashny.fortera.core.ui.currency.LocalFiat
+import com.yasashny.fortera.core.ui.format.formatFiat
 import com.yasashny.fortera.core.ui.text.asString
 import com.yasashny.fortera.core.ui.token.tokenIconUrl
 import com.yasashny.fortera.feature.receive.R as ReceiveR
@@ -185,12 +189,17 @@ internal fun SendLayout(
                 },
             )
 
-            if (state.amountUsd.isNotEmpty()) {
-                Text(
-                    text = "${state.amountUsd} $",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            state.amountUsd?.let { amountUsd ->
+                val fiatText = formatFiat(amountUsd, LocalFiat.current)
+                if (fiatText != null) {
+                    Text(
+                        text = fiatText,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                } else {
+                    ShimmerBox(modifier = Modifier.size(width = 80.dp, height = 16.dp))
+                }
             }
 
             val amountHint: String? = when {
@@ -273,7 +282,7 @@ private fun SendLayoutPreview() {
                 balance = BigDecimal("0.1949040"),
                 priceUsd = 2500.0,
                 amount = "0.000345",
-                amountUsd = "0.86",
+                amountUsd = 0.86,
                 isLoading = false,
             ),
             onBackClick = {},

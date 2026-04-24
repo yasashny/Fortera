@@ -15,7 +15,6 @@ import com.yasashny.fortera.feature.receive.send.SendContract.Intent
 import com.yasashny.fortera.feature.receive.send.SendContract.State
 import kotlinx.coroutines.flow.first
 import java.math.BigDecimal
-import java.util.Locale
 
 internal class SendViewModel(
     private val tokenId: String,
@@ -94,9 +93,7 @@ internal class SendViewModel(
             UiText.of(R.string.send_error_amount_only_digits) else null
 
         val amountDecimal = filtered.normalizeDecimal().toBigDecimalOrNull()
-        val usdValue = amountDecimal
-            ?.let { String.format(Locale.US, "%.2f", it.toDouble() * currentState.priceUsd) }
-            ?: ""
+        val usdValue: Double? = amountDecimal?.let { it.toDouble() * currentState.priceUsd }
         val insufficient = amountDecimal != null && amountDecimal > currentState.balance
         reduce(
             currentState.copy(

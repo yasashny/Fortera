@@ -83,6 +83,9 @@ import com.yasashny.fortera.core.ui.component.GroupCard
 import com.yasashny.fortera.core.ui.component.ShimmerBox
 import com.yasashny.fortera.core.ui.component.TokenIcon
 import com.yasashny.fortera.core.ui.component.cardShapeForPosition
+import com.yasashny.fortera.core.ui.currency.FiatDisplay
+import com.yasashny.fortera.core.ui.currency.LocalFiat
+import com.yasashny.fortera.core.ui.format.formatFiat
 import com.yasashny.fortera.core.ui.token.tokenIconUrl
 import com.yasashny.fortera.core.domaincrypto.model.FeeEstimate
 import com.yasashny.fortera.core.domaincrypto.model.FeeSpeed
@@ -170,6 +173,7 @@ internal fun ConfirmSendLayout(
             TotalCard(
                 totalAmount = state.totalAmount,
                 totalAmountUsd = state.totalAmountUsd,
+                fiat = LocalFiat.current,
             )
 
             if (state.insufficientGas) {
@@ -286,12 +290,17 @@ private fun HeroCard(state: ConfirmSendContract.State) {
                     ),
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                 )
-                if (state.amountUsd.isNotEmpty()) {
-                    Text(
-                        text = state.amountUsd,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
+                state.amountUsd?.let { usd ->
+                    val fiatText = formatFiat(usd, LocalFiat.current, approximate = true)
+                    if (fiatText != null) {
+                        Text(
+                            text = fiatText,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    } else {
+                        ShimmerBox(modifier = Modifier.size(width = 80.dp, height = 16.dp))
+                    }
                 }
             }
         }
@@ -498,12 +507,17 @@ private fun FeeValue(state: ConfirmSendContract.State) {
                 color = MaterialTheme.colorScheme.onSurface,
             )
         }
-        if (!commission?.usdAmount.isNullOrEmpty()) {
-            Text(
-                text = commission.usdAmount,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+        if (commission != null) {
+            val fiatText = formatFiat(commission.feeUsd, LocalFiat.current, approximate = true)
+            if (fiatText != null) {
+                Text(
+                    text = fiatText,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                ShimmerBox(modifier = Modifier.size(width = 60.dp, height = 12.dp))
+            }
         }
     }
 }
@@ -564,7 +578,11 @@ private fun SpeedPill(
 }
 
 @Composable
-private fun TotalCard(totalAmount: String, totalAmountUsd: String) {
+private fun TotalCard(
+    totalAmount: String,
+    totalAmountUsd: Double?,
+    fiat: FiatDisplay,
+) {
     val loading = totalAmount.isEmpty()
     Row(
         modifier = Modifier
@@ -593,12 +611,17 @@ private fun TotalCard(totalAmount: String, totalAmountUsd: String) {
             )
             if (loading) {
                 ShimmerBox(modifier = Modifier.size(width = 70.dp, height = 12.dp))
-            } else if (totalAmountUsd.isNotEmpty()) {
-                Text(
-                    text = totalAmountUsd,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            } else if (totalAmountUsd != null) {
+                val fiatText = formatFiat(totalAmountUsd, fiat, approximate = true)
+                if (fiatText != null) {
+                    Text(
+                        text = fiatText,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                } else {
+                    ShimmerBox(modifier = Modifier.size(width = 70.dp, height = 12.dp))
+                }
             }
         }
         if (loading) {
@@ -707,6 +730,7 @@ private fun SpeedSheetContent(
             }
             val selected = speed == selectedSpeed
 
+            val fiat = LocalFiat.current
             GroupCard(
                 position = position,
                 onClick = { onSelectSpeed(speed) },
@@ -729,11 +753,17 @@ private fun SpeedSheetContent(
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                             color = MaterialTheme.colorScheme.onSurface,
                         )
-                        Text(
-                            text = commission?.usdAmount.orEmpty(),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                        val fiatText = commission?.feeUsd
+                            ?.let { formatFiat(it, fiat, approximate = true) }
+                        if (fiatText != null) {
+                            Text(
+                                text = fiatText,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        } else if (commission != null) {
+                            ShimmerBox(modifier = Modifier.size(width = 60.dp, height = 12.dp))
+                        }
                     }
                 },
             )
@@ -952,7 +982,7 @@ private fun ConfirmSendLayoutPreview() {
                 tokenSymbol = "ETH",
                 walletName = "Wallet 1",
                 amount = "0.000345 ETH",
-                amountUsd = "≈ $0.86",
+                amountUsd = 0.86,
                 address = "0xGGJ7GJHHJGJHFDFKJDFKFNKDBJF",
                 networkName = "Ethereum",
                 commissions = mapOf(
@@ -962,7 +992,7 @@ private fun ConfirmSendLayoutPreview() {
                 ),
                 selectedSpeed = FeeSpeed.FAST,
                 totalAmount = "0.000495 ETH",
-                totalAmountUsd = "≈ $1.01",
+                totalAmountUsd = 1.01,
                 isLoading = false,
             ),
             onBackClick = {},
@@ -985,6 +1015,6 @@ private fun previewCommission(
     return ConfirmSendContract.CommissionInfo(
         estimate = FeeEstimate(nativeAmount = decimal, nativeSymbol = "ETH"),
         nativeAmount = "$nativeAmount ETH",
-        usdAmount = "≈ \$${"%.2f".format(usd)}",
+        feeUsd = usd,
     )
 }

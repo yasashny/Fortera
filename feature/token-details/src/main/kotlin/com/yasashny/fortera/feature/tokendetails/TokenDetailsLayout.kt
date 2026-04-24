@@ -87,8 +87,9 @@ import java.math.BigDecimal
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.yasashny.fortera.core.ui.currency.LocalFiat
 import com.yasashny.fortera.core.ui.format.formatCrypto
-import com.yasashny.fortera.core.ui.format.formatUsd
+import com.yasashny.fortera.core.ui.format.formatFiat
 import com.yasashny.fortera.core.ui.token.tokenIconUrl
 import com.yasashny.fortera.feature.tokendetails.R as TokenDetailsR
 import kotlin.math.abs
@@ -195,11 +196,16 @@ internal fun TokenDetailsLayout(
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Medium,
                             )
-                            Text(
-                                text = "≈ ${formatUsd(fiatBalance)}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                            val fiatText = formatFiat(fiatBalance, LocalFiat.current, approximate = true)
+                            if (fiatText != null) {
+                                Text(
+                                    text = fiatText,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            } else {
+                                ShimmerBox(modifier = Modifier.size(width = 60.dp, height = 12.dp))
+                            }
                         }
                     }
                 },
@@ -456,7 +462,9 @@ private fun PriceHero(
         horizontalAlignment = Alignment.Start,
     ) {
         Spacer(modifier = Modifier.height(16.dp))
-        if (isLoading) {
+        val fiat = LocalFiat.current
+        val priceText = if (isLoading) null else formatFiat(priceUsd, fiat)
+        if (priceText == null) {
             ShimmerBox(modifier = Modifier.size(width = 180.dp, height = 40.dp))
             ShimmerBox(
                 modifier = Modifier.size(width = 140.dp, height = 22.dp),
@@ -466,7 +474,7 @@ private fun PriceHero(
         }
 
         Text(
-            text = formatUsd(priceUsd),
+            text = priceText,
             color = MaterialTheme.colorScheme.onSurface,
             fontSize = 34.sp,
             lineHeight = 40.sp,
@@ -480,7 +488,7 @@ private fun PriceHero(
             val deltaAbs = abs(priceUsd * changePercent / (100.0 + changePercent))
             val sign = if (isUp) "+" else "−"
             val pctFormatted = String.format(Locale.US, "%.2f", abs(changePercent))
-            val deltaFormatted = formatUsd(deltaAbs)
+            val deltaFormatted = formatFiat(deltaAbs, fiat) ?: return@Column
 
             Row(
                 modifier = Modifier

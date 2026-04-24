@@ -15,4 +15,10 @@
     <string name="settings_language_en">English</string>
     <string name="settings_environment_mainnet">Mainnet</string>
     <string name="settings_environment_testnet">Sepolia / BTC testnet</string>
+    <string name="settings_currency_title">Display currency</string>
+    <string name="settings_currency_hint">Balances, prices, and fee estimates are shown in this currency throughout the app.</string>
+    <string name="settings_currency_usd">US Dollar</string>
+    <string name="settings_currency_eur">Euro</string>
+    <string name="settings_currency_rub">Russian Ruble</string>
+    <string name="settings_currency_cny">Chinese Yuan</string>
 </resources>

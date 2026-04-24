@@ -38,6 +38,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.yasashny.fortera.core.common.currency.Currency
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 import com.yasashny.fortera.core.network.environment.AppEnvironment
 import com.yasashny.fortera.core.ui.component.CardGroup
@@ -116,9 +117,9 @@ internal fun SettingsLayout(
                 )
                 GroupCard(
                     position = CardPosition.Middle,
-                    onClick = {},
+                    onClick = { onIntent(Intent.OpenCurrencySheet) },
                     title = stringResource(SettingsR.string.settings_currency),
-                    subtitle = "USD",
+                    subtitle = state.currency.code,
                     icon = CardIcon.Vector(Icons.Default.AttachMoney),
                 )
                 GroupCard(
@@ -166,6 +167,20 @@ internal fun SettingsLayout(
             EnvironmentSheetContent(
                 current = state.environment,
                 onSelect = { onIntent(Intent.SelectEnvironment(it)) },
+            )
+        }
+    }
+
+    if (state.isCurrencySheetOpen) {
+        val sheetState = rememberModalBottomSheetState()
+        ModalBottomSheet(
+            onDismissRequest = { onIntent(Intent.DismissCurrencySheet) },
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        ) {
+            CurrencySheetContent(
+                current = state.currency,
+                onSelect = { onIntent(Intent.SelectCurrency(it)) },
             )
         }
     }
@@ -225,6 +240,66 @@ private fun EnvironmentSheetContent(
         Spacer(Modifier.height(12.dp))
     }
 }
+
+@Composable
+private fun CurrencySheetContent(
+    current: Currency,
+    onSelect: (Currency) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = stringResource(SettingsR.string.settings_currency_title),
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Text(
+            text = stringResource(SettingsR.string.settings_currency_hint),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        Spacer(Modifier.height(4.dp))
+
+        CardGroup(
+            items = Currency.entries,
+            key = { it.code },
+        ) { currency, position ->
+            val selected = currency == current
+            GroupCard(
+                position = position,
+                innerRadius = 4.dp,
+                onClick = { onSelect(currency) },
+                title = stringResource(currency.displayNameRes),
+                subtitle = currency.code,
+                icon = currency.symbol.firstOrNull()?.let { CardIcon.Letter(it) },
+                trailing = if (selected) {
+                    {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                } else null,
+            )
+        }
+
+        Spacer(Modifier.height(12.dp))
+    }
+}
+
+private val Currency.displayNameRes: Int
+    get() = when (this) {
+        Currency.USD -> SettingsR.string.settings_currency_usd
+        Currency.EUR -> SettingsR.string.settings_currency_eur
+        Currency.RUB -> SettingsR.string.settings_currency_rub
+        Currency.CNY -> SettingsR.string.settings_currency_cny
+    }
 
 @Preview(showBackground = true)
 @Composable

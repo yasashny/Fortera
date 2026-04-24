@@ -6,7 +6,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import com.yasashny.fortera.core.domaincrypto.repository.BalanceRepository
 import com.yasashny.fortera.core.mvi.MviViewModel
-import com.yasashny.fortera.core.network.environment.AppEnvironment
+import com.yasashny.fortera.core.network.currency.CurrencyRepository
 import com.yasashny.fortera.core.network.environment.EnvironmentRepository
 import com.yasashny.fortera.feature.settings.SettingsContract.Effect
 import com.yasashny.fortera.feature.settings.SettingsContract.Intent
@@ -15,6 +15,7 @@ import com.yasashny.fortera.feature.settings.SettingsContract.State
 class SettingsViewModel(
     private val dataStore: DataStore<Preferences>,
     private val environmentRepository: EnvironmentRepository,
+    private val currencyRepository: CurrencyRepository,
     private val balanceRepository: BalanceRepository,
 ) : MviViewModel<State, Intent, Effect>(State()) {
 
@@ -40,6 +41,11 @@ class SettingsViewModel(
                     reduce(currentState.copy(environment = env))
                 }
             }
+            launch {
+                currencyRepository.observe().collect { currency ->
+                    reduce(currentState.copy(currency = currency))
+                }
+            }
         }
     }
 
@@ -58,6 +64,19 @@ class SettingsViewModel(
                     balanceRepository.clearAllCaches()
                 }
                 reduce(currentState.copy(isEnvSheetOpen = false))
+            }
+
+            Intent.OpenCurrencySheet -> intent {
+                reduce(currentState.copy(isCurrencySheetOpen = true))
+            }
+            Intent.DismissCurrencySheet -> intent {
+                reduce(currentState.copy(isCurrencySheetOpen = false))
+            }
+            is Intent.SelectCurrency -> intent {
+                if (intent.currency != currentState.currency) {
+                    currencyRepository.set(intent.currency)
+                }
+                reduce(currentState.copy(isCurrencySheetOpen = false))
             }
         }
     }

@@ -1,17 +1,43 @@
 package com.yasashny.fortera.core.ui.format
 
+import com.yasashny.fortera.core.common.currency.CurrencySymbolPosition
+import com.yasashny.fortera.core.ui.currency.FiatDisplay
 import java.math.BigDecimal
 import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
 
-private val UsdFormatter = DecimalFormat("#,##0.00").apply {
-    decimalFormatSymbols = decimalFormatSymbols.apply {
+private val FiatFormatter = DecimalFormat("#,##0.00").apply {
+    decimalFormatSymbols = DecimalFormatSymbols().apply {
         groupingSeparator = ' '
         decimalSeparator = ','
     }
 }
 
-/** `$1 234,56` — USD with space grouping and comma decimals. */
-fun formatUsd(amount: Double): String = "$${UsdFormatter.format(amount)}"
+/**
+ * Formats a USD-canonical amount for display in [fiat]'s currency using its live rate.
+ *
+ * Returns `null` when [fiat] has no rate yet — the caller must render a loading placeholder
+ * (typically a [com.yasashny.fortera.core.ui.component.ShimmerBox]) rather than a fabricated
+ * number. That is the only "loading" signal UI layers get for fiat values; there are no
+ * bootstrap or fallback rates elsewhere in the codebase.
+ *
+ * [approximate] prepends "≈ " — used for derived values (fees, totals, USD equivalents of a
+ * crypto amount) to signal to the reader that the number is indicative, not a contract price.
+ */
+fun formatFiat(
+    amountUsd: Double,
+    fiat: FiatDisplay,
+    approximate: Boolean = false,
+): String? {
+    val rate = fiat.rateFromUsd ?: return null
+    val converted = amountUsd * rate
+    val formattedNumber = FiatFormatter.format(converted)
+    val body = when (fiat.currency.symbolPosition) {
+        CurrencySymbolPosition.PREFIX -> "${fiat.currency.symbol}$formattedNumber"
+        CurrencySymbolPosition.SUFFIX -> "$formattedNumber ${fiat.currency.symbol}"
+    }
+    return if (approximate) "≈ $body" else body
+}
 
 /**
  * Crypto amount trimmed to 6 fractional digits. Keeps the full integer part, avoids scientific notation.
