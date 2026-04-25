@@ -7,8 +7,8 @@ import com.yasashny.fortera.core.ui.dialog.ErrorDialog
 import com.yasashny.fortera.feature.createwallet.CreateWallet
 import com.yasashny.fortera.feature.importwallet.ImportWallet
 import com.yasashny.fortera.feature.walletselector.WalletSettings
-import com.yasashny.fortera.feature.walletselector.main.presentation.WalletSelectorContract
 import com.yasashny.fortera.feature.walletselector.main.presentation.WalletSelectorContract.Effect
+import com.yasashny.fortera.feature.walletselector.main.presentation.WalletSelectorContract.Intent
 import com.yasashny.fortera.feature.walletselector.main.presentation.WalletSelectorViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -46,7 +46,7 @@ fun WalletSelectorSheet(
 
         ErrorDialog(
             message = state.errorMessage,
-            onDismiss = { onIntent(WalletSelectorContract.Intent.DismissError) },
+            onDismiss = { onIntent(Intent.DismissError) },
         )
     }
 }

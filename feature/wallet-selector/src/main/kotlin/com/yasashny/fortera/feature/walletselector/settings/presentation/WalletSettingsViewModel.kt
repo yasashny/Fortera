@@ -4,110 +4,70 @@ import com.yasashny.fortera.core.domain.wallet.WalletInteractor
 import com.yasashny.fortera.core.mvi.MviViewModel
 import com.yasashny.fortera.core.ui.text.UiText
 import com.yasashny.fortera.feature.walletselector.R
+import com.yasashny.fortera.feature.walletselector.settings.presentation.WalletSettingsContract.Effect
+import com.yasashny.fortera.feature.walletselector.settings.presentation.WalletSettingsContract.Intent
+import com.yasashny.fortera.feature.walletselector.settings.presentation.WalletSettingsContract.State
 
 class WalletSettingsViewModel(
     private val walletId: String,
     private val walletInteractor: WalletInteractor,
-) : MviViewModel<WalletSettingsContract.State, WalletSettingsContract.Intent, WalletSettingsContract.Effect>(
-    WalletSettingsContract.State.Loading,
-) {
+) : MviViewModel<State, Intent, Effect>(State.Loading) {
 
     init {
         intent {
-            launch {
-                walletInteractor.getWallets().collect { wallets ->
-                    val wallet = wallets.find { it.id == walletId } ?: return@collect
-                    withState<WalletSettingsContract.State.Loading> {
-                        reduce(
-                            WalletSettingsContract.State.Content(
-                                walletId = walletId, name = wallet.name,
-                            )
-                        )
+            walletInteractor.getWallets().collect { wallets ->
+                val wallet = wallets.find { it.id == walletId } ?: return@collect
+                if (currentState is State.Loading) {
+                    reduce(State.Content(walletId = wallet.id, name = wallet.name))
+                }
+            }
+        }
+    }
+
+    override fun handleIntent(intent: Intent) = when (intent) {
+        is Intent.NameChanged -> updateContent { it.copy(name = intent.value) }
+        Intent.SaveClicked -> saveName()
+        Intent.DeleteClicked -> updateContent { it.copy(showDeleteDialog = true) }
+        Intent.DismissDeleteDialog -> updateContent { it.copy(showDeleteDialog = false) }
+        Intent.ConfirmDelete -> deleteWallet()
+        Intent.BackClicked -> sendEffect(Effect.NavigateBack)
+        Intent.DismissError -> updateContent { it.copy(errorMessage = null) }
+    }
+
+    private fun saveName() {
+        intent {
+            withState<State.Content> { content ->
+                if (content.name.isBlank()) {
+                    reduce(content.copy(errorMessage = UiText.of(R.string.wallet_settings_error_name_empty)))
+                    return@withState
+                }
+                reduce(content.copy(isSaving = true, errorMessage = null))
+                walletInteractor.updateWalletName(content.walletId, content.name)
+                    .onSuccess {
+                        reduce(content.copy(isSaving = false))
+                        sendEffect(Effect.ShowSuccess(UiText.of(R.string.wallet_settings_name_saved)))
                     }
-                }
+                    .onFailure {
+                        reduce(content.copy(isSaving = false, errorMessage = UiText.of(R.string.wallet_settings_error_save_failed)))
+                    }
             }
         }
     }
 
-    override fun handleIntent(intent: WalletSettingsContract.Intent) {
-        when (intent) {
-            is WalletSettingsContract.Intent.NameChanged -> onNameChanged(intent.value)
-            WalletSettingsContract.Intent.SaveClicked -> onSaveClicked()
-            WalletSettingsContract.Intent.DeleteClicked -> onDeleteClicked()
-            WalletSettingsContract.Intent.ConfirmDelete -> onConfirmDelete()
-            WalletSettingsContract.Intent.DismissDeleteDialog -> onDismissDeleteDialog()
-            WalletSettingsContract.Intent.BackClicked -> sendEffect(WalletSettingsContract.Effect.NavigateBack)
-            WalletSettingsContract.Intent.DismissError -> clearError()
-        }
-    }
-
-    private fun onNameChanged(value: String) {
-        updateState { state ->
-            (state as? WalletSettingsContract.State.Content)?.copy(name = value) ?: state
-        }
-    }
-
-    private fun clearError() {
-        updateState { state ->
-            (state as? WalletSettingsContract.State.Content)?.copy(errorMessage = null) ?: state
-        }
-    }
-
-    private fun onSaveClicked() = intent {
-        withState<WalletSettingsContract.State.Content> { content ->
-            if (content.name.isBlank()) {
-                reduce(content.copy(errorMessage = UiText.of(R.string.wallet_settings_error_name_empty)))
-                return@withState
+    private fun deleteWallet() {
+        intent {
+            withState<State.Content> { content ->
+                reduce(content.copy(showDeleteDialog = false, isSaving = true, errorMessage = null))
+                walletInteractor.deleteWallet(content.walletId)
+                    .onSuccess { sendEffect(Effect.NavigateBack) }
+                    .onFailure {
+                        reduce(content.copy(isSaving = false, errorMessage = UiText.of(R.string.wallet_settings_error_delete_failed)))
+                    }
             }
-            reduce(content.copy(isSaving = true, errorMessage = null))
-            walletInteractor.updateWalletName(content.walletId, content.name)
-                .onSuccess {
-                    reduce(content.copy(isSaving = false))
-                    sendEffect(
-                        WalletSettingsContract.Effect.ShowSuccess(
-                            UiText.of(R.string.wallet_settings_name_saved)
-                        )
-                    )
-                }
-                .onFailure { throwable ->
-                    reduce(
-                        content.copy(
-                            isSaving = false,
-                            errorMessage = mapError(throwable, R.string.wallet_settings_error_save_failed),
-                        )
-                    )
-                }
         }
     }
 
-    private fun onDeleteClicked() {
-        updateState { state ->
-            (state as? WalletSettingsContract.State.Content)?.copy(showDeleteDialog = true) ?: state
-        }
+    private inline fun updateContent(crossinline transform: (State.Content) -> State.Content) {
+        updateState { state -> if (state is State.Content) transform(state) else state }
     }
-
-    private fun onDismissDeleteDialog() {
-        updateState { state ->
-            (state as? WalletSettingsContract.State.Content)?.copy(showDeleteDialog = false) ?: state
-        }
-    }
-
-    private fun onConfirmDelete() = intent {
-        withState<WalletSettingsContract.State.Content> { content ->
-            reduce(content.copy(showDeleteDialog = false, isSaving = true, errorMessage = null))
-            walletInteractor.deleteWallet(content.walletId)
-                .onSuccess { sendEffect(WalletSettingsContract.Effect.NavigateBack) }
-                .onFailure { throwable ->
-                    reduce(
-                        content.copy(
-                            isSaving = false,
-                            errorMessage = mapError(throwable, R.string.wallet_settings_error_delete_failed),
-                        )
-                    )
-                }
-        }
-    }
-
-    private fun mapError(throwable: Throwable, fallback: Int): UiText =
-        throwable.message?.takeIf { it.isNotBlank() }?.let(UiText::of) ?: UiText.of(fallback)
 }

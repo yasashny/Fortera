@@ -1,5 +1,6 @@
 package com.yasashny.fortera.feature.walletselector.settings.presentation
 
+import androidx.compose.runtime.Immutable
 import com.yasashny.fortera.core.mvi.UiEffect
 import com.yasashny.fortera.core.mvi.UiIntent
 import com.yasashny.fortera.core.mvi.UiState
@@ -7,8 +8,9 @@ import com.yasashny.fortera.core.ui.text.UiText
 
 object WalletSettingsContract {
 
+    @Immutable
     sealed interface State : UiState {
-        /** Present on both substates — the Screen watches it and shows the shared ErrorDialog. */
+        /** Surfaced via the shared [com.yasashny.fortera.core.ui.dialog.ErrorDialog]. */
         val errorMessage: UiText?
 
         data object Loading : State {

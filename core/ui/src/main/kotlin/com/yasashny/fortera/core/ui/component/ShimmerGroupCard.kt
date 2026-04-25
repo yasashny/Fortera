@@ -1,4 +1,4 @@
-package com.yasashny.fortera.feature.main.ui
+package com.yasashny.fortera.core.ui.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,20 +18,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
-import com.yasashny.fortera.core.ui.component.CardPosition
-import com.yasashny.fortera.core.ui.component.ShimmerBox
-import com.yasashny.fortera.core.ui.component.cardShapeForPosition
 
+/**
+ * Shimmer placeholder shaped like a [GroupCard]. Use while a list of cards is loading
+ * so the layout doesn't jump when real items arrive.
+ */
 @Composable
-internal fun ShimmerGroupCard(
-    modifier: Modifier = Modifier,
+fun ShimmerGroupCard(
     position: CardPosition,
+    modifier: Modifier = Modifier,
+    showTrailing: Boolean = true,
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = cardShapeForPosition(position),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ),
     ) {
         Row(
@@ -49,17 +51,13 @@ internal fun ShimmerGroupCard(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                ShimmerBox(
-                    modifier = Modifier.size(width = 100.dp, height = 16.dp),
-                )
-                ShimmerBox(
-                    modifier = Modifier.size(width = 60.dp, height = 14.dp),
-                )
+                ShimmerBox(modifier = Modifier.size(width = 100.dp, height = 16.dp))
+                ShimmerBox(modifier = Modifier.size(width = 60.dp, height = 14.dp))
             }
-            Spacer(modifier = Modifier.width(16.dp))
-            ShimmerBox(
-                modifier = Modifier.size(width = 70.dp, height = 16.dp),
-            )
+            if (showTrailing) {
+                Spacer(modifier = Modifier.width(16.dp))
+                ShimmerBox(modifier = Modifier.size(width = 70.dp, height = 16.dp))
+            }
         }
     }
 }
@@ -75,16 +73,6 @@ private fun ShimmerGroupCardPreview() {
             ShimmerGroupCard(position = CardPosition.First)
             ShimmerGroupCard(position = CardPosition.Middle)
             ShimmerGroupCard(position = CardPosition.Last)
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun ShimmerGroupCardSinglePreview() {
-    ForteraTheme {
-        Column(modifier = Modifier.padding(16.dp)) {
-            ShimmerGroupCard(position = CardPosition.Single)
         }
     }
 }

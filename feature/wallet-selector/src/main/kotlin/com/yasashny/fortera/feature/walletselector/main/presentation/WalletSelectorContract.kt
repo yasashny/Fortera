@@ -1,5 +1,6 @@
 package com.yasashny.fortera.feature.walletselector.main.presentation
 
+import androidx.compose.runtime.Immutable
 import com.yasashny.fortera.core.domain.wallet.Wallet
 import com.yasashny.fortera.core.mvi.UiEffect
 import com.yasashny.fortera.core.mvi.UiIntent
@@ -8,12 +9,21 @@ import com.yasashny.fortera.core.ui.text.UiText
 
 object WalletSelectorContract {
 
+    @Immutable
     data class State(
-        val wallets: List<Wallet> = emptyList(),
-        val activeWalletId: String? = null,
-        val isLoading: Boolean = true,
+        val wallets: WalletsState = WalletsState.Loading,
         val errorMessage: UiText? = null,
     ) : UiState
+
+    /** Loading vs ready split for the wallet list — drives shimmer/content rendering. */
+    @Immutable
+    sealed interface WalletsState {
+        data object Loading : WalletsState
+        data class Ready(
+            val items: List<Wallet>,
+            val activeWalletId: String?,
+        ) : WalletsState
+    }
 
     sealed interface Intent : UiIntent {
         data class SelectWallet(val id: String) : Intent

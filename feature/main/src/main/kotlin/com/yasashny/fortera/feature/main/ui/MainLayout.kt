@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 import com.yasashny.fortera.core.ui.component.ForteraCollapsingScaffold
+import com.yasashny.fortera.core.ui.component.ShimmerGroupCard
 import com.yasashny.fortera.core.ui.component.cardGroupItems
 import com.yasashny.fortera.core.ui.component.cardPosition
 import com.yasashny.fortera.feature.main.R
