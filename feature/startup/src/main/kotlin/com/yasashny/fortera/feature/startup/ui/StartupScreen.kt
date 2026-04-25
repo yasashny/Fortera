@@ -12,22 +12,15 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 import com.yasashny.fortera.core.mvi.MviContainer
 import com.yasashny.fortera.core.navigation.LocalAppNavigator
@@ -37,7 +30,6 @@ import com.yasashny.fortera.core.ui.component.CardPosition
 import com.yasashny.fortera.core.ui.component.GroupCard
 import com.yasashny.fortera.feature.createwallet.CreateWallet
 import com.yasashny.fortera.feature.importwallet.ImportWallet
-import com.yasashny.fortera.feature.main.Main
 import com.yasashny.fortera.feature.startup.presentation.StartupContract
 import com.yasashny.fortera.feature.startup.presentation.StartupContract.Effect
 import com.yasashny.fortera.feature.startup.presentation.StartupViewModel
@@ -57,25 +49,13 @@ internal fun StartupScreen(
             when (effect) {
                 Effect.NavigateToCreateWallet -> navigator.navigate(CreateWallet)
                 Effect.NavigateToImportWallet -> navigator.navigate(ImportWallet)
-                Effect.NavigateToMain -> navigator.clearAndNavigate(Main)
             }
         }
-    ) { state, onIntent ->
-        if (state.isLoading) {
-            Box(
-                modifier = modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background),
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-            }
-        } else {
-            StartupLayout(
-                modifier = modifier,
-                onIntent
-            )
-        }
+    ) { _, onIntent ->
+        StartupLayout(
+            modifier = modifier,
+            onIntent = onIntent,
+        )
     }
 }
 

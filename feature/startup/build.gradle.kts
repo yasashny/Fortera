@@ -7,8 +7,6 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.domainWallet)
-
     implementation(libs.androidx.activity.compose)
     // Own api
     implementation(projects.feature.startupApi)

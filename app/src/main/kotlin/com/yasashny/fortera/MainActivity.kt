@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.SnackbarHost
@@ -15,9 +16,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.lifecycleScope
 import com.yasashny.fortera.core.common.currency.Currency
 import com.yasashny.fortera.core.common.theme.ThemeMode
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
+import com.yasashny.fortera.core.domain.wallet.WalletInteractor
 import com.yasashny.fortera.core.navigation.AppNavigator
 import com.yasashny.fortera.core.navigation.ForteraNavHost
 import com.yasashny.fortera.core.navigation.NavigationRegistry
@@ -28,13 +31,30 @@ import com.yasashny.fortera.core.network.theme.ThemeRepository
 import com.yasashny.fortera.core.ui.LocalSnackbarHostState
 import com.yasashny.fortera.core.ui.currency.FiatDisplay
 import com.yasashny.fortera.core.ui.currency.LocalFiat
+import com.yasashny.fortera.feature.main.Main
 import com.yasashny.fortera.lock.AppLockGate
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import org.koin.android.ext.android.get
 import org.koin.compose.koinInject
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
+        var keepSplashOnScreen = true
+        splashScreen.setKeepOnScreenCondition { keepSplashOnScreen }
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val walletInteractor = get<WalletInteractor>()
+        val navigator = get<AppNavigator>()
+        lifecycleScope.launch {
+            val activeWallet = walletInteractor.observeActiveWallet().first()
+            if (activeWallet != null) navigator.clearAndNavigate(Main)
+            keepSplashOnScreen = false
+        }
+
         setContent {
             val themeRepository = koinInject<ThemeRepository>()
             val themeMode by themeRepository.observe()
@@ -47,7 +67,7 @@ class MainActivity : AppCompatActivity() {
                 LaunchedEffect(Unit) { fiatRateRepository.refreshIfStale() }
 
                 AppLockGate {
-                    val navigator = koinInject<AppNavigator>()
+                    val composeNavigator = koinInject<AppNavigator>()
                     val registry = koinInject<NavigationRegistry>()
                     val currencyRepository = koinInject<CurrencyRepository>()
                     val snackbarHostState = remember { SnackbarHostState() }
@@ -65,7 +85,7 @@ class MainActivity : AppCompatActivity() {
                         LocalFiat provides fiat,
                     ) {
                         Box(modifier = Modifier.fillMaxSize()) {
-                            ForteraNavHost(navigator = navigator, registry = registry)
+                            ForteraNavHost(navigator = composeNavigator, registry = registry)
                             SnackbarHost(
                                 hostState = snackbarHostState,
                                 modifier = Modifier.align(Alignment.BottomCenter),
