@@ -6,10 +6,6 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 
-/**
- * Source of haptic feedback. Exposed as an interface so UI code doesn't depend on Android
- * vibrator APIs directly and can be tested with a no-op / recording impl.
- */
 interface Haptics {
     fun click()
 }

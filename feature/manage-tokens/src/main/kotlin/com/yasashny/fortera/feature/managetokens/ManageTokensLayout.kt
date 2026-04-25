@@ -88,7 +88,7 @@ internal fun ManageTokensLayout(
                     title = item.token.name,
                     titleSuffix = item.token.symbol,
                     subtitle = subtitle,
-                    iconUrl = tokenIconUrl(item.token.symbol),
+                    iconUrl = tokenIconUrl(item.token),
                     icon = CardIcon.Letter(item.token.symbol.first()),
                     badgeIconUrl = badgeUrl,
                     trailing = {

@@ -11,11 +11,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 import com.yasashny.fortera.feature.walletselector.R
 
-/**
- * Destructive confirmation for wallet deletion. The dialog is rendered conditionally off
- * [WalletSettingsContract.State.Content.showDeleteDialog] — pass `onConfirm` to commit the
- * delete and `onDismiss` for everything else (outside-tap, cancel, back-press).
- */
 @Composable
 internal fun DeleteWalletDialog(
     onConfirm: () -> Unit,

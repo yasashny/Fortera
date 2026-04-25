@@ -28,10 +28,6 @@ import kotlinx.coroutines.delay
 
 private const val AutoDismissDelayMs = 3000L
 
-/**
- * State-driven banner overlay. Renders nothing when [banner] is null, and auto-dismisses
- * after [AutoDismissDelayMs] via [onDismiss]. Animates in/out purely on [banner] visibility.
- */
 @Composable
 internal fun ErrorBanner(
     banner: Banner?,

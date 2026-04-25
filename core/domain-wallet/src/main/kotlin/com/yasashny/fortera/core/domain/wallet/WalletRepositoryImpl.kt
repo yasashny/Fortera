@@ -18,8 +18,6 @@ internal class WalletRepositoryImpl(
     private val secureStorage: SecureStorage,
 ) : WalletRepository {
 
-    // Room — метаданные кошелька
-
     override fun getWallets(): Flow<List<Wallet>> =
         walletDao.getAll().map { it.map(WalletEntity::toWallet) }
 
@@ -34,8 +32,6 @@ internal class WalletRepositoryImpl(
     override suspend fun setActiveWallet(walletId: String) {
         dataStore.edit { it[ACTIVE_WALLET_ID_KEY] = walletId }
     }
-
-    // Операции с кошельком
 
     override suspend fun createWallet(name: String, seedPhrase: SeedPhrase): Wallet =
         insertWallet(name.ifBlank { "My Wallet" }, seedPhrase)
@@ -63,8 +59,6 @@ internal class WalletRepositoryImpl(
             if (prefs[ACTIVE_WALLET_ID_KEY] == id) prefs.remove(ACTIVE_WALLET_ID_KEY)
         }
     }
-
-    // EncryptedSharedPreferences — seed phrase
 
     override suspend fun getWalletCount(): Int = walletDao.getCount()
 

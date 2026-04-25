@@ -22,22 +22,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
-/** Spacing between cards in a group — matches CardSpacing in GroupCard */
 private val InputCardSpacing = 4.dp
 
-/**
- * Text input styled as a card. Supports corner rounding via [CardPosition]
- * for grouping multiple inputs together visually.
- *
- * @param value Current text value
- * @param onValueChange Called when text changes
- * @param placeholder Placeholder text shown when value is empty
- * @param modifier Modifier
- * @param position Corner rounding position within a group
- * @param enabled Whether the field is editable
- * @param error Error message shown below the card, or null
- * @param trailingIcon Optional trailing icon (e.g. paste button)
- */
 @Composable
 fun InputCard(
     value: String,
@@ -103,19 +89,6 @@ fun InputCard(
     }
 }
 
-/**
- * Container for a group of [InputCard]s.
- * Adds [InputCardSpacing] between cards — use [CardPosition] on each card
- * to control corner rounding.
- *
- * Usage:
- * ```
- * InputCardGroup {
- *     InputCard(..., position = CardPosition.First)
- *     InputCard(..., position = CardPosition.Last)
- * }
- * ```
- */
 @Composable
 fun InputCardGroup(
     modifier: Modifier = Modifier,

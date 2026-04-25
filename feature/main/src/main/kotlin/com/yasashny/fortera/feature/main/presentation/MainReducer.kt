@@ -3,12 +3,6 @@ package com.yasashny.fortera.feature.main.presentation
 import com.yasashny.fortera.feature.main.domain.MainOverview
 import com.yasashny.fortera.feature.main.domain.MainOverviewEvent
 
-/**
- * Pure state transitions — no side effects, no dispatchers. Easy to unit-test.
- *
- * Each function maps an input (event or intent payload) to a new [MainState],
- * keeping the ViewModel a thin orchestrator over these transitions.
- */
 internal object MainReducer {
 
     fun onWalletActivated(state: MainState, walletName: String): MainState = state.copy(
@@ -61,8 +55,8 @@ internal object MainReducer {
         val unreachable = event.overview.unreachableBannerOrNull()
         return when {
             unreachable != null -> unreachable
-            event.isCached -> previous      // cached: we don't know what's up yet, keep UI stable
-            else -> null                    // fresh success: clear stale banner
+            event.isCached -> previous
+            else -> null
         }
     }
 }

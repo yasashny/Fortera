@@ -8,14 +8,6 @@ import com.yasashny.fortera.core.domaincrypto.model.TokenDefinition
 import com.yasashny.fortera.core.domaincrypto.repository.SendTransactionRepository
 import java.math.BigDecimal
 
-/**
- * Send-transaction operations scoped to a wallet — the caller identifies the wallet by id,
- * seed access stays inside the bridge module.
- *
- * [estimateFees] takes [walletId] + [amount] so the underlying sender can pre-select UTXOs
- * (BTC) or call `eth_estimateGas` from the real sender address (ETH). Without this the
- * estimator falls back to a conservative single-input template.
- */
 interface WalletTransactionSender {
     suspend fun estimateFees(
         walletId: String,

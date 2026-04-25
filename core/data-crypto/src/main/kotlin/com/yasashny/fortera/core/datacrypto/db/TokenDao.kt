@@ -46,8 +46,6 @@ interface TokenDao {
     @Query("DELETE FROM wallet_tokens WHERE walletId = :walletId AND tokenId = :tokenId")
     suspend fun deleteWalletToken(walletId: String, tokenId: String)
 
-    // Cached balances
-
     @Query("SELECT * FROM cached_balances WHERE walletId = :walletId AND tokenId IN (:tokenIds)")
     suspend fun getCachedBalances(walletId: String, tokenIds: List<String>): List<CachedBalanceEntity>
 

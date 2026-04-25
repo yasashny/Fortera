@@ -41,7 +41,7 @@ internal fun TokenRow(
         title = tokenBalance.token.name,
         subtitle = String.format(Locale.US, "%+.2f%%", change),
         subtitleColor = changeColor.copy(alpha = staleAlpha),
-        iconUrl = tokenIconUrl(tokenBalance.token.symbol),
+        iconUrl = tokenIconUrl(tokenBalance.token),
         icon = CardIcon.Letter(tokenBalance.token.symbol.first()),
         badgeIconUrl = networkBadgeUrlFor(tokenBalance.token),
         trailing = {

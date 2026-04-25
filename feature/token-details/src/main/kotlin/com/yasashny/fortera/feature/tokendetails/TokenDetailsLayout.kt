@@ -165,7 +165,6 @@ internal fun TokenDetailsLayout(
 
             Spacer(Modifier.height(16.dp))
 
-            // Token card
             val badgeUrl = if (state.tokenContractAddress != null) {
                 tokenIconUrl("eth")
             } else {
@@ -179,7 +178,7 @@ internal fun TokenDetailsLayout(
                 onClick = {},
                 title = stringResource(TokenDetailsR.string.token_details_your_balance),
                 subtitle = state.tokenName,
-                iconUrl = tokenIconUrl(state.tokenSymbol),
+                iconUrl = state.tokenIconUrl,
                 icon = state.tokenSymbol.firstOrNull()?.let { CardIcon.Letter(it) },
                 badgeIconUrl = badgeUrl,
                 trailing = {
@@ -213,7 +212,6 @@ internal fun TokenDetailsLayout(
 
             Spacer(Modifier.height(4.dp))
 
-            // Send / Receive buttons
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -244,7 +242,6 @@ internal fun TokenDetailsLayout(
 
             Spacer(Modifier.height(16.dp))
 
-            // Transactions
             TransactionsSection(
                 transactions = state.transactions,
                 isLoading = state.isLoading || state.isTransactionsLoading,

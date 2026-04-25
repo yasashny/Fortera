@@ -16,24 +16,6 @@ import com.yasashny.fortera.core.ui.R
 import com.yasashny.fortera.core.ui.text.UiText
 import com.yasashny.fortera.core.ui.text.asString
 
-/**
- * Shared error dialog. Used from any feature that needs to surface a recoverable failure
- * ("Send failed", "Wallet delete failed", etc.). Prefer this over a snackbar when the
- * message is important enough that the user shouldn't miss it.
- *
- * The dialog renders conditionally — pass a non-null [UiText] to show it, `null` to hide.
- * [onDismiss] is called on outside-tap, back-press, or OK-tap.
- *
- * ```kotlin
- * ErrorDialog(
- *     message = state.errorMessage,
- *     onDismiss = { onIntent(FooIntent.DismissError) },
- * )
- * ```
- *
- * For richer scenarios (custom title or confirm label), pass [title] / [confirmLabel]
- * as additional [UiText] values.
- */
 @Composable
 fun ErrorDialog(
     message: UiText?,

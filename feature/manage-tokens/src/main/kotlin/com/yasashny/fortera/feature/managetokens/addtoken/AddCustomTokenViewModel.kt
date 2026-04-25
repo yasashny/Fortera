@@ -37,9 +37,6 @@ class AddCustomTokenViewModel(
         when {
             trimmed.isEmpty() -> updateState { it.copy(input = value, verification = Verification.Idle) }
             !ETH_ADDRESS_REGEX.matches(trimmed) -> updateState {
-                // Keep client-side validation silent until the user has typed enough
-                // to plausibly have intended a full 0x-prefixed address — pre-empts
-                // the "Invalid address" flash on partial input.
                 if (trimmed.length >= MIN_LENGTH_FOR_INVALID_HINT) {
                     it.copy(
                         input = value,
@@ -59,12 +56,10 @@ class AddCustomTokenViewModel(
     private fun scheduleVerification(input: String) = intent {
         launch {
             delay(VERIFICATION_DEBOUNCE_MS)
-            // Bail out if the user kept typing while we waited.
             if (currentState.input.trim() != input) return@launch
 
             val result = tokenMetadataFetcher.fetch(input)
 
-            // Drop stale results — the user moved on.
             if (currentState.input.trim() != input) return@launch
 
             val verification = result.fold(
@@ -105,8 +100,6 @@ class AddCustomTokenViewModel(
     }
 
     private fun CustomTokenMetadata.toTokenDefinition(): TokenDefinition = TokenDefinition(
-        // Coin-listing ID first when available so pricing wires up; otherwise fall back
-        // to the contract address so the row stays unique in the database.
         id = coingeckoId ?: "custom-${contractAddress.lowercase()}",
         name = name,
         symbol = symbol,

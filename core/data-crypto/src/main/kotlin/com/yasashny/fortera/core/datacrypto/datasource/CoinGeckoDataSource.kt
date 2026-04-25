@@ -7,14 +7,6 @@ import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import org.json.JSONObject
 
-/**
- * Public CoinGecko v3 API. Used by the "add custom token" flow to resolve an
- * Ethereum contract address into name / symbol / decimals via the
- * `/coins/ethereum/contract/{address}` reverse-lookup endpoint.
- *
- * The free public endpoint has no auth but is rate-limited; the single-call,
- * on-demand usage here stays well within the limits.
- */
 class CoinGeckoDataSource(private val httpClient: HttpClient) {
 
     suspend fun fetchByContract(contractAddress: String): CustomTokenMetadata? = runCatching {

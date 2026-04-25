@@ -76,7 +76,7 @@ internal fun SelectTokenLayout(
                     title = token.name,
                     titleSuffix = token.symbol,
                     subtitle = subtitle,
-                    iconUrl = tokenIconUrl(token.symbol),
+                    iconUrl = tokenIconUrl(token),
                     icon = CardIcon.Letter(token.symbol.first()),
                     badgeIconUrl = badgeUrl,
                 )

@@ -206,7 +206,7 @@ private fun TokenPreviewCard(metadata: CustomTokenMetadata) {
             ManageTokensR.string.add_token_decimals_label,
             metadata.decimals,
         ),
-        iconUrl = tokenIconUrl(metadata.symbol),
+        iconUrl = tokenIconUrl(metadata),
         icon = CardIcon.Letter(metadata.symbol.firstOrNull() ?: '?'),
         badgeIconUrl = tokenIconUrl("eth"),
     )

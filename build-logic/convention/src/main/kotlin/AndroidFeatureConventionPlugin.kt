@@ -14,16 +14,13 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
             }
 
             dependencies {
-                // Core UI
                 implementation(project(":core:designsystem"))
                 implementation(project(":core:ui"))
                 implementation(project(":core:common"))
 
-                // Architecture
                 implementation(project(":core:mvi"))
                 implementation(project(":core:navigation"))
 
-                // Libraries
                 implementation(libs.androidx.lifecycle.runtime.ktx)
                 implementation(libs.kotlinx.coroutines.android)
                 implementation(libs.koin.androidx.compose)

@@ -20,17 +20,6 @@ import org.web3j.utils.Numeric
 import java.math.BigDecimal
 import java.math.BigInteger
 
-/**
- * Signs and broadcasts ETH / ERC-20 transactions using EIP-1559 fee semantics.
- *
- * Gas pricing is derived from `eth_feeHistory` — slow/fast/instant tiers map to
- * 10th / 50th / 90th-percentile priority-fee tips plus a safety buffer on the
- * predicted next-block base fee. ERC-20 gas limits come from `eth_estimateGas`
- * with a 20% headroom, so we don't rely on hard-coded values per token.
- *
- * Falls back to legacy `eth_gasPrice` + conservative gas limits if the node
- * rejects fee history (older RPC endpoints).
- */
 internal class EthereumSender(
     private val infuraDataSource: InfuraDataSource,
     private val addressResolver: AddressResolverImpl,
@@ -82,8 +71,6 @@ internal class EthereumSender(
         return infuraDataSource.sendRawTransaction(Numeric.toHexString(signed))
     }
 
-    // ────────────────────────────── Gas pricing ──────────────────────────────
-
     private suspend fun resolvePricing(): GasPricing = runCatching {
         val history = infuraDataSource.getFeeHistory(
             blockCount = FEE_HISTORY_BLOCKS,
@@ -95,11 +82,8 @@ internal class EthereumSender(
         val instantTip = history.medianPriorityFee(2).coerceAtLeastTip()
         GasPricing.Eip1559(baseFee, slowTip, fastTip, instantTip)
     }.getOrElse {
-        // Older RPCs or certain testnets may not support feeHistory — fall back to legacy.
         GasPricing.Legacy(infuraDataSource.getGasPrice())
     }
-
-    // ───────────────────────────── Gas limit ─────────────────────────────
 
     private suspend fun resolveGasLimit(
         token: TokenDefinition,
@@ -108,7 +92,6 @@ internal class EthereumSender(
     ): BigInteger {
         val contract = token.contractAddress ?: return ETH_TRANSFER_GAS_LIMIT
 
-        // ERC-20 — simulate to avoid over/under-shooting per-token variance.
         val caller = fromAddress ?: ZERO_ADDRESS
         val estimated = runCatching {
             val rawAmount = amount.movePointRight(token.decimals).toBigInteger()
@@ -117,7 +100,6 @@ internal class EthereumSender(
             infuraDataSource.estimateGas(from = caller, to = contract, data = data)
         }.getOrNull() ?: ERC20_FALLBACK_GAS_LIMIT
 
-        // 20% headroom — mempool relay rules are stricter than simulation.
         return estimated.multiply(BigInteger.valueOf(120)).divide(HUNDRED)
     }
 
@@ -132,8 +114,6 @@ internal class EthereumSender(
 
     private fun BigInteger.coerceAtLeastTip(): BigInteger =
         if (this <= BigInteger.ZERO) MIN_PRIORITY_FEE_WEI else this
-
-    // ───────────────────────────── Pricing models ─────────────────────────────
 
     private sealed interface GasPricing {
 
@@ -163,7 +143,6 @@ internal class EthereumSender(
             }
 
             override fun maxFeePerGas(speed: FeeSpeed): BigInteger {
-                // 2× baseFee covers up to ~87.5% base-fee bump over several blocks.
                 return nextBaseFee.multiply(BigInteger.TWO).add(tipFor(speed))
             }
 
@@ -265,7 +244,7 @@ internal class EthereumSender(
         val ETH_TRANSFER_GAS_LIMIT: BigInteger = BigInteger.valueOf(21_000)
         val ERC20_FALLBACK_GAS_LIMIT: BigInteger = BigInteger.valueOf(90_000)
         val HUNDRED: BigInteger = BigInteger.valueOf(100)
-        val MIN_PRIORITY_FEE_WEI: BigInteger = BigInteger.valueOf(1_000_000_000L) // 1 gwei floor
+        val MIN_PRIORITY_FEE_WEI: BigInteger = BigInteger.valueOf(1_000_000_000L)
 
         const val ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
     }

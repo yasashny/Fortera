@@ -14,10 +14,6 @@ import com.yasashny.fortera.core.ui.component.CardPosition
 import com.yasashny.fortera.core.ui.component.GroupCard
 import com.yasashny.fortera.feature.walletselector.R
 
-/**
- * Top of the wallet-selector sheet: the two always-visible entry points to the create-wallet
- * and import-wallet flows.
- */
 @Composable
 internal fun CreateImportActions(
     onCreateClick: () -> Unit,

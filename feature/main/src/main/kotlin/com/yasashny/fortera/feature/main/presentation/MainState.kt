@@ -18,14 +18,11 @@ data class MainState(
     }
 }
 
-/** Balances section of the screen — a sealed hierarchy makes the shimmer / content split explicit. */
 @Immutable
 sealed interface BalancesState {
 
-    /** First-time load, no cached data yet. Show shimmer. */
     data object Loading : BalancesState
 
-    /** Balances available. [isStale] signals cached/partial data that should render pulsed. */
     data class Ready(
         val totalUsd: Double,
         val tokens: List<TokenBalance>,
@@ -33,7 +30,6 @@ sealed interface BalancesState {
     ) : BalancesState
 }
 
-/** Transient banner shown at the top of the screen. Part of state so it survives configuration changes. */
 @Immutable
 sealed interface Banner {
     data object GenericError : Banner

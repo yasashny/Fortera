@@ -10,13 +10,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
-/**
- * Single source of truth for the user's selected theme mode.
- *
- * Backed by [DataStore] — the selection survives process death and is observable by every
- * screen that depends on theme. Mirrors [com.yasashny.fortera.core.network.currency.CurrencyRepository]
- * in shape and contract; changes made through [set] propagate to all subscribers of [observe].
- */
 interface ThemeRepository {
     fun observe(): Flow<ThemeMode>
     suspend fun current(): ThemeMode

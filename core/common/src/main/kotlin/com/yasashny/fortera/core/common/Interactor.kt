@@ -7,13 +7,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 
-/**
- * Base class for domain interactors that offload work to a specific [dispatcher].
- *
- * [execute] rethrows [CancellationException] so the coroutine cancellation machinery
- * still works — otherwise a cancelled interactor would surface as `Result.failure(...)`
- * and the caller could keep running on a dead scope.
- */
 abstract class Interactor(
     protected val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {

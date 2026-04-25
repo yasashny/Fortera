@@ -129,13 +129,6 @@ class InfuraDataSource(
         return BigInteger(hex.removePrefix("0x"), 16)
     }
 
-    /**
-     * EIP-1559 fee history. Returns base fees per block (including the predicted next one)
-     * and priority-fee samples at the requested [rewardPercentiles].
-     *
-     * @param blockCount number of recent blocks to sample (max 1024 on most providers)
-     * @param rewardPercentiles percentiles in 0..100, e.g. `listOf(10, 50, 90)` for slow/medium/fast tiers
-     */
     suspend fun getFeeHistory(
         blockCount: Int,
         rewardPercentiles: List<Int>,
@@ -160,10 +153,6 @@ class InfuraDataSource(
         return FeeHistory(baseFeePerGas = baseFees, rewardsPerBlock = rewards)
     }
 
-    /**
-     * Simulates a transaction on the node and returns the gas it would consume.
-     * Used to avoid hard-coding ERC-20 transfer gas limits.
-     */
     suspend fun estimateGas(
         from: String,
         to: String,
@@ -208,25 +197,13 @@ class InfuraDataSource(
         }.bodyAsText()
     }
 
-    /**
-     * Snapshot returned by [getFeeHistory]. [baseFeePerGas] has `blockCount + 1` entries —
-     * the last one is the node's prediction for the next block's base fee. [rewardsPerBlock]
-     * has one entry per sampled block, each containing priority-fee samples at the requested
-     * percentiles in the same order as passed in.
-     */
     data class FeeHistory(
         val baseFeePerGas: List<BigInteger>,
         val rewardsPerBlock: List<List<BigInteger>>,
     ) {
-        /** Node's predicted base fee for the next block (last element of [baseFeePerGas]). */
         val nextBaseFee: BigInteger
             get() = baseFeePerGas.lastOrNull() ?: BigInteger.ZERO
 
-        /**
-         * Median priority-fee tip across sampled blocks at the given percentile index.
-         * [percentileIndex] refers to position in the `rewardPercentiles` list passed to
-         * [getFeeHistory], not the percentile value itself.
-         */
         fun medianPriorityFee(percentileIndex: Int): BigInteger {
             val samples = rewardsPerBlock.mapNotNull { row -> row.getOrNull(percentileIndex) }
                 .filter { it > BigInteger.ZERO }

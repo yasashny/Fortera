@@ -22,7 +22,6 @@ internal class AddressValidatorImpl(
                         AppEnvironment.MAINNET -> MainNetParams.get()
                         AppEnvironment.TESTNET -> TestNet3Params.get()
                     }
-                    // Throws if bech32 decode / HRP / checksum fails.
                     SegwitAddress.fromBech32(params, address)
                     true
                 }

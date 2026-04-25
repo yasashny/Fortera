@@ -21,6 +21,7 @@ object TokenDetailsContract {
     data class State(
         val tokenName: String = "",
         val tokenSymbol: String = "",
+        val tokenIconUrl: String = "",
         val tokenContractAddress: String? = null,
         val balance: BigDecimal = BigDecimal.ZERO,
         val priceUsd: Double = 0.0,

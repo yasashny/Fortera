@@ -7,11 +7,6 @@ import org.bitcoinj.core.NetworkParameters
 import org.bitcoinj.params.MainNetParams
 import org.bitcoinj.params.TestNet3Params
 
-/**
- * Concrete address derivation backed by [HdWallet] and network params resolved from
- * [EnvironmentRepository]. Exposes suspend variants that return network-specific keys
- * used by the data-layer senders.
- */
 internal class AddressResolverImpl(
     private val environmentRepository: EnvironmentRepository,
 ) : AddressResolver {

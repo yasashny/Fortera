@@ -13,7 +13,6 @@ android {
         try {
             props.load(rootProject.file("local.properties").inputStream())
         } catch (_: Exception) {
-            // local.properties may not exist in CI
         }
         buildConfigField("String", "INFURA_PROJECT_ID", "\"${props["INFURA_PROJECT_ID"] ?: ""}\"")
         buildConfigField("String", "COINSTATS_API_KEY", "\"${props["COINSTATS_API_KEY"] ?: ""}\"")

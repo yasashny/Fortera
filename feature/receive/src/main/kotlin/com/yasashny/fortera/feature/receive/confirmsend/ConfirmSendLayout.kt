@@ -86,7 +86,6 @@ import com.yasashny.fortera.core.ui.component.cardShapeForPosition
 import com.yasashny.fortera.core.ui.currency.FiatDisplay
 import com.yasashny.fortera.core.ui.currency.LocalFiat
 import com.yasashny.fortera.core.ui.format.formatFiat
-import com.yasashny.fortera.core.ui.token.tokenIconUrl
 import com.yasashny.fortera.core.domaincrypto.model.FeeEstimate
 import com.yasashny.fortera.core.domaincrypto.model.FeeSpeed
 import java.math.BigDecimal
@@ -244,7 +243,7 @@ private fun HeroCard(state: ConfirmSendContract.State) {
                 )
             } else {
                 TokenIcon(
-                    iconUrl = tokenIconUrl(state.tokenSymbol),
+                    iconUrl = state.tokenIconUrl,
                     icon = CardIcon.Letter(state.tokenSymbol.firstOrNull() ?: '?'),
                     size = 44.dp,
                 )

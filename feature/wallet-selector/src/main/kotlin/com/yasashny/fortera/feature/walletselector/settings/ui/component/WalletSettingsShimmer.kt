@@ -12,10 +12,6 @@ import androidx.compose.ui.unit.dp
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 import com.yasashny.fortera.core.ui.component.ShimmerBox
 
-/**
- * Placeholder shown while the wallet record is being read from the database.
- * Sized to match the real [WalletNameField] so the layout doesn't shift on load.
- */
 @Composable
 internal fun WalletSettingsShimmer(
     modifier: Modifier = Modifier,

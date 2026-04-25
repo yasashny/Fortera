@@ -69,8 +69,6 @@ private fun BiometricAuthEffect(
                         errorCode: Int,
                         errString: CharSequence,
                     ) {
-                        // ERROR_CANCELED = system dismiss (e.g. app backgrounded)
-                        // repeatOnLifecycle will cancel the coroutine and retry on next RESUME
                         if (errorCode != BiometricPrompt.ERROR_CANCELED && cont.isActive) {
                             cont.resume(false)
                         }

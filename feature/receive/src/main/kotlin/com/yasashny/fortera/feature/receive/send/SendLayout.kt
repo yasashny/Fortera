@@ -47,7 +47,6 @@ import com.yasashny.fortera.core.ui.component.TokenIcon
 import com.yasashny.fortera.core.ui.currency.LocalFiat
 import com.yasashny.fortera.core.ui.format.formatFiat
 import com.yasashny.fortera.core.ui.text.asString
-import com.yasashny.fortera.core.ui.token.tokenIconUrl
 import com.yasashny.fortera.feature.receive.R as ReceiveR
 import java.math.BigDecimal
 
@@ -112,7 +111,7 @@ internal fun SendLayout(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     TokenIcon(
-                        iconUrl = tokenIconUrl(state.tokenSymbol),
+                        iconUrl = state.tokenIconUrl,
                         icon = CardIcon.Letter(state.tokenSymbol.firstOrNull() ?: '?'),
                         size = 40.dp,
                     )

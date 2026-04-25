@@ -17,10 +17,6 @@ import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 import com.yasashny.fortera.core.ui.component.InputCard
 import com.yasashny.fortera.feature.walletselector.R
 
-/**
- * Wallet-name editor card with an inline Save action. The save spinner is intentionally
- * scoped to this control — it's the only thing being saved on this screen.
- */
 @Composable
 internal fun WalletNameField(
     name: String,

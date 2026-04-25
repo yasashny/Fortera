@@ -12,11 +12,6 @@ import org.web3j.crypto.Credentials
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 
-/**
- * BIP-39 → BIP-32 derivation using web3j (ETH, m/44'/60'/0'/0/0) and
- * bitcoinj (BTC, m/84'/0'/0'/0/0 → P2WPKH). Bitcoin address is network-dependent
- * — pass [MainNetParams] for mainnet (bc1…) or [TestNet3Params] for testnet (tb1…).
- */
 internal object HdWallet {
 
     private val ETH_PATH = intArrayOf(

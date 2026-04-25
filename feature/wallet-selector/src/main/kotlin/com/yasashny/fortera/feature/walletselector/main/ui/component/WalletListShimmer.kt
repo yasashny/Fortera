@@ -13,10 +13,6 @@ import com.yasashny.fortera.core.ui.component.cardPosition
 
 private const val ShimmerItemCount = 3
 
-/**
- * Placeholder shown while [WalletSelectorContract.State.WalletsState] is `Loading`.
- * Mirrors the shape of the real wallet list so the layout doesn't jump when it arrives.
- */
 @Composable
 internal fun WalletListShimmer(
     modifier: Modifier = Modifier,

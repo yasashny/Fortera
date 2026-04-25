@@ -8,6 +8,7 @@ import com.yasashny.fortera.core.domaincrypto.repository.BalanceRepository
 import com.yasashny.fortera.core.domaincrypto.repository.TokenRepository
 import com.yasashny.fortera.core.mvi.MviViewModel
 import com.yasashny.fortera.core.ui.text.UiText
+import com.yasashny.fortera.core.ui.token.tokenIconUrl
 import com.yasashny.fortera.core.walletbalances.WalletAddressesService
 import com.yasashny.fortera.feature.receive.R
 import com.yasashny.fortera.feature.receive.send.SendContract.Effect
@@ -40,6 +41,7 @@ internal class SendViewModel(
                     tokenId = tokenId,
                     tokenName = loadedToken.name,
                     tokenSymbol = loadedToken.symbol,
+                    tokenIconUrl = tokenIconUrl(loadedToken),
                 )
             )
 
@@ -82,11 +84,6 @@ internal class SendViewModel(
         }
     }
 
-    /**
-     * Accepts only digits and at most one decimal separator. Anything else (letters, spaces,
-     * symbols, a second `.`/`,`) is silently filtered out and a localised hint is surfaced
-     * so the user understands why their key press didn't register.
-     */
     private fun onAmountChanged(raw: String) = intent {
         val filtered = filterAmountInput(raw)
         val amountError: UiText? = if (filtered != raw)
@@ -105,7 +102,6 @@ internal class SendViewModel(
         )
     }
 
-    /** Keep digits and at most one decimal separator; drop letters / symbols / duplicate separators. */
     private fun filterAmountInput(input: String): String {
         val sb = StringBuilder(input.length)
         var separatorSeen = false
@@ -116,7 +112,6 @@ internal class SendViewModel(
                     sb.append(c)
                     separatorSeen = true
                 }
-                // letters, spaces, repeated separators — dropped
             }
         }
         return sb.toString()
@@ -126,8 +121,8 @@ internal class SendViewModel(
         val trimmed = raw.trim()
         val network = token?.network
         val error: UiText? = when {
-            trimmed.isEmpty() -> null                              // don't shame an empty field
-            network == null -> null                                // token hasn't loaded yet
+            trimmed.isEmpty() -> null
+            network == null -> null
             addressValidator.isValid(trimmed, network) -> null
             else -> UiText.of(invalidAddressStringFor(network))
         }
@@ -140,7 +135,6 @@ internal class SendViewModel(
         sendEffect(
             Effect.NavigateToConfirm(
                 tokenId = snapshot.tokenId,
-                // Confirm screen parses with `.` — normalise before navigation.
                 amount = snapshot.amount.normalizeDecimal(),
                 address = snapshot.address,
             )

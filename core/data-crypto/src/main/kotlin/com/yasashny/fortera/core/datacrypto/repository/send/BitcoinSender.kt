@@ -19,18 +19,6 @@ import org.bitcoinj.script.ScriptBuilder
 import org.web3j.utils.Numeric
 import java.math.BigDecimal
 
-/**
- * Signs and broadcasts P2WPKH (SegWit) Bitcoin transactions.
- *
- * [estimateFees] pre-runs UTXO selection for the requested amount so the fee shown on the
- * confirm screen matches the one the user will actually pay at send time (within rounding).
- * Without this, a single-input vsize estimate would under-report the fee whenever the real
- * transaction needs more than one input.
- *
- * [pickFeeRate] linearly interpolates between neighbouring `block-target → sat/vbyte`
- * points when the exact target isn't present in the estimates map — avoids the "jumped
- * from 10-block rate to 1008-block rate" cliff on sparsely-populated testnets.
- */
 internal class BitcoinSender(
     private val blockstreamDataSource: BlockstreamDataSource,
     private val addressResolver: AddressResolverImpl,
@@ -40,7 +28,6 @@ internal class BitcoinSender(
         val estimates = blockstreamDataSource.getFeeEstimates()
         val amountSats = amount.movePointRight(SATS_DECIMALS).toLong().coerceAtLeast(1L)
 
-        // Try to fetch real UTXOs for accurate vsize; fall back to 1-input estimate on failure.
         val utxos = btcAddress
             ?.let { runCatching { blockstreamDataSource.getUtxos(it).filter { u -> u.confirmed } }.getOrNull() }
             .orEmpty()
@@ -105,12 +92,6 @@ internal class BitcoinSender(
         return blockstreamDataSource.broadcastTransaction(Numeric.toHexStringNoPrefix(tx.bitcoinSerialize()))
     }
 
-    // ───────────────────────────── Helpers ─────────────────────────────
-
-    /**
-     * Estimates vsize of a transaction that would cover [targetSats] at the given [feeRate].
-     * Falls back to a single-input estimate if we don't have UTXOs available.
-     */
     private fun estimateVsize(
         utxos: List<BlockstreamDataSource.Utxo>,
         targetSats: Long,
@@ -148,14 +129,6 @@ internal class BitcoinSender(
     private fun vsizeFor(inputs: Int): Int =
         VSIZE_BASE + VSIZE_PER_INPUT * inputs.coerceAtLeast(1) + VSIZE_PER_OUTPUT * 2
 
-    /**
-     * Picks the fee rate for [target] blocks. Interpolates between neighbouring keys when
-     * the exact target is missing.
-     *
-     * The API semantics: `rate[target]` is the minimum sat/vbyte that confirms within
-     * `target` blocks. Smaller `target` → stricter deadline → higher rate. Interpolation
-     * produces a reasonable in-between value even on sparse maps.
-     */
     private fun pickFeeRate(estimates: Map<Int, Double>, target: Int): Double {
         if (estimates.isEmpty()) return DEFAULT_SAT_PER_VB
         estimates[target]?.let { return it }

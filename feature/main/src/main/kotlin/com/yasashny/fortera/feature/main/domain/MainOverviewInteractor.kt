@@ -18,11 +18,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 
-/**
- * Projects [WalletBalances] events plus active-wallet tracking into the feature-level
- * [MainOverviewEvent] stream. No seed / address / network code here — that all lives in
- * [WalletBalances] now.
- */
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainOverviewInteractor(
     private val walletInteractor: WalletInteractor,
@@ -58,7 +53,7 @@ class MainOverviewInteractor(
         emit(MainOverviewEvent.WalletActivated(wallet.id, wallet.name))
         walletBalances.observe(wallet.id).collect { event ->
             when (event) {
-                is WalletBalancesEvent.Loading -> Unit // WalletActivated already signalled the reset
+                is WalletBalancesEvent.Loading -> Unit
                 is WalletBalancesEvent.Snapshot -> emit(
                     MainOverviewEvent.Data(
                         overview = event.value.toOverview(),

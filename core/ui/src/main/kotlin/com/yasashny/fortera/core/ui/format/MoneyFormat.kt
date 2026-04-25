@@ -13,17 +13,6 @@ private val FiatFormatter = DecimalFormat("#,##0.00").apply {
     }
 }
 
-/**
- * Formats a USD-canonical amount for display in [fiat]'s currency using its live rate.
- *
- * Returns `null` when [fiat] has no rate yet — the caller must render a loading placeholder
- * (typically a [com.yasashny.fortera.core.ui.component.ShimmerBox]) rather than a fabricated
- * number. That is the only "loading" signal UI layers get for fiat values; there are no
- * bootstrap or fallback rates elsewhere in the codebase.
- *
- * [approximate] prepends "≈ " — used for derived values (fees, totals, USD equivalents of a
- * crypto amount) to signal to the reader that the number is indicative, not a contract price.
- */
 fun formatFiat(
     amountUsd: Double,
     fiat: FiatDisplay,
@@ -39,9 +28,6 @@ fun formatFiat(
     return if (approximate) "≈ $body" else body
 }
 
-/**
- * Crypto amount trimmed to 6 fractional digits. Keeps the full integer part, avoids scientific notation.
- */
 fun formatCrypto(amount: BigDecimal): String {
     val plain = amount.toPlainString()
     val dotIndex = plain.indexOf('.')
@@ -49,5 +35,4 @@ fun formatCrypto(amount: BigDecimal): String {
     else plain.substring(0, dotIndex + 7)
 }
 
-/** Convenience — [formatCrypto] for `Double` sources (non-wallet-scale values). */
 fun formatCrypto(amount: Double): String = formatCrypto(BigDecimal.valueOf(amount))

@@ -62,8 +62,6 @@ class MainActivity : AppCompatActivity() {
             ForteraTheme(themeMode = themeMode) {
                 val fiatRateRepository = koinInject<FiatRateRepository>()
 
-                // Kick off before the lock screen so rates are ready by the time the user unlocks.
-                // The call short-circuits if last fetch is within the staleness window.
                 LaunchedEffect(Unit) { fiatRateRepository.refreshIfStale() }
 
                 AppLockGate {

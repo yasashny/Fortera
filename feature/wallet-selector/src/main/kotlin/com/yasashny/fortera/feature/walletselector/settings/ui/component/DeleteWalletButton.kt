@@ -15,10 +15,6 @@ import androidx.compose.ui.unit.dp
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 import com.yasashny.fortera.feature.walletselector.R
 
-/**
- * Bottom-of-screen destructive action that opens [DeleteWalletDialog]. Disabled while a save
- * or delete is in flight to avoid double-submits.
- */
 @Composable
 internal fun DeleteWalletButton(
     onClick: () -> Unit,

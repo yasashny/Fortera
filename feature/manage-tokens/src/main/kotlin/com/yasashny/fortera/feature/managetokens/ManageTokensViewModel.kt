@@ -23,10 +23,6 @@ class ManageTokensViewModel(
                 val wallet = walletInteractor.observeActiveWallet().first() ?: return@launch
                 activeWalletId = wallet.id
 
-                // Combined Flow: either side reacts independently — adding a custom
-                // token bumps the all-tokens list, toggling a switch bumps the
-                // enabled-ids set, and the UI gets a fresh, consistent snapshot
-                // for either change.
                 combine(
                     tokenRepository.observeAllTokens(),
                     tokenRepository.observeEnabledTokenIds(wallet.id),

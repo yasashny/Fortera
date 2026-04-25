@@ -10,7 +10,6 @@ object WalletSettingsContract {
 
     @Immutable
     sealed interface State : UiState {
-        /** Surfaced via the shared [com.yasashny.fortera.core.ui.dialog.ErrorDialog]. */
         val errorMessage: UiText?
 
         data object Loading : State {

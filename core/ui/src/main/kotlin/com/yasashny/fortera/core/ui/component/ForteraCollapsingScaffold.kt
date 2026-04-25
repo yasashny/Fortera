@@ -47,11 +47,8 @@ fun ForteraCollapsingScaffold(
     val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val collapsedBarTotalPx = with(density) { (collapsedBarHeight + statusBarHeight).roundToPx() }
 
-    // 0f = header at rest, 1f = header scrolled off behind collapsed bar
-    // Uses only Int pixel values (beforeContentPadding, offset, size) to avoid Float/Int mismatch
     val fraction by remember {
         derivedStateOf {
-            // Guaranteed 0 when list is at rest — no rounding issues possible
             if (listState.firstVisibleItemIndex == 0 &&
                 listState.firstVisibleItemScrollOffset == 0
             ) return@derivedStateOf 0f
@@ -74,7 +71,6 @@ fun ForteraCollapsingScaffold(
         }
     }
 
-    // Exact deficit to allow full collapse even with little content
     val scrollReserveDp by remember {
         derivedStateOf {
             val info = listState.layoutInfo
@@ -98,7 +94,6 @@ fun ForteraCollapsingScaffold(
         }
     }
 
-    // Expanded header fades out in first half, collapsed bar fades in in second half
     val expandedAlpha = (1f - fraction * 2f).coerceAtLeast(0f)
     val collapsedAlpha = ((fraction - 0.4f) / 0.6f).coerceIn(0f, 1f)
     val bgAlpha = (fraction * 2f).coerceAtMost(1f)
@@ -139,7 +134,6 @@ fun ForteraCollapsingScaffold(
             }
         }
 
-        // Fixed collapsed bar overlay — not rendered until needed to avoid intercepting touches
         if (collapsedAlpha > 0f) {
             Box(
                 modifier = Modifier

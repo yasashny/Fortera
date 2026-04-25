@@ -39,7 +39,6 @@ android {
 }
 
 dependencies {
-    // Core modules
     implementation(projects.core.domainCrypto)
     implementation(projects.core.dataCrypto)
     implementation(projects.core.network)
@@ -52,7 +51,6 @@ dependencies {
     implementation(projects.core.navigation)
     implementation(projects.core.mvi)
 
-    // Feature modules
     implementation(projects.feature.startupApi)
     implementation(projects.feature.startup)
     implementation(projects.feature.importWalletApi)
@@ -72,24 +70,18 @@ dependencies {
     implementation(projects.feature.receiveApi)
     implementation(projects.feature.receive)
 
-    // DataStore
     implementation(libs.androidx.datastore.preferences)
 
-    // App lock
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.biometric)
     implementation(libs.androidx.lifecycle.runtime.compose)
 
-    // Splash screen
     implementation(libs.androidx.core.splashscreen)
 
-    // Compose
     implementation(libs.androidx.activity.compose)
 
-    // DI
     implementation(libs.koin.androidx.compose)
 
-    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

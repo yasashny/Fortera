@@ -24,10 +24,6 @@ import com.yasashny.fortera.core.ui.component.CardPosition
 import com.yasashny.fortera.core.ui.component.GroupCard
 import com.yasashny.fortera.feature.walletselector.R
 
-/**
- * One row of the wallet list inside the wallet-selector sheet. Shows a checkmark when this
- * wallet is the currently active one and exposes a per-wallet settings entry point.
- */
 @Composable
 internal fun WalletItem(
     wallet: Wallet,

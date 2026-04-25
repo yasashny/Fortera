@@ -13,22 +13,9 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 
-/**
- * Single entry point for "give me balances for wallet X".
- *
- * Replaces the seed→addresses→balances dance that previously lived in every feature.
- * Under the hood this composes [WalletAddressesService], [TokenRepository], and [BalanceRepository],
- * but callers never see those details or the seed phrase.
- */
 interface WalletBalances {
-    /**
-     * Observe balances for [walletId]. Emits a [WalletBalancesEvent.Loading] at the start of each
-     * session, then cached snapshot (if any), then a fresh snapshot, re-emitting when the wallet's
-     * enabled token set changes.
-     */
     fun observe(walletId: String): Flow<WalletBalancesEvent>
 
-    /** Force a remote reload and cache the result. */
     suspend fun refresh(walletId: String): Result<WalletBalancesSnapshot>
 }
 

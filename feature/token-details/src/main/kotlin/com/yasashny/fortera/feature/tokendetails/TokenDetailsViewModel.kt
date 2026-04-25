@@ -7,6 +7,7 @@ import com.yasashny.fortera.core.domaincrypto.repository.TokenRepository
 import com.yasashny.fortera.core.domaincrypto.repository.TransactionRepository
 import com.yasashny.fortera.core.domain.wallet.WalletInteractor
 import com.yasashny.fortera.core.mvi.MviViewModel
+import com.yasashny.fortera.core.ui.token.tokenIconUrl
 import com.yasashny.fortera.core.walletbalances.WalletAddressesService
 import com.yasashny.fortera.feature.tokendetails.TokenDetailsContract.ChartPeriod
 import com.yasashny.fortera.feature.tokendetails.TokenDetailsContract.Effect
@@ -38,6 +39,7 @@ class TokenDetailsViewModel(
                 currentState.copy(
                     tokenName = t.name,
                     tokenSymbol = t.symbol,
+                    tokenIconUrl = tokenIconUrl(t),
                     tokenContractAddress = t.contractAddress,
                 )
             )

@@ -27,7 +27,6 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":app")
 
-// Core modules
 include(":core:domain-crypto")
 include(":core:data-crypto")
 include(":core:network")
@@ -40,7 +39,6 @@ include(":core:navigation")
 include(":core:mvi")
 include(":core:wallet-balances")
 
-// Feature modules
 include(":feature:startup-api")
 include(":feature:startup")
 

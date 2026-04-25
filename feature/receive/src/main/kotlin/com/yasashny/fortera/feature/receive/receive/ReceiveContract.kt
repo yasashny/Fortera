@@ -9,6 +9,7 @@ internal object ReceiveContract {
     data class State(
         val tokenName: String = "",
         val tokenSymbol: String = "",
+        val tokenIconUrl: String = "",
         val networkName: String = "",
         val networkIconUrl: String? = null,
         val address: String = "",

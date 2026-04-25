@@ -8,10 +8,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 
-/**
- * Pulsing alpha for "stale" content — cached balances or partial-success data.
- * Returns a constant 1f when [stale] is false so untouched UI isn't animated.
- */
 @Composable
 internal fun rememberStaleAlpha(stale: Boolean): Float {
     if (!stale) return 1f

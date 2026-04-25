@@ -15,7 +15,6 @@ object WalletSelectorContract {
         val errorMessage: UiText? = null,
     ) : UiState
 
-    /** Loading vs ready split for the wallet list — drives shimmer/content rendering. */
     @Immutable
     sealed interface WalletsState {
         data object Loading : WalletsState

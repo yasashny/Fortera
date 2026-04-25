@@ -261,7 +261,6 @@ val unspecified_scheme = ColorFamily(
 @Composable
 fun ForteraTheme(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
-    // Dynamic color is available on Android 12+
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
@@ -296,4 +295,3 @@ fun ForteraTheme(
     content = content
   )
 }
-

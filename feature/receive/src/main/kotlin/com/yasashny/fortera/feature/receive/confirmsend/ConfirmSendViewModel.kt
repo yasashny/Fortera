@@ -11,6 +11,7 @@ import com.yasashny.fortera.core.domaincrypto.repository.SendTransactionError
 import com.yasashny.fortera.core.domaincrypto.repository.TokenRepository
 import com.yasashny.fortera.core.mvi.MviViewModel
 import com.yasashny.fortera.core.ui.text.UiText
+import com.yasashny.fortera.core.ui.token.tokenIconUrl
 import com.yasashny.fortera.core.walletbalances.WalletBalances
 import com.yasashny.fortera.core.walletbalances.WalletTransactionSender
 import com.yasashny.fortera.feature.receive.R
@@ -25,25 +26,6 @@ import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.util.Locale
 
-/**
- * Drives the "confirm send" screen.
- *
- * Every 15 seconds, three things are refreshed in parallel:
- *   1. Fee estimates from the chain-specific sender (ETH/BTC, with real amount + sender address
- *      so the fee matches what we'd actually pay),
- *   2. Spot prices for the token + the native fee currency (keeps USD display fresh while user
- *      is on screen),
- *   3. Native-balance check — if the computed fee exceeds the user's native balance (e.g. ERC-20
- *      send with insufficient ETH for gas), we mark state.insufficientGas and the Layout blocks
- *      the Send button.
- *
- * At actual send time the underlying sender re-fetches fees again, so the signed transaction is
- * always priced on latest chain state — display values are informational only.
- *
- * USD values (amountUsd, feeUsd, totalAmountUsd) are pushed to state as raw `Double`s. The
- * Layout reads `LocalCurrency` and formats at the leaf — this is what makes switching currency
- * in Settings update this screen live, without the ViewModel having to listen for currency changes.
- */
 internal class ConfirmSendViewModel(
     private val tokenId: String,
     amount: String,
@@ -90,6 +72,7 @@ internal class ConfirmSendViewModel(
                 State(
                     tokenName = loadedToken.name,
                     tokenSymbol = loadedToken.symbol,
+                    tokenIconUrl = tokenIconUrl(loadedToken),
                     walletName = wallet?.name?.takeIf { it.isNotBlank() }.orEmpty(),
                     amount = "${formatCrypto(amountDouble)} ${loadedToken.symbol}",
                     amountUsd = amountDouble * tokenPriceUsd,
@@ -139,8 +122,6 @@ internal class ConfirmSendViewModel(
             Intent.DismissError -> updateState { it.copy(errorMessage = null) }
         }
     }
-
-    // ─────────────────── Polling ───────────────────
 
     private fun startFeePolling(forToken: TokenDefinition) {
         pollingJob?.cancel()
@@ -212,15 +193,6 @@ internal class ConfirmSendViewModel(
             )
         }
 
-    // ─────────────────── Math ───────────────────
-
-    /**
-     * Returns (totalNativeDisplay, totalUsd). Works in BigDecimal throughout — no string parsing.
-     *
-     * If the token being sent IS the fee currency (native ETH / BTC), total = amount + fee.
-     * Otherwise (ERC-20 vs ETH fee), the token total is just the amount and fee shows up in
-     * USD addition only.
-     */
     private fun computeTotal(
         tokenSymbol: String,
         commission: CommissionInfo,
@@ -236,11 +208,6 @@ internal class ConfirmSendViewModel(
         return "${formatCrypto(totalNative.toDouble())} $tokenSymbol" to totalUsd
     }
 
-    /**
-     * True when the wallet can't cover the fee. For ERC-20 sends, compares fee (in native ETH)
-     * to native balance. For native sends, subtracts amount first — there must be enough native
-     * left to pay the fee after the transfer.
-     */
     private fun isInsufficientGas(commission: CommissionInfo): Boolean {
         val tokenSymbol = token?.symbol ?: return false
         val feeNative = commission.estimate.nativeAmount
@@ -252,8 +219,6 @@ internal class ConfirmSendViewModel(
         }
         return available < feeNative
     }
-
-    // ─────────────────── Send ───────────────────
 
     private fun sendTransaction() {
         val activeToken = token ?: return
@@ -285,12 +250,6 @@ internal class ConfirmSendViewModel(
         }
     }
 
-    /**
-     * Maps send-time exceptions to localised UI messages.
-     * Known [SendTransactionError] cases resolve to feature strings; everything else falls
-     * back to the exception message (usually from RPC / http layer) wrapped as a literal, or
-     * the generic "send failed" resource if the message is empty.
-     */
     private fun mapSendError(throwable: Throwable): UiText = when (throwable) {
         is SendTransactionError.NoConfirmedUtxos ->
             UiText.of(R.string.send_confirm_error_no_utxos)
@@ -305,9 +264,5 @@ internal class ConfirmSendViewModel(
     }
 }
 
-/**
- * Trimmed crypto amount with no trailing zeros — the review screen prefers
- * `0.05` over `0.050000`, different from the shared fixed-precision formatter.
- */
 private fun formatCrypto(value: Double): String =
     String.format(Locale.US, "%.6f", value).trimEnd('0').trimEnd('.')

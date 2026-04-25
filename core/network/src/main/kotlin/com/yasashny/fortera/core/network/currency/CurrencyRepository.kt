@@ -10,13 +10,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
-/**
- * Single source of truth for the user's selected display currency.
- *
- * Backed by [DataStore] — the selection survives process death and is observable by every
- * screen that shows fiat values. Mirrors [com.yasashny.fortera.core.network.environment.EnvironmentRepository]
- * in shape and contract; changes made through [set] propagate to all subscribers of [observe].
- */
 interface CurrencyRepository {
     fun observe(): Flow<Currency>
     suspend fun current(): Currency

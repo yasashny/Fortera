@@ -9,10 +9,6 @@ import com.yasashny.fortera.core.domaincrypto.model.TokenDefinition
 import com.yasashny.fortera.core.domaincrypto.repository.SendTransactionRepository
 import java.math.BigDecimal
 
-/**
- * Thin dispatcher that routes to the appropriate network-specific sender.
- * All heavy lifting (signing, UTXO selection, gas math) lives in [EthereumSender] / [BitcoinSender].
- */
 internal class SendTransactionRepositoryImpl(
     private val ethereumSender: EthereumSender,
     private val bitcoinSender: BitcoinSender,

@@ -19,10 +19,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 
-/**
- * Shimmer placeholder shaped like a [GroupCard]. Use while a list of cards is loading
- * so the layout doesn't jump when real items arrive.
- */
 @Composable
 fun ShimmerGroupCard(
     position: CardPosition,

@@ -42,17 +42,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import coil3.compose.SubcomposeAsyncImage
 import com.yasashny.fortera.core.ui.R
 
-/** Spacing between cards in a group */
 private val CardSpacing = 4.dp
 
-/** Width of text fade zone */
 private val FadeWidth = 24.dp
 
-/**
- * Modifier to create a horizontal fading edge effect on the right side.
- */
 private fun Modifier.horizontalFadingEdge(
     fadeWidth: Dp = FadeWidth
 ): Modifier = this
@@ -69,37 +65,21 @@ private fun Modifier.horizontalFadingEdge(
         )
     }
 
-/**
- * Card position within a group.
- */
 enum class CardPosition {
-    /** Single card - all corners rounded */
     Single,
-    /** First card in group - top corners rounded */
     First,
-    /** Middle card in group - no rounded corners */
     Middle,
-    /** Last card in group - bottom corners rounded */
     Last
 }
 
-/**
- * Icon for GroupCard - can be a drawable resource, ImageVector, or letter.
- */
 sealed interface CardIcon {
-    /** Icon from drawable resource */
     data class Resource(@DrawableRes val resId: Int) : CardIcon
 
-    /** Icon from ImageVector */
     data class Vector(val imageVector: ImageVector) : CardIcon
 
-    /** Letter as placeholder */
     data class Letter(val char: Char) : CardIcon
 }
 
-/**
- * Returns card shape based on its position in a group.
- */
 @Composable
 fun cardShapeForPosition(
     position: CardPosition,
@@ -124,19 +104,6 @@ fun cardShapeForPosition(
     }
 }
 
-/**
- * Card with icon, title/subtitle and trailing content.
- *
- * @param position Card position in group
- * @param onClick Click handler
- * @param title Main text
- * @param modifier Modifier
- * @param subtitle Subtitle (displayed below title)
- * @param iconUrl Image URL (loaded via Coil)
- * @param icon Icon (Resource, Vector or Letter)
- * @param cornerRadius Corner radius
- * @param trailing Trailing content (e.g., chevron, switch, value)
- */
 @Composable
 fun GroupCard(
     position: CardPosition,
@@ -225,12 +192,6 @@ fun GroupCard(
     }
 }
 
-/**
- * Token/card icon with optional network badge. Shows [iconUrl] via Coil,
- * falls back to [icon] (Resource/Vector/Letter) when the url is null,
- * and overlays a [badgeIconUrl] chip at the bottom-end with a
- * surface-colored ring so the badge reads on any background.
- */
 @Composable
 fun TokenIcon(
     iconUrl: String?,
@@ -249,21 +210,10 @@ fun TokenIcon(
                 .clip(CircleShape),
             contentAlignment = Alignment.Center,
         ) {
-            when {
-                iconUrl != null -> {
-                    AsyncImage(
-                        model = iconUrl,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(size)
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
-                }
-                icon != null -> {
+            val fallback: @Composable () -> Unit = {
+                if (icon != null) {
                     IconWithBackground(icon = icon, size = size)
-                }
-                else -> {
+                } else {
                     Box(
                         modifier = Modifier
                             .size(size)
@@ -273,6 +223,20 @@ fun TokenIcon(
                             )
                     )
                 }
+            }
+            if (iconUrl.isNullOrBlank()) {
+                fallback()
+            } else {
+                SubcomposeAsyncImage(
+                    model = iconUrl,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(size)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop,
+                    error = { fallback() },
+                    loading = { fallback() },
+                )
             }
         }
         if (badgeIconUrl != null) {
@@ -295,9 +259,6 @@ fun TokenIcon(
     }
 }
 
-/**
- * Icon with circular background.
- */
 @Composable
 private fun IconWithBackground(
     icon: CardIcon,
@@ -343,9 +304,6 @@ private fun IconWithBackground(
     }
 }
 
-/**
- * Avatar with letter.
- */
 @Composable
 fun LetterAvatar(
     letter: Char,
@@ -357,15 +315,6 @@ fun LetterAvatar(
     )
 }
 
-// ============== Card group containers ==============
-
-/**
- * Container for a group of cards (Column).
- * Automatically adds spacing between cards.
- *
- * @param modifier Modifier
- * @param content Content - cards
- */
 @Composable
 fun CardGroup(
     modifier: Modifier = Modifier,
@@ -378,15 +327,6 @@ fun CardGroup(
     )
 }
 
-/**
- * Convenient container for a list of similar cards.
- * Automatically determines position of each card.
- *
- * @param items List of items
- * @param modifier Modifier
- * @param key Function to get unique key for item
- * @param itemContent Content for each item (receives item and position)
- */
 @Composable
 fun <T> CardGroup(
     items: List<T>,
@@ -411,16 +351,6 @@ fun <T> CardGroup(
     }
 }
 
-/**
- * Container for a group of cards with LazyColumn.
- * Automatically determines position of each card and adds spacing.
- *
- * @param items List of items
- * @param modifier Modifier
- * @param contentPadding Content padding for the list
- * @param key Function to get unique key for item
- * @param itemContent Content for each item (receives item and position)
- */
 @Composable
 fun <T> LazyCardGroup(
     items: List<T>,
@@ -444,13 +374,6 @@ fun <T> LazyCardGroup(
     }
 }
 
-/**
- * Extension for LazyListScope - adds a group of cards to LazyColumn.
- *
- * @param items List of items
- * @param key Function to get unique key for item
- * @param itemContent Content for each item (receives item and position)
- */
 fun <T> LazyListScope.cardGroupItems(
     items: List<T>,
     key: ((T) -> Any)? = null,
@@ -470,9 +393,6 @@ fun <T> LazyListScope.cardGroupItems(
     }
 }
 
-/**
- * Determines card position by index and total count.
- */
 fun cardPosition(index: Int, total: Int): CardPosition {
     return when {
         total == 1 -> CardPosition.Single

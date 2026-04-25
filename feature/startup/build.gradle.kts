@@ -8,9 +8,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.activity.compose)
-    // Own api
     implementation(projects.feature.startupApi)
-    // Cross-feature navigation
     implementation(projects.feature.createWalletApi)
     implementation(projects.feature.importWalletApi)
     implementation(projects.feature.mainApi)

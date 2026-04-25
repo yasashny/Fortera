@@ -50,7 +50,6 @@ import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 import com.yasashny.fortera.core.ui.component.CardIcon
 import com.yasashny.fortera.core.ui.component.CardPosition
 import com.yasashny.fortera.core.ui.component.GroupCard
-import com.yasashny.fortera.core.ui.token.tokenIconUrl
 import com.yasashny.fortera.feature.receive.R as ReceiveR
 
 @Composable
@@ -125,6 +124,7 @@ internal fun ReceiveLayout(
             TokenStripCard(
                 tokenName = state.tokenName,
                 tokenSymbol = state.tokenSymbol,
+                tokenIconUrl = state.tokenIconUrl,
                 networkName = state.networkName,
                 networkIconUrl = state.networkIconUrl,
             )
@@ -183,6 +183,7 @@ internal fun ReceiveLayout(
 private fun TokenStripCard(
     tokenName: String,
     tokenSymbol: String,
+    tokenIconUrl: String,
     networkName: String,
     networkIconUrl: String?,
 ) {
@@ -191,7 +192,7 @@ private fun TokenStripCard(
         onClick = {},
         title = tokenName,
         subtitle = networkName,
-        iconUrl = tokenIconUrl(tokenSymbol),
+        iconUrl = tokenIconUrl,
         icon = CardIcon.Letter(tokenSymbol.firstOrNull() ?: '?'),
         badgeIconUrl = networkIconUrl,
         trailing = {

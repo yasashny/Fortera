@@ -4,6 +4,7 @@ import com.yasashny.fortera.core.domaincrypto.model.BlockchainNetwork
 import com.yasashny.fortera.core.domaincrypto.repository.TokenRepository
 import com.yasashny.fortera.core.mvi.MviViewModel
 import com.yasashny.fortera.core.ui.token.networkBadgeUrlFor
+import com.yasashny.fortera.core.ui.token.tokenIconUrl
 import com.yasashny.fortera.core.walletbalances.WalletAddressesService
 import com.yasashny.fortera.feature.receive.receive.ReceiveContract.Effect
 import com.yasashny.fortera.feature.receive.receive.ReceiveContract.Intent
@@ -30,6 +31,7 @@ internal class ReceiveViewModel(
             reduce(currentState.copy(
                 tokenName = token.name,
                 tokenSymbol = token.symbol,
+                tokenIconUrl = tokenIconUrl(token),
                 networkName = networkName,
                 networkIconUrl = networkIconUrl,
             ))
