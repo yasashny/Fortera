@@ -8,6 +8,7 @@ import com.yasashny.fortera.core.domaincrypto.repository.BalanceRepository
 import com.yasashny.fortera.core.mvi.MviViewModel
 import com.yasashny.fortera.core.network.currency.CurrencyRepository
 import com.yasashny.fortera.core.network.environment.EnvironmentRepository
+import com.yasashny.fortera.core.network.theme.ThemeRepository
 import com.yasashny.fortera.feature.settings.SettingsContract.Effect
 import com.yasashny.fortera.feature.settings.SettingsContract.Intent
 import com.yasashny.fortera.feature.settings.SettingsContract.State
@@ -16,6 +17,7 @@ class SettingsViewModel(
     private val dataStore: DataStore<Preferences>,
     private val environmentRepository: EnvironmentRepository,
     private val currencyRepository: CurrencyRepository,
+    private val themeRepository: ThemeRepository,
     private val balanceRepository: BalanceRepository,
 ) : MviViewModel<State, Intent, Effect>(State()) {
 
@@ -44,6 +46,11 @@ class SettingsViewModel(
             launch {
                 currencyRepository.observe().collect { currency ->
                     reduce(currentState.copy(currency = currency))
+                }
+            }
+            launch {
+                themeRepository.observe().collect { mode ->
+                    reduce(currentState.copy(themeMode = mode))
                 }
             }
         }
@@ -77,6 +84,19 @@ class SettingsViewModel(
                     currencyRepository.set(intent.currency)
                 }
                 reduce(currentState.copy(isCurrencySheetOpen = false))
+            }
+
+            Intent.OpenThemeSheet -> intent {
+                reduce(currentState.copy(isThemeSheetOpen = true))
+            }
+            Intent.DismissThemeSheet -> intent {
+                reduce(currentState.copy(isThemeSheetOpen = false))
+            }
+            is Intent.SelectTheme -> intent {
+                if (intent.mode != currentState.themeMode) {
+                    themeRepository.set(intent.mode)
+                }
+                reduce(currentState.copy(isThemeSheetOpen = false))
             }
         }
     }

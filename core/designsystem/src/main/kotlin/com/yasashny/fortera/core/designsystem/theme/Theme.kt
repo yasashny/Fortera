@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import com.yasashny.fortera.core.common.theme.ThemeMode
 
 private val lightScheme = lightColorScheme(
     primary = primaryLight,
@@ -259,17 +260,22 @@ val unspecified_scheme = ColorFamily(
 
 @Composable
 fun ForteraTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    themeMode: ThemeMode = ThemeMode.SYSTEM,
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
+  val darkTheme = when (themeMode) {
+      ThemeMode.SYSTEM -> isSystemInDarkTheme()
+      ThemeMode.LIGHT -> false
+      ThemeMode.DARK -> true
+  }
   val colorScheme = when {
       dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
           val context = LocalContext.current
           if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
       }
-      
+
       darkTheme -> darkScheme
       else -> lightScheme
   }

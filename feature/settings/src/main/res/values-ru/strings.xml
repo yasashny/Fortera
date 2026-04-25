@@ -21,4 +21,13 @@
     <string name="settings_currency_eur">Евро</string>
     <string name="settings_currency_rub">Российский рубль</string>
     <string name="settings_currency_cny">Китайский юань</string>
+    <string name="settings_theme">Тема</string>
+    <string name="settings_theme_title">Выберите тему</string>
+    <string name="settings_theme_hint">Выберите оформление приложения. Системная подстраивается под настройки устройства.</string>
+    <string name="settings_theme_system">Системная</string>
+    <string name="settings_theme_system_subtitle">Как на устройстве</string>
+    <string name="settings_theme_light">Светлая</string>
+    <string name="settings_theme_light_subtitle">Всегда светлая</string>
+    <string name="settings_theme_dark">Тёмная</string>
+    <string name="settings_theme_dark_subtitle">Всегда тёмная</string>
 </resources>

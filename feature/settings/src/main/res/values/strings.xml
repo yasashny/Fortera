@@ -21,4 +21,13 @@
     <string name="settings_currency_eur">Euro</string>
     <string name="settings_currency_rub">Russian Ruble</string>
     <string name="settings_currency_cny">Chinese Yuan</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_title">Select theme</string>
+    <string name="settings_theme_hint">Choose how the app looks. System matches your device setting.</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_theme_system_subtitle">Match device setting</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_light_subtitle">Always light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_theme_dark_subtitle">Always dark</string>
 </resources>

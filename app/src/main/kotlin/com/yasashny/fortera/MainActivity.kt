@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.yasashny.fortera.core.common.currency.Currency
+import com.yasashny.fortera.core.common.theme.ThemeMode
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 import com.yasashny.fortera.core.navigation.AppNavigator
 import com.yasashny.fortera.core.navigation.ForteraNavHost
@@ -23,6 +24,7 @@ import com.yasashny.fortera.core.navigation.NavigationRegistry
 import com.yasashny.fortera.core.network.currency.CurrencyRepository
 import com.yasashny.fortera.core.network.currency.FiatRateRepository
 import com.yasashny.fortera.core.network.currency.FiatRates
+import com.yasashny.fortera.core.network.theme.ThemeRepository
 import com.yasashny.fortera.core.ui.LocalSnackbarHostState
 import com.yasashny.fortera.core.ui.currency.FiatDisplay
 import com.yasashny.fortera.core.ui.currency.LocalFiat
@@ -34,7 +36,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            ForteraTheme {
+            val themeRepository = koinInject<ThemeRepository>()
+            val themeMode by themeRepository.observe()
+                .collectAsState(initial = ThemeMode.Default)
+            ForteraTheme(themeMode = themeMode) {
                 val fiatRateRepository = koinInject<FiatRateRepository>()
 
                 // Kick off before the lock screen so rates are ready by the time the user unlocks.

@@ -14,9 +14,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -33,12 +37,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.yasashny.fortera.core.common.currency.Currency
+import com.yasashny.fortera.core.common.theme.ThemeMode
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 import com.yasashny.fortera.core.network.environment.AppEnvironment
 import com.yasashny.fortera.core.ui.component.CardGroup
@@ -123,6 +129,13 @@ internal fun SettingsLayout(
                     icon = CardIcon.Vector(Icons.Default.AttachMoney),
                 )
                 GroupCard(
+                    position = CardPosition.Middle,
+                    onClick = { onIntent(Intent.OpenThemeSheet) },
+                    title = stringResource(SettingsR.string.settings_theme),
+                    subtitle = stringResource(state.themeMode.titleRes),
+                    icon = CardIcon.Vector(Icons.Default.Palette),
+                )
+                GroupCard(
                     position = CardPosition.Last,
                     onClick = { onIntent(Intent.TogglePassword) },
                     title = stringResource(SettingsR.string.settings_password),
@@ -181,6 +194,20 @@ internal fun SettingsLayout(
             CurrencySheetContent(
                 current = state.currency,
                 onSelect = { onIntent(Intent.SelectCurrency(it)) },
+            )
+        }
+    }
+
+    if (state.isThemeSheetOpen) {
+        val sheetState = rememberModalBottomSheetState()
+        ModalBottomSheet(
+            onDismissRequest = { onIntent(Intent.DismissThemeSheet) },
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        ) {
+            ThemeSheetContent(
+                current = state.themeMode,
+                onSelect = { onIntent(Intent.SelectTheme(it)) },
             )
         }
     }
@@ -299,6 +326,79 @@ private val Currency.displayNameRes: Int
         Currency.EUR -> SettingsR.string.settings_currency_eur
         Currency.RUB -> SettingsR.string.settings_currency_rub
         Currency.CNY -> SettingsR.string.settings_currency_cny
+    }
+
+@Composable
+private fun ThemeSheetContent(
+    current: ThemeMode,
+    onSelect: (ThemeMode) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = stringResource(SettingsR.string.settings_theme_title),
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Text(
+            text = stringResource(SettingsR.string.settings_theme_hint),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        Spacer(Modifier.height(4.dp))
+
+        CardGroup(
+            items = ThemeMode.entries,
+            key = { it.name },
+        ) { mode, position ->
+            val selected = mode == current
+            GroupCard(
+                position = position,
+                innerRadius = 4.dp,
+                onClick = { onSelect(mode) },
+                title = stringResource(mode.titleRes),
+                subtitle = stringResource(mode.subtitleRes),
+                icon = CardIcon.Vector(mode.icon),
+                trailing = if (selected) {
+                    {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                } else null,
+            )
+        }
+
+        Spacer(Modifier.height(12.dp))
+    }
+}
+
+private val ThemeMode.titleRes: Int
+    get() = when (this) {
+        ThemeMode.SYSTEM -> SettingsR.string.settings_theme_system
+        ThemeMode.LIGHT -> SettingsR.string.settings_theme_light
+        ThemeMode.DARK -> SettingsR.string.settings_theme_dark
+    }
+
+private val ThemeMode.subtitleRes: Int
+    get() = when (this) {
+        ThemeMode.SYSTEM -> SettingsR.string.settings_theme_system_subtitle
+        ThemeMode.LIGHT -> SettingsR.string.settings_theme_light_subtitle
+        ThemeMode.DARK -> SettingsR.string.settings_theme_dark_subtitle
+    }
+
+private val ThemeMode.icon: ImageVector
+    get() = when (this) {
+        ThemeMode.SYSTEM -> Icons.Default.BrightnessAuto
+        ThemeMode.LIGHT -> Icons.Default.LightMode
+        ThemeMode.DARK -> Icons.Default.DarkMode
     }
 
 @Preview(showBackground = true)
