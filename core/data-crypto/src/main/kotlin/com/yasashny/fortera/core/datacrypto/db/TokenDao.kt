@@ -13,8 +13,14 @@ interface TokenDao {
     @Query("SELECT * FROM tokens")
     suspend fun getAllTokens(): List<TokenEntity>
 
+    @Query("SELECT * FROM tokens")
+    fun observeAllTokens(): Flow<List<TokenEntity>>
+
     @Query("SELECT * FROM tokens WHERE id = :id")
     suspend fun getTokenById(id: String): TokenEntity?
+
+    @Query("SELECT * FROM tokens WHERE contractAddress IS NOT NULL AND LOWER(contractAddress) = LOWER(:contractAddress) LIMIT 1")
+    suspend fun getTokenByContract(contractAddress: String): TokenEntity?
 
     @Query("SELECT COUNT(*) FROM tokens")
     suspend fun getTokenCount(): Int

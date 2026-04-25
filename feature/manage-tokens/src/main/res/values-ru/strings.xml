@@ -1,4 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="manage_tokens_title">Управление токенами</string>
+    <string name="manage_tokens_add_cd">Добавить токен</string>
+
+    <string name="add_token_title">Добавление токена</string>
+    <string name="add_token_back_cd">Назад</string>
+    <string name="add_token_input_placeholder">Адрес контракта</string>
+    <string name="add_token_input_hint">Вставьте адрес Ethereum ERC-20 контракта, начинающийся с 0x</string>
+    <string name="add_token_paste_cd">Вставить</string>
+    <string name="add_token_verifying">Проверка…</string>
+    <string name="add_token_button">Добавить токен</string>
+    <string name="add_token_decimals_label">%1$d знаков</string>
+
+    <string name="add_token_error_invalid_address">Некорректный адрес Ethereum — должен начинаться с 0x и содержать 40 hex символов</string>
+    <string name="add_token_error_not_found">По этому адресу токен не найден</string>
+    <string name="add_token_error_already_added">Этот токен уже добавлен в список</string>
+    <string name="add_token_error_network">Ошибка сети — попробуйте ещё раз</string>
 </resources>

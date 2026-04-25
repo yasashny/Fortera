@@ -1,4 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="manage_tokens_title">Manage tokens</string>
+    <string name="manage_tokens_add_cd">Add token</string>
+
+    <string name="add_token_title">Add token</string>
+    <string name="add_token_back_cd">Back</string>
+    <string name="add_token_input_placeholder">Contract address</string>
+    <string name="add_token_input_hint">Paste an Ethereum ERC-20 contract address starting with 0x</string>
+    <string name="add_token_paste_cd">Paste</string>
+    <string name="add_token_verifying">Checking…</string>
+    <string name="add_token_button">Add token</string>
+    <string name="add_token_decimals_label">%1$d decimals</string>
+
+    <string name="add_token_error_invalid_address">Not a valid Ethereum address — must be 0x followed by 40 hex characters</string>
+    <string name="add_token_error_not_found">No token found at this address</string>
+    <string name="add_token_error_already_added">This token is already in your list</string>
+    <string name="add_token_error_network">Network error — please try again</string>
 </resources>

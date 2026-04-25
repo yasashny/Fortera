@@ -22,6 +22,7 @@ fun ManageTokensScreen(
         ManageTokensLayout(
             state = state,
             onBackClick = { navigator.back() },
+            onAddClick = { navigator.navigate(AddCustomToken) },
             onToggle = { tokenId -> sendIntent(ManageTokensContract.Intent.Toggle(tokenId)) },
         )
     }

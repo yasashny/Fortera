@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -33,6 +34,7 @@ import com.yasashny.fortera.feature.managetokens.R as ManageTokensR
 internal fun ManageTokensLayout(
     state: ManageTokensContract.State,
     onBackClick: () -> Unit,
+    onAddClick: () -> Unit,
     onToggle: (String) -> Unit,
 ) {
     Scaffold(
@@ -50,6 +52,14 @@ internal fun ManageTokensLayout(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = null,
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onAddClick) {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = stringResource(ManageTokensR.string.manage_tokens_add_cd),
                         )
                     }
                 },
@@ -105,6 +115,7 @@ private fun ManageTokensLayoutPreview() {
                 isLoading = false,
             ),
             onBackClick = {},
+            onAddClick = {},
             onToggle = {},
         )
     }

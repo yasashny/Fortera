@@ -35,9 +35,26 @@ internal class TokenRepositoryImpl(
         return tokenDao.getAllTokens().map { it.toTokenDefinition() }
     }
 
+    override fun observeAllTokens(): Flow<List<TokenDefinition>> = flow {
+        ensureSeeded()
+        emitAll(tokenDao.observeAllTokens().map { entities ->
+            entities.map { it.toTokenDefinition() }
+        })
+    }
+
     override suspend fun getTokenById(id: String): TokenDefinition? {
         ensureSeeded()
         return tokenDao.getTokenById(id)?.toTokenDefinition()
+    }
+
+    override suspend fun findTokenByContract(contractAddress: String): TokenDefinition? {
+        ensureSeeded()
+        return tokenDao.getTokenByContract(contractAddress)?.toTokenDefinition()
+    }
+
+    override suspend fun addCustomToken(token: TokenDefinition) {
+        ensureSeeded()
+        tokenDao.insertTokens(listOf(token.toEntity()))
     }
 
     override suspend fun getEnabledTokenIds(walletId: String): Set<String> {
