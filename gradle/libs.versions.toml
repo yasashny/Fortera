@@ -32,6 +32,7 @@ tradingview-lightweightcharts = "4.0.0"
 zxing = "3.5.3"
 web3j = "4.12.1"
 bitcoinj = "0.16.3"
+mockk = "1.14.6"
 
 
 [libraries]
@@ -105,6 +106,8 @@ androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "j
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesAndroid" }
 koin-test = { module = "io.insert-koin:koin-test", version.ref = "koinAndroidxCompose" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+mockk-android = { module = "io.mockk:mockk-android", version.ref = "mockk" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

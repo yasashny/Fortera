@@ -1,6 +1,7 @@
+import com.yasashny.fortera.androidTestImplementation
+import com.yasashny.fortera.debugImplementation
 import com.yasashny.fortera.implementation
 import com.yasashny.fortera.libs
-import com.yasashny.fortera.testImplementation
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.dependencies
@@ -24,6 +25,12 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
                 implementation(libs.androidx.lifecycle.runtime.ktx)
                 implementation(libs.kotlinx.coroutines.android)
                 implementation(libs.koin.androidx.compose)
+
+                androidTestImplementation(libs.androidx.junit)
+                androidTestImplementation(libs.androidx.espresso.core)
+                androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+                androidTestImplementation(libs.mockk.android)
+                debugImplementation(libs.androidx.compose.ui.test.manifest)
             }
         }
     }

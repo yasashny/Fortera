@@ -35,5 +35,4 @@ dependencies {
         exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
     }
     implementation(libs.koin.androidx.compose)
-    testImplementation(libs.junit)
 }

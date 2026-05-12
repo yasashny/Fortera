@@ -9,5 +9,4 @@ android {
 dependencies {
     api(projects.core.common)
     implementation(libs.koin.androidx.compose)
-    testImplementation(libs.junit)
 }
