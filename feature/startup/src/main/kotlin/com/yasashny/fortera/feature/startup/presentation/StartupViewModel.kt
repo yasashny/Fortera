@@ -2,21 +2,12 @@ package com.yasashny.fortera.feature.startup.presentation
 
 import com.yasashny.fortera.core.mvi.MviViewModel
 
-class StartupViewModel : MviViewModel<StartupContract.State, StartupContract.Intent, StartupContract.Effect>(
-    StartupContract.State
-) {
-    override fun handleIntent(intent: StartupContract.Intent) {
+class StartupViewModel : MviViewModel<StartupState, StartupIntent, StartupEffect>(StartupState) {
+
+    override fun handleIntent(intent: StartupIntent) {
         when (intent) {
-            StartupContract.Intent.CreateWalletClicked -> onCreateWalletClicked()
-            StartupContract.Intent.ImportWalletClicked -> onImportWalletClicked()
+            StartupIntent.CreateWalletClicked -> sendEffect(StartupEffect.NavigateToCreateWallet)
+            StartupIntent.ImportWalletClicked -> sendEffect(StartupEffect.NavigateToImportWallet)
         }
-    }
-
-    private fun onCreateWalletClicked() = intent {
-        sendEffect(StartupContract.Effect.NavigateToCreateWallet)
-    }
-
-    private fun onImportWalletClicked() = intent {
-        sendEffect(StartupContract.Effect.NavigateToImportWallet)
     }
 }

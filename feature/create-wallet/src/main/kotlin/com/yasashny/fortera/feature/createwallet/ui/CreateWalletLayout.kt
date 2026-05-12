@@ -40,8 +40,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
-import com.yasashny.fortera.feature.createwallet.presentation.CreateWalletContract.Intent
-import com.yasashny.fortera.feature.createwallet.presentation.CreateWalletContract.State
+import com.yasashny.fortera.feature.createwallet.presentation.CreateWalletIntent
+import com.yasashny.fortera.feature.createwallet.presentation.CreateWalletState
 import kotlinx.coroutines.launch
 import com.yasashny.fortera.core.ui.R as CoreR
 import com.yasashny.fortera.feature.createwallet.R as CreateWalletR
@@ -49,9 +49,9 @@ import com.yasashny.fortera.feature.createwallet.R as CreateWalletR
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun CreateWalletLayout(
-    state: State,
+    state: CreateWalletState,
+    onIntent: (CreateWalletIntent) -> Unit,
     modifier: Modifier = Modifier,
-    onIntent: (Intent) -> Unit,
 ) {
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
@@ -69,7 +69,7 @@ internal fun CreateWalletLayout(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { onIntent(Intent.BackClicked) }) {
+                    IconButton(onClick = { onIntent(CreateWalletIntent.BackClicked) }) {
                         Icon(
                             painter = painterResource(id = CoreR.drawable.ic_arrow_back),
                             contentDescription = stringResource(
@@ -93,7 +93,7 @@ internal fun CreateWalletLayout(
                 .padding(paddingValues)
         ) {
             when (state) {
-                is State.Loading -> {
+                is CreateWalletState.Loading -> {
                     CircularProgressIndicator(
                         modifier = Modifier
                             .size(48.dp)
@@ -102,7 +102,7 @@ internal fun CreateWalletLayout(
                     )
                 }
 
-                is State.ShowSeedPhrase -> {
+                is CreateWalletState.ShowSeedPhrase -> {
                     ShowSeedPhraseContent(
                         state = state,
                         onCopyClick = {
@@ -117,7 +117,7 @@ internal fun CreateWalletLayout(
                                 )
                             }
                         },
-                        onCreateClick = { onIntent(Intent.CreateClicked(nameTemplate)) }
+                        onCreateClick = { onIntent(CreateWalletIntent.CreateClicked(nameTemplate)) },
                     )
                 }
             }
@@ -127,7 +127,7 @@ internal fun CreateWalletLayout(
 
 @Composable
 private fun ShowSeedPhraseContent(
-    state: State.ShowSeedPhrase,
+    state: CreateWalletState.ShowSeedPhrase,
     onCopyClick: () -> Unit,
     onCreateClick: () -> Unit
 ) {
@@ -302,8 +302,8 @@ private fun CreateWalletLayoutPreview() {
     )
     ForteraTheme {
         CreateWalletLayout(
-            state = State.ShowSeedPhrase(seedPhrase = words),
-            onIntent = {}
+            state = CreateWalletState.ShowSeedPhrase(seedPhrase = words),
+            onIntent = {},
         )
     }
 }

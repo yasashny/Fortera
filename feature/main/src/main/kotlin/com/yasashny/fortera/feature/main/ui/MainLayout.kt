@@ -116,15 +116,7 @@ internal fun MainLayout(
 
 @Preview(showBackground = true)
 @Composable
-private fun MainLayoutLoadingPreview() {
-    ForteraTheme {
-        MainLayout(state = MainState.Initial, onIntent = {})
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun MainLayoutReadyPreview() {
+private fun MainLayoutPreview() {
     ForteraTheme {
         MainLayout(
             state = MainState(

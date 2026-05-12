@@ -35,8 +35,8 @@ import com.yasashny.fortera.core.ui.component.CardPosition
 import com.yasashny.fortera.core.ui.component.InputCard
 import com.yasashny.fortera.core.ui.component.InputCardGroup
 import com.yasashny.fortera.core.ui.text.asString
-import com.yasashny.fortera.feature.importwallet.presentation.ImportWalletContract.Intent
-import com.yasashny.fortera.feature.importwallet.presentation.ImportWalletContract.State
+import com.yasashny.fortera.feature.importwallet.presentation.ImportWalletIntent
+import com.yasashny.fortera.feature.importwallet.presentation.ImportWalletState
 import kotlinx.coroutines.launch
 import com.yasashny.fortera.core.ui.R as CoreR
 import com.yasashny.fortera.feature.importwallet.R as ImportWalletR
@@ -44,8 +44,8 @@ import com.yasashny.fortera.feature.importwallet.R as ImportWalletR
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ImportWalletLayout(
-    state: State,
-    onIntent: (Intent) -> Unit,
+    state: ImportWalletState,
+    onIntent: (ImportWalletIntent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val clipboard = LocalClipboard.current
@@ -62,7 +62,7 @@ internal fun ImportWalletLayout(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { onIntent(Intent.BackClicked) }) {
+                    IconButton(onClick = { onIntent(ImportWalletIntent.BackClicked) }) {
                         Icon(
                             painter = painterResource(id = CoreR.drawable.ic_arrow_back),
                             contentDescription = stringResource(ImportWalletR.string.import_wallet_back_cd),
@@ -79,19 +79,19 @@ internal fun ImportWalletLayout(
         modifier = modifier
     ) { paddingValues ->
         when (state) {
-            is State.Content -> {
+            is ImportWalletState.Content -> {
                 ImportWalletContent(
                     state = state,
-                    onNameChanged = { onIntent(Intent.NameChanged(it)) },
-                    onSeedPhraseChanged = { onIntent(Intent.SeedPhraseChanged(it)) },
+                    onNameChanged = { onIntent(ImportWalletIntent.NameChanged(it)) },
+                    onSeedPhraseChanged = { onIntent(ImportWalletIntent.SeedPhraseChanged(it)) },
                     onPasteClick = {
                         scope.launch {
                             val clip = clipboard.getClipEntry()
                             val pastedText = clip?.clipData?.getItemAt(0)?.text?.toString() ?: ""
-                            onIntent(Intent.SeedPhraseChanged(pastedText))
+                            onIntent(ImportWalletIntent.SeedPhraseChanged(pastedText))
                         }
                     },
-                    onImportClick = { onIntent(Intent.ImportClicked) },
+                    onImportClick = { onIntent(ImportWalletIntent.ImportClicked) },
                     modifier = Modifier.padding(paddingValues)
                 )
             }
@@ -101,7 +101,7 @@ internal fun ImportWalletLayout(
 
 @Composable
 private fun ImportWalletContent(
-    state: State.Content,
+    state: ImportWalletState.Content,
     onNameChanged: (String) -> Unit,
     onSeedPhraseChanged: (String) -> Unit,
     onPasteClick: () -> Unit,
@@ -178,11 +178,11 @@ private fun ImportWalletContent(
 private fun ImportWalletLayoutPreview() {
     ForteraTheme {
         ImportWalletLayout(
-            state = State.Content(
+            state = ImportWalletState.Content(
                 name = "",
                 seedPhrase = "",
             ),
-            onIntent = {}
+            onIntent = {},
         )
     }
 }

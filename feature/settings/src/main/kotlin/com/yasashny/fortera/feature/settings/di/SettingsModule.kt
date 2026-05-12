@@ -1,7 +1,7 @@
 package com.yasashny.fortera.feature.settings.di
 
 import com.yasashny.fortera.core.navigation.FeatureNavProvider
-import com.yasashny.fortera.feature.settings.SettingsViewModel
+import com.yasashny.fortera.feature.settings.presentation.SettingsViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.bind

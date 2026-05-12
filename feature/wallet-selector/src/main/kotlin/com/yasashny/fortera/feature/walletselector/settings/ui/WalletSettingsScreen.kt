@@ -7,8 +7,8 @@ import com.yasashny.fortera.core.navigation.LocalAppNavigator
 import com.yasashny.fortera.core.ui.LocalSnackbarHostState
 import com.yasashny.fortera.core.ui.dialog.ErrorDialog
 import com.yasashny.fortera.core.ui.text.asString
-import com.yasashny.fortera.feature.walletselector.settings.presentation.WalletSettingsContract.Effect
-import com.yasashny.fortera.feature.walletselector.settings.presentation.WalletSettingsContract.Intent
+import com.yasashny.fortera.feature.walletselector.settings.presentation.WalletSettingsEffect
+import com.yasashny.fortera.feature.walletselector.settings.presentation.WalletSettingsIntent
 import com.yasashny.fortera.feature.walletselector.settings.presentation.WalletSettingsViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -26,8 +26,8 @@ internal fun WalletSettingsScreen(
         viewModel = viewModel,
         onEffect = { effect ->
             when (effect) {
-                Effect.NavigateBack -> navigator.back()
-                is Effect.ShowSuccess -> snackbarHostState.showSnackbar(effect.message.asString(context))
+                WalletSettingsEffect.NavigateBack -> navigator.back()
+                is WalletSettingsEffect.ShowSuccess -> snackbarHostState.showSnackbar(effect.message.asString(context))
             }
         },
     ) { state, onIntent ->
@@ -35,7 +35,7 @@ internal fun WalletSettingsScreen(
 
         ErrorDialog(
             message = state.errorMessage,
-            onDismiss = { onIntent(Intent.DismissError) },
+            onDismiss = { onIntent(WalletSettingsIntent.DismissError) },
         )
     }
 }

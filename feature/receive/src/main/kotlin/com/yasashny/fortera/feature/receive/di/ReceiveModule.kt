@@ -1,11 +1,11 @@
 package com.yasashny.fortera.feature.receive.di
 
 import com.yasashny.fortera.core.navigation.FeatureNavProvider
-import com.yasashny.fortera.feature.receive.confirmsend.ConfirmSendViewModel
-import com.yasashny.fortera.feature.receive.receive.ReceiveViewModel
-import com.yasashny.fortera.feature.receive.selecttoken.SelectTokenViewModel
-import com.yasashny.fortera.feature.receive.selecttokenforsend.SelectTokenForSendViewModel
-import com.yasashny.fortera.feature.receive.send.SendViewModel
+import com.yasashny.fortera.feature.receive.confirmsend.presentation.ConfirmSendViewModel
+import com.yasashny.fortera.feature.receive.receive.presentation.ReceiveViewModel
+import com.yasashny.fortera.feature.receive.selecttoken.presentation.SelectTokenViewModel
+import com.yasashny.fortera.feature.receive.selecttokenforsend.presentation.SelectTokenForSendViewModel
+import com.yasashny.fortera.feature.receive.send.presentation.SendViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.qualifier.named

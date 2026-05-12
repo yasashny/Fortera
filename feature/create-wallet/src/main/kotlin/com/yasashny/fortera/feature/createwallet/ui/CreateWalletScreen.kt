@@ -6,7 +6,7 @@ import androidx.compose.ui.Modifier
 import com.yasashny.fortera.core.mvi.MviContainer
 import com.yasashny.fortera.core.navigation.LocalAppNavigator
 import com.yasashny.fortera.core.ui.LocalSnackbarHostState
-import com.yasashny.fortera.feature.createwallet.presentation.CreateWalletContract.Effect
+import com.yasashny.fortera.feature.createwallet.presentation.CreateWalletEffect
 import com.yasashny.fortera.feature.createwallet.presentation.CreateWalletViewModel
 import com.yasashny.fortera.feature.main.Main
 import org.koin.androidx.compose.koinViewModel
@@ -15,7 +15,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 internal fun CreateWalletScreen(
     modifier: Modifier = Modifier,
-    viewModel: CreateWalletViewModel = koinViewModel()
+    viewModel: CreateWalletViewModel = koinViewModel(),
 ) {
     val navigator = LocalAppNavigator.current
     val snackbarHostState = LocalSnackbarHostState.current
@@ -24,12 +24,12 @@ internal fun CreateWalletScreen(
         viewModel = viewModel,
         onEffect = { effect ->
             when (effect) {
-                Effect.NavigateBack -> navigator.back()
-                Effect.NavigateToMain -> navigator.clearAndNavigate(Main)
-                is Effect.ShowError -> snackbarHostState.showSnackbar(effect.message)
+                CreateWalletEffect.NavigateBack -> navigator.back()
+                CreateWalletEffect.NavigateToMain -> navigator.clearAndNavigate(Main)
+                is CreateWalletEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
             }
-        }
+        },
     ) { state, onIntent ->
-        CreateWalletLayout(state = state, modifier = modifier, onIntent = onIntent)
+        CreateWalletLayout(state = state, onIntent = onIntent, modifier = modifier)
     }
 }

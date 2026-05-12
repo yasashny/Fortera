@@ -7,8 +7,8 @@ import com.yasashny.fortera.core.ui.dialog.ErrorDialog
 import com.yasashny.fortera.feature.createwallet.CreateWallet
 import com.yasashny.fortera.feature.importwallet.ImportWallet
 import com.yasashny.fortera.feature.walletselector.WalletSettings
-import com.yasashny.fortera.feature.walletselector.main.presentation.WalletSelectorContract.Effect
-import com.yasashny.fortera.feature.walletselector.main.presentation.WalletSelectorContract.Intent
+import com.yasashny.fortera.feature.walletselector.main.presentation.WalletSelectorEffect
+import com.yasashny.fortera.feature.walletselector.main.presentation.WalletSelectorIntent
 import com.yasashny.fortera.feature.walletselector.main.presentation.WalletSelectorViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -23,15 +23,15 @@ fun WalletSelectorSheet(
         viewModel = viewModel,
         onEffect = { effect ->
             when (effect) {
-                Effect.NavigateToCreateWallet -> {
+                WalletSelectorEffect.NavigateToCreateWallet -> {
                     onDismiss()
                     navigator.navigate(CreateWallet)
                 }
-                Effect.NavigateToImportWallet -> {
+                WalletSelectorEffect.NavigateToImportWallet -> {
                     onDismiss()
                     navigator.navigate(ImportWallet)
                 }
-                is Effect.NavigateToSettings -> {
+                is WalletSelectorEffect.NavigateToSettings -> {
                     onDismiss()
                     navigator.navigate(WalletSettings(effect.walletId))
                 }
@@ -46,7 +46,7 @@ fun WalletSelectorSheet(
 
         ErrorDialog(
             message = state.errorMessage,
-            onDismiss = { onIntent(Intent.DismissError) },
+            onDismiss = { onIntent(WalletSelectorIntent.DismissError) },
         )
     }
 }

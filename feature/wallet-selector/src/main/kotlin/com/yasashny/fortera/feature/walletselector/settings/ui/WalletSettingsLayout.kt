@@ -25,8 +25,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 import com.yasashny.fortera.feature.walletselector.R
-import com.yasashny.fortera.feature.walletselector.settings.presentation.WalletSettingsContract.Intent
-import com.yasashny.fortera.feature.walletselector.settings.presentation.WalletSettingsContract.State
+import com.yasashny.fortera.feature.walletselector.settings.presentation.WalletSettingsIntent
+import com.yasashny.fortera.feature.walletselector.settings.presentation.WalletSettingsState
 import com.yasashny.fortera.feature.walletselector.settings.ui.component.DeleteWalletButton
 import com.yasashny.fortera.feature.walletselector.settings.ui.component.DeleteWalletDialog
 import com.yasashny.fortera.feature.walletselector.settings.ui.component.WalletNameField
@@ -35,8 +35,8 @@ import com.yasashny.fortera.feature.walletselector.settings.ui.component.WalletS
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun WalletSettingsLayout(
-    state: State,
-    onIntent: (Intent) -> Unit,
+    state: WalletSettingsState,
+    onIntent: (WalletSettingsIntent) -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -49,7 +49,7 @@ internal fun WalletSettingsLayout(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { onIntent(Intent.BackClicked) }) {
+                    IconButton(onClick = { onIntent(WalletSettingsIntent.BackClicked) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.wallet_settings_back_cd),
@@ -68,8 +68,8 @@ internal fun WalletSettingsLayout(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
         ) {
             when (state) {
-                State.Loading -> WalletSettingsShimmer()
-                is State.Content -> WalletSettingsContent(state = state, onIntent = onIntent)
+                WalletSettingsState.Loading -> WalletSettingsShimmer()
+                is WalletSettingsState.Content -> WalletSettingsContent(state = state, onIntent = onIntent)
             }
         }
     }
@@ -77,21 +77,21 @@ internal fun WalletSettingsLayout(
 
 @Composable
 private fun WalletSettingsContent(
-    state: State.Content,
-    onIntent: (Intent) -> Unit,
+    state: WalletSettingsState.Content,
+    onIntent: (WalletSettingsIntent) -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         WalletNameField(
             name = state.name,
-            onNameChange = { onIntent(Intent.NameChanged(it)) },
-            onSaveClick = { onIntent(Intent.SaveClicked) },
+            onNameChange = { onIntent(WalletSettingsIntent.NameChanged(it)) },
+            onSaveClick = { onIntent(WalletSettingsIntent.SaveClicked) },
             isSaving = state.isSaving,
         )
 
         Spacer(modifier = Modifier.weight(1f))
 
         DeleteWalletButton(
-            onClick = { onIntent(Intent.DeleteClicked) },
+            onClick = { onIntent(WalletSettingsIntent.DeleteClicked) },
             enabled = !state.isSaving,
         )
 
@@ -100,8 +100,8 @@ private fun WalletSettingsContent(
 
     if (state.showDeleteDialog) {
         DeleteWalletDialog(
-            onConfirm = { onIntent(Intent.ConfirmDelete) },
-            onDismiss = { onIntent(Intent.DismissDeleteDialog) },
+            onConfirm = { onIntent(WalletSettingsIntent.ConfirmDelete) },
+            onDismiss = { onIntent(WalletSettingsIntent.DismissDeleteDialog) },
         )
     }
 }
@@ -111,7 +111,7 @@ private fun WalletSettingsContent(
 private fun WalletSettingsLayoutPreview() {
     ForteraTheme {
         WalletSettingsLayout(
-            state = State.Content(
+            state = WalletSettingsState.Content(
                 walletId = "1",
                 name = "Wallet №1",
             ),

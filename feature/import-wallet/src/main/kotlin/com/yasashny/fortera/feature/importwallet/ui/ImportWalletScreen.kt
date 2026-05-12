@@ -5,8 +5,8 @@ import androidx.compose.ui.Modifier
 import com.yasashny.fortera.core.mvi.MviContainer
 import com.yasashny.fortera.core.navigation.LocalAppNavigator
 import com.yasashny.fortera.core.ui.dialog.ErrorDialog
-import com.yasashny.fortera.feature.importwallet.presentation.ImportWalletContract
-import com.yasashny.fortera.feature.importwallet.presentation.ImportWalletContract.Effect
+import com.yasashny.fortera.feature.importwallet.presentation.ImportWalletEffect
+import com.yasashny.fortera.feature.importwallet.presentation.ImportWalletIntent
 import com.yasashny.fortera.feature.importwallet.presentation.ImportWalletViewModel
 import com.yasashny.fortera.feature.main.Main
 import org.koin.androidx.compose.koinViewModel
@@ -22,8 +22,8 @@ internal fun ImportWalletScreen(
         viewModel = viewModel,
         onEffect = { effect ->
             when (effect) {
-                Effect.NavigateBack -> navigator.back()
-                Effect.NavigateToHome -> navigator.clearAndNavigate(Main)
+                ImportWalletEffect.NavigateBack -> navigator.back()
+                ImportWalletEffect.NavigateToHome -> navigator.clearAndNavigate(Main)
             }
         },
     ) { state, onIntent ->
@@ -35,7 +35,7 @@ internal fun ImportWalletScreen(
 
         ErrorDialog(
             message = state.errorMessage,
-            onDismiss = { onIntent(ImportWalletContract.Intent.DismissError) },
+            onDismiss = { onIntent(ImportWalletIntent.DismissError) },
         )
     }
 }

@@ -8,12 +8,12 @@ import com.yasashny.fortera.feature.receive.SelectTokenForReceive
 import com.yasashny.fortera.feature.receive.SelectTokenForSend
 import com.yasashny.fortera.feature.receive.SendSuccess
 import com.yasashny.fortera.feature.receive.SendToken
-import com.yasashny.fortera.feature.receive.confirmsend.ConfirmSendScreen
-import com.yasashny.fortera.feature.receive.receive.ReceiveScreen
-import com.yasashny.fortera.feature.receive.selecttoken.SelectTokenScreen
-import com.yasashny.fortera.feature.receive.selecttokenforsend.SelectTokenForSendScreen
-import com.yasashny.fortera.feature.receive.send.SendScreen
-import com.yasashny.fortera.feature.receive.sendsuccess.SendSuccessScreen
+import com.yasashny.fortera.feature.receive.confirmsend.ui.ConfirmSendScreen
+import com.yasashny.fortera.feature.receive.receive.ui.ReceiveScreen
+import com.yasashny.fortera.feature.receive.selecttoken.ui.SelectTokenScreen
+import com.yasashny.fortera.feature.receive.selecttokenforsend.ui.SelectTokenForSendScreen
+import com.yasashny.fortera.feature.receive.send.ui.SendScreen
+import com.yasashny.fortera.feature.receive.sendsuccess.ui.SendSuccessScreen
 
 internal class ReceiveNavProvider : FeatureNavProvider {
     override fun entryFor(key: Any): NavEntry<*>? = when (key) {

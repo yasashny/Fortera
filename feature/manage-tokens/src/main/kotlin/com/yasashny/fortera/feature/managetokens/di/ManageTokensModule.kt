@@ -1,8 +1,8 @@
 package com.yasashny.fortera.feature.managetokens.di
 
 import com.yasashny.fortera.core.navigation.FeatureNavProvider
-import com.yasashny.fortera.feature.managetokens.ManageTokensViewModel
-import com.yasashny.fortera.feature.managetokens.addtoken.AddCustomTokenViewModel
+import com.yasashny.fortera.feature.managetokens.addtoken.presentation.AddCustomTokenViewModel
+import com.yasashny.fortera.feature.managetokens.presentation.ManageTokensViewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.bind

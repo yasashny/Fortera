@@ -19,9 +19,9 @@ import androidx.compose.ui.unit.dp
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 import com.yasashny.fortera.core.domain.wallet.Wallet
 import com.yasashny.fortera.core.ui.component.CardGroup
-import com.yasashny.fortera.feature.walletselector.main.presentation.WalletSelectorContract.Intent
-import com.yasashny.fortera.feature.walletselector.main.presentation.WalletSelectorContract.State
-import com.yasashny.fortera.feature.walletselector.main.presentation.WalletSelectorContract.WalletsState
+import com.yasashny.fortera.feature.walletselector.main.presentation.WalletSelectorIntent
+import com.yasashny.fortera.feature.walletselector.main.presentation.WalletSelectorState
+import com.yasashny.fortera.feature.walletselector.main.presentation.WalletsState
 import com.yasashny.fortera.feature.walletselector.main.ui.component.CreateImportActions
 import com.yasashny.fortera.feature.walletselector.main.ui.component.WalletItem
 import com.yasashny.fortera.feature.walletselector.main.ui.component.WalletListShimmer
@@ -29,8 +29,8 @@ import com.yasashny.fortera.feature.walletselector.main.ui.component.WalletListS
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun WalletSelectorLayout(
-    state: State,
-    onIntent: (Intent) -> Unit,
+    state: WalletSelectorState,
+    onIntent: (WalletSelectorIntent) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -42,31 +42,42 @@ internal fun WalletSelectorLayout(
         sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = minSheetHeight),
-        ) {
-            CreateImportActions(
-                onCreateClick = { onIntent(Intent.CreateWalletClicked) },
-                onImportClick = { onIntent(Intent.ImportWalletClicked) },
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
+        WalletSelectorContent(
+            state = state,
+            onIntent = onIntent,
+            modifier = Modifier.heightIn(min = minSheetHeight),
+        )
+    }
+}
 
-            WalletListSection(
-                wallets = state.wallets,
-                onIntent = onIntent,
-            )
+@Composable
+private fun WalletSelectorContent(
+    state: WalletSelectorState,
+    onIntent: (WalletSelectorIntent) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        CreateImportActions(
+            onCreateClick = { onIntent(WalletSelectorIntent.CreateWalletClicked) },
+            onImportClick = { onIntent(WalletSelectorIntent.ImportWalletClicked) },
+            modifier = Modifier.padding(horizontal = 16.dp),
+        )
 
-            Spacer(modifier = Modifier.padding(bottom = 8.dp))
-        }
+        WalletListSection(
+            wallets = state.wallets,
+            onIntent = onIntent,
+        )
+
+        Spacer(modifier = Modifier.padding(bottom = 8.dp))
     }
 }
 
 @Composable
 private fun WalletListSection(
     wallets: WalletsState,
-    onIntent: (Intent) -> Unit,
+    onIntent: (WalletSelectorIntent) -> Unit,
 ) {
     val sectionPadding = Modifier.padding(horizontal = 16.dp)
 
@@ -87,8 +98,8 @@ private fun WalletListSection(
                     wallet = wallet,
                     position = position,
                     isActive = wallet.id == wallets.activeWalletId,
-                    onSelectClick = { onIntent(Intent.SelectWallet(wallet.id)) },
-                    onSettingsClick = { onIntent(Intent.SettingsClicked(wallet.id)) },
+                    onSelectClick = { onIntent(WalletSelectorIntent.SelectWallet(wallet.id)) },
+                    onSettingsClick = { onIntent(WalletSelectorIntent.SettingsClicked(wallet.id)) },
                 )
             }
         }
@@ -99,8 +110,8 @@ private fun WalletListSection(
 @Composable
 private fun WalletSelectorLayoutPreview() {
     ForteraTheme {
-        WalletSelectorLayout(
-            state = State(
+        WalletSelectorContent(
+            state = WalletSelectorState(
                 wallets = WalletsState.Ready(
                     items = listOf(
                         Wallet(id = "1", name = "Wallet №1"),
@@ -110,7 +121,6 @@ private fun WalletSelectorLayoutPreview() {
                 ),
             ),
             onIntent = {},
-            onDismiss = {},
         )
     }
 }

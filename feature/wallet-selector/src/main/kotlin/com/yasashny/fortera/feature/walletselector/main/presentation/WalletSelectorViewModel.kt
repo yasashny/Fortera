@@ -4,15 +4,11 @@ import com.yasashny.fortera.core.domain.wallet.WalletInteractor
 import com.yasashny.fortera.core.mvi.MviViewModel
 import com.yasashny.fortera.core.ui.text.UiText
 import com.yasashny.fortera.feature.walletselector.R
-import com.yasashny.fortera.feature.walletselector.main.presentation.WalletSelectorContract.Effect
-import com.yasashny.fortera.feature.walletselector.main.presentation.WalletSelectorContract.Intent
-import com.yasashny.fortera.feature.walletselector.main.presentation.WalletSelectorContract.State
-import com.yasashny.fortera.feature.walletselector.main.presentation.WalletSelectorContract.WalletsState
 import kotlinx.coroutines.flow.combine
 
 class WalletSelectorViewModel(
     private val walletInteractor: WalletInteractor,
-) : MviViewModel<State, Intent, Effect>(State()) {
+) : MviViewModel<WalletSelectorState, WalletSelectorIntent, WalletSelectorEffect>(WalletSelectorState()) {
 
     init {
         intent {
@@ -27,12 +23,16 @@ class WalletSelectorViewModel(
         }
     }
 
-    override fun handleIntent(intent: Intent) = when (intent) {
-        is Intent.SelectWallet -> selectWallet(intent.id)
-        is Intent.SettingsClicked -> sendEffect(Effect.NavigateToSettings(intent.walletId))
-        Intent.CreateWalletClicked -> sendEffect(Effect.NavigateToCreateWallet)
-        Intent.ImportWalletClicked -> sendEffect(Effect.NavigateToImportWallet)
-        Intent.DismissError -> updateState { it.copy(errorMessage = null) }
+    override fun handleIntent(intent: WalletSelectorIntent) = when (intent) {
+        is WalletSelectorIntent.SelectWallet -> selectWallet(intent.id)
+        is WalletSelectorIntent.SettingsClicked ->
+            sendEffect(WalletSelectorEffect.NavigateToSettings(intent.walletId))
+        WalletSelectorIntent.CreateWalletClicked ->
+            sendEffect(WalletSelectorEffect.NavigateToCreateWallet)
+        WalletSelectorIntent.ImportWalletClicked ->
+            sendEffect(WalletSelectorEffect.NavigateToImportWallet)
+        WalletSelectorIntent.DismissError ->
+            updateState { it.copy(errorMessage = null) }
     }
 
     private fun selectWallet(id: String) {

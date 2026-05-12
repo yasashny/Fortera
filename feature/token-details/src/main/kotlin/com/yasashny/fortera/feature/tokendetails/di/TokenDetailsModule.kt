@@ -1,7 +1,7 @@
 package com.yasashny.fortera.feature.tokendetails.di
 
 import com.yasashny.fortera.core.navigation.FeatureNavProvider
-import com.yasashny.fortera.feature.tokendetails.TokenDetailsViewModel
+import com.yasashny.fortera.feature.tokendetails.presentation.TokenDetailsViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.bind

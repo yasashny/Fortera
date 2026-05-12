@@ -4,44 +4,41 @@ import com.yasashny.fortera.core.domain.wallet.WalletInteractor
 import com.yasashny.fortera.core.mvi.MviViewModel
 import com.yasashny.fortera.core.ui.text.UiText
 import com.yasashny.fortera.feature.importwallet.R
-import com.yasashny.fortera.feature.importwallet.presentation.ImportWalletContract.Effect
-import com.yasashny.fortera.feature.importwallet.presentation.ImportWalletContract.Intent
-import com.yasashny.fortera.feature.importwallet.presentation.ImportWalletContract.State
 
 class ImportWalletViewModel(
     private val walletInteractor: WalletInteractor,
-) : MviViewModel<State, Intent, Effect>(State.Content()) {
+) : MviViewModel<ImportWalletState, ImportWalletIntent, ImportWalletEffect>(ImportWalletState.Content()) {
 
-    override fun handleIntent(intent: Intent) {
+    override fun handleIntent(intent: ImportWalletIntent) {
         when (intent) {
-            is Intent.NameChanged -> onNameChanged(intent.value)
-            is Intent.SeedPhraseChanged -> onSeedPhraseChanged(intent.value)
-            Intent.ImportClicked -> onImportClicked()
-            Intent.BackClicked -> sendEffect(Effect.NavigateBack)
-            Intent.DismissError -> clearError()
+            is ImportWalletIntent.NameChanged -> onNameChanged(intent.value)
+            is ImportWalletIntent.SeedPhraseChanged -> onSeedPhraseChanged(intent.value)
+            ImportWalletIntent.ImportClicked -> onImportClicked()
+            ImportWalletIntent.BackClicked -> sendEffect(ImportWalletEffect.NavigateBack)
+            ImportWalletIntent.DismissError -> clearError()
         }
     }
 
     private fun onNameChanged(value: String) {
         updateState { state ->
-            (state as? State.Content)?.copy(name = value, nameError = null) ?: state
+            (state as? ImportWalletState.Content)?.copy(name = value, nameError = null) ?: state
         }
     }
 
     private fun onSeedPhraseChanged(value: String) {
         updateState { state ->
-            (state as? State.Content)?.copy(seedPhrase = value, seedPhraseError = null) ?: state
+            (state as? ImportWalletState.Content)?.copy(seedPhrase = value, seedPhraseError = null) ?: state
         }
     }
 
     private fun clearError() {
         updateState { state ->
-            (state as? State.Content)?.copy(errorMessage = null) ?: state
+            (state as? ImportWalletState.Content)?.copy(errorMessage = null) ?: state
         }
     }
 
     private fun onImportClicked() = intent {
-        withState<State.Content> { content ->
+        withState<ImportWalletState.Content> { content ->
             val nameError = if (content.name.isBlank())
                 UiText.of(R.string.import_wallet_error_name_empty) else null
             val seedError = if (content.seedPhrase.isBlank())
@@ -54,7 +51,7 @@ class ImportWalletViewModel(
             walletInteractor.importWallet(content.name, content.seedPhrase)
                 .onSuccess {
                     reduce(content.copy(isLoading = false))
-                    sendEffect(Effect.NavigateToHome)
+                    sendEffect(ImportWalletEffect.NavigateToHome)
                 }
                 .onFailure { error ->
                     val message = error.message?.takeIf { it.isNotBlank() }?.let(UiText::of)
