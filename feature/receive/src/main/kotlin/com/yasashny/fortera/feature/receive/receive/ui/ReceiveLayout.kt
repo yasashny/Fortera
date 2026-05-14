@@ -302,9 +302,7 @@ private fun AddressChunks(address: String) {
     val rest = if (hasHexPrefix) address.drop(2) else address
     val groups = rest.chunked(4)
 
-    val accent = MaterialTheme.colorScheme.primary
-    val deep = MaterialTheme.colorScheme.inversePrimary
-    val body = MaterialTheme.colorScheme.onSurface
+    val color = MaterialTheme.colorScheme.onSurface
     val chunkStyle = MaterialTheme.typography.bodyMedium.copy(
         fontFamily = FontFamily.Monospace,
         letterSpacing = 0.8.sp,
@@ -319,22 +317,16 @@ private fun AddressChunks(address: String) {
             Text(
                 text = "0x",
                 style = chunkStyle,
-                color = accent,
+                color = color,
                 fontWeight = FontWeight.Medium,
             )
         }
-        groups.forEachIndexed { index, chunk ->
-            val color = when (index) {
-                groups.lastIndex -> deep
-                groups.lastIndex - 1 -> accent
-                else -> body
-            }
-            val weight = if (index >= groups.lastIndex - 1) FontWeight.Medium else FontWeight.Normal
+        groups.forEach { chunk ->
             Text(
                 text = chunk,
                 style = chunkStyle,
                 color = color,
-                fontWeight = weight,
+                fontWeight = FontWeight.Normal,
             )
         }
     }

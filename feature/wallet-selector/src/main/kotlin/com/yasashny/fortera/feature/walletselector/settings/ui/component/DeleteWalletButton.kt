@@ -3,6 +3,7 @@ package com.yasashny.fortera.feature.walletselector.settings.ui.component
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -26,13 +27,17 @@ internal fun DeleteWalletButton(
         enabled = enabled,
         modifier = modifier
             .fillMaxWidth()
-            .height(48.dp),
+            .height(59.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.error,
             contentColor = MaterialTheme.colorScheme.onError,
         ),
     ) {
-        Text(stringResource(R.string.wallet_settings_delete))
+        Text(
+            text = stringResource(R.string.wallet_settings_delete),
+            style = MaterialTheme.typography.titleMedium,
+        )
     }
 }
 
