@@ -70,7 +70,7 @@ internal fun AnimatedLogo(imageVector: Painter) {
             painter = imageVector,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onPrimary,
-            modifier = Modifier.size(140.dp)
+            modifier = Modifier.size(110.dp)
         )
     }
 }
