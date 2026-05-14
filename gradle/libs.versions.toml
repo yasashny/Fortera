@@ -33,6 +33,8 @@ zxing = "3.5.3"
 web3j = "4.12.1"
 bitcoinj = "0.16.3"
 mockk = "1.14.6"
+cameraX = "1.4.2"
+guava = "33.4.0-android"
 
 
 [libraries]
@@ -91,6 +93,11 @@ ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "k
 androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycleRuntimeKtx" }
 tradingview-lightweightcharts = { module = "com.tradingview:lightweightcharts", version.ref = "tradingview-lightweightcharts" }
 zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
+camerax-core = { module = "androidx.camera:camera-core", version.ref = "cameraX" }
+camerax-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraX" }
+camerax-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "cameraX" }
+camerax-view = { module = "androidx.camera:camera-view", version.ref = "cameraX" }
+guava = { module = "com.google.guava:guava", version.ref = "guava" }
 web3j-core = { module = "org.web3j:core", version.ref = "web3j" }
 web3j-crypto = { module = "org.web3j:crypto", version.ref = "web3j" }
 bitcoinj-core = { module = "org.bitcoinj:bitcoinj-core", version.ref = "bitcoinj" }

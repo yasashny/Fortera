@@ -11,6 +11,9 @@
     <string name="send_title">Send</string>
     <string name="send_input_address">Enter address</string>
     <string name="send_paste">Paste</string>
+    <string name="send_scan">Scan QR</string>
+    <string name="send_scan_hint">Point the camera at a QR code</string>
+    <string name="send_scan_permission_needed">Camera access is required to scan QR codes</string>
     <string name="send_insufficient_funds">Insufficient funds</string>
     <string name="send_error_amount_only_digits">Only digits and a decimal separator are allowed</string>
     <string name="send_error_invalid_eth_address">Invalid Ethereum address — expected 0x followed by 40 hex characters</string>

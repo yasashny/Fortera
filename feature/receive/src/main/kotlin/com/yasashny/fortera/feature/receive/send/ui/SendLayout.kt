@@ -22,6 +22,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentPaste
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,6 +33,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
@@ -59,6 +64,12 @@ private fun formatBalance(balance: BigDecimal, symbol: String): String {
     return "$formatted $symbol"
 }
 
+internal fun parseScannedAddress(raw: String): String =
+    raw.trim()
+        .substringAfter(':')
+        .substringBefore('?')
+        .trim()
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SendLayout(
@@ -78,6 +89,19 @@ internal fun SendLayout(
         MaterialTheme.colorScheme.error
     } else {
         MaterialTheme.colorScheme.onSurface
+    }
+
+    var scannerOpen by remember { mutableStateOf(false) }
+
+    if (scannerOpen) {
+        QrScannerView(
+            onClose = { scannerOpen = false },
+            onScanned = { value ->
+                scannerOpen = false
+                onAddressChange(parseScannedAddress(value))
+            },
+        )
+        return
     }
 
     Scaffold(
@@ -249,6 +273,13 @@ internal fun SendLayout(
                         }
                     },
                 )
+                IconButton(onClick = { scannerOpen = true }) {
+                    Icon(
+                        imageVector = Icons.Default.QrCodeScanner,
+                        contentDescription = stringResource(ReceiveR.string.send_scan),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 IconButton(onClick = onPasteClick) {
                     Icon(
                         imageVector = Icons.Default.ContentPaste,
