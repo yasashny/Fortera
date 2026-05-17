@@ -226,12 +226,7 @@ private fun HeroCard(state: ConfirmSendState) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(MaterialTheme.colorScheme.primaryContainer)
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                shape = RoundedCornerShape(24.dp),
-            )
+            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f))
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -262,7 +257,7 @@ private fun HeroCard(state: ConfirmSendState) {
                             letterSpacing = 0.6.sp,
                             fontWeight = FontWeight.SemiBold,
                         ),
-                        color = MaterialTheme.colorScheme.primary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     val displayWalletName = state.walletName.ifBlank {
                         stringResource(ReceiveR.string.send_confirm_default_wallet_name)
@@ -273,7 +268,7 @@ private fun HeroCard(state: ConfirmSendState) {
                             displayWalletName,
                         ),
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
             }
@@ -290,7 +285,7 @@ private fun HeroCard(state: ConfirmSendState) {
                         fontWeight = FontWeight.SemiBold,
                         letterSpacing = (-0.5).sp,
                     ),
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 state.amountUsd?.let { usd ->
                     val fiatText = formatFiat(usd, LocalFiat.current, approximate = true)
@@ -298,7 +293,7 @@ private fun HeroCard(state: ConfirmSendState) {
                         Text(
                             text = fiatText,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.primary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     } else {
                         ShimmerBox(modifier = Modifier.size(width = 80.dp, height = 16.dp))
@@ -591,11 +586,6 @@ private fun TotalCard(
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
             .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f))
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                shape = RoundedCornerShape(20.dp),
-            )
             .padding(horizontal = 20.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -644,7 +634,7 @@ private fun WarningChip(networkName: String) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.secondaryContainer)
+            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f))
             .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
