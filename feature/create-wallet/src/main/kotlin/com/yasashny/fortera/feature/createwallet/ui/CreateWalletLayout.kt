@@ -1,6 +1,8 @@
 package com.yasashny.fortera.feature.createwallet.ui
 
 import android.content.ClipData
+import android.os.Build
+import android.os.PersistableBundle
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -42,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import com.yasashny.fortera.core.designsystem.theme.ForteraTheme
 import com.yasashny.fortera.feature.createwallet.presentation.CreateWalletIntent
 import com.yasashny.fortera.feature.createwallet.presentation.CreateWalletState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.yasashny.fortera.core.ui.R as CoreR
 import com.yasashny.fortera.feature.createwallet.R as CreateWalletR
@@ -107,14 +110,15 @@ internal fun CreateWalletLayout(
                         state = state,
                         onCopyClick = {
                             scope.launch {
-                                clipboard.setClipEntry(
-                                    ClipEntry(
-                                        ClipData.newPlainText(
-                                            "",
-                                            state.seedPhrase.joinToString(" ")
-                                        )
-                                    )
-                                )
+                                val clip = ClipData.newPlainText("", state.seedPhrase.joinToString(" "))
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    clip.description.extras = PersistableBundle().apply {
+                                        putBoolean("android.content.extra.IS_SENSITIVE", true)
+                                    }
+                                }
+                                clipboard.setClipEntry(ClipEntry(clip))
+                                delay(60_000)
+                                clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("", "")))
                             }
                         },
                         onCreateClick = { onIntent(CreateWalletIntent.CreateClicked(nameTemplate)) },
