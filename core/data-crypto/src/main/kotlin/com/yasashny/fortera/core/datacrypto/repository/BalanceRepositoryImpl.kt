@@ -51,25 +51,22 @@ internal class BalanceRepositoryImpl(
                 .map { it.network.displayName }
                 .toSet()
 
-            val cachedMap = if (failedTokenIds.isNotEmpty()) {
-                tokenDao.getCachedBalances(walletId, failedTokenIds.toList())
-                    .associate { it.tokenId to it }
-            } else {
-                emptyMap()
-            }
+            val cachedMap = tokenDao.getCachedBalances(walletId, coinIds)
+                .associate { it.tokenId to it }
 
             val tokenBalances = tokens.map { token ->
                 val priceInfo = prices[token.id]
                 val fetched = balances[token.id]
+                val cached = cachedMap[token.id]
                 if (fetched != null) {
                     TokenBalance(
                         token = token,
                         balance = fetched,
-                        priceUsd = priceInfo?.priceUsd ?: 0.0,
-                        changePercent24h = priceInfo?.changePercent24h ?: 0.0,
+                        priceUsd = priceInfo?.priceUsd ?: cached?.priceUsd ?: 0.0,
+                        changePercent24h = priceInfo?.changePercent24h
+                            ?: cached?.changePercent24h ?: 0.0,
                     )
                 } else {
-                    val cached = cachedMap[token.id]
                     TokenBalance(
                         token = token,
                         balance = cached?.balance?.toBigDecimal() ?: BigDecimal.ZERO,
