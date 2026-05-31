@@ -51,11 +51,13 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.zxing.BarcodeFormat
+import com.google.zxing.Binarizer
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.DecodeHintType
 import com.google.zxing.MultiFormatReader
 import com.google.zxing.NotFoundException
 import com.google.zxing.PlanarYUVLuminanceSource
+import com.google.zxing.common.GlobalHistogramBinarizer
 import com.google.zxing.common.HybridBinarizer
 import com.yasashny.fortera.feature.receive.R as ReceiveR
 import java.util.concurrent.Executors
@@ -282,12 +284,18 @@ private class QrCodeAnalyzer(
             height,
             false,
         )
-        return try {
-            reader.decodeWithState(BinaryBitmap(HybridBinarizer(source))).text
+        return decodeOrNull(HybridBinarizer(source))
+            ?: decodeOrNull(HybridBinarizer(source.invert()))
+            ?: decodeOrNull(GlobalHistogramBinarizer(source))
+            ?: decodeOrNull(GlobalHistogramBinarizer(source.invert()))
+    }
+
+    private fun decodeOrNull(binarizer: Binarizer): String? =
+        try {
+            reader.decodeWithState(BinaryBitmap(binarizer)).text
         } catch (_: NotFoundException) {
             null
         } finally {
             reader.reset()
         }
-    }
 }
