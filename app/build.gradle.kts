@@ -14,7 +14,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -33,6 +34,15 @@ android {
                 "META-INF/AL2.0",
                 "META-INF/LGPL2.1",
                 "META-INF/*.kotlin_module",
+                "jni/**",
+                "ethereum/ckzg4844/lib/**",
+                "trusted_setup.txt",
+                "org/bouncycastle/pqc/**",
+                "org/bouncycastle/x509/*.properties",
+                "org/bouncycastle/i18n/**",
+                "org.bitcoin.*.checkpoints.txt",
+                "org/bitcoinj/crypto/cacerts",
+                "**/*.proto",
             )
         }
     }
