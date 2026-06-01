@@ -45,6 +45,23 @@ class MoneyFormatTest {
     }
 
     @Test
+    fun `formatFiat keeps significant digits for sub-cent prices`() {
+        val display = FiatDisplay(Currency.USD, rateFromUsd = 1.0)
+
+        assertEquals("$0,00001226", formatFiat(amountUsd = 0.00001226, fiat = display))
+        assertEquals("$0,005", formatFiat(amountUsd = 0.005, fiat = display))
+    }
+
+    @Test
+    fun `formatFiat still uses two decimals at or above one cent`() {
+        val display = FiatDisplay(Currency.USD, rateFromUsd = 1.0)
+
+        assertEquals("$0,01", formatFiat(amountUsd = 0.01, fiat = display))
+        assertEquals("$0,50", formatFiat(amountUsd = 0.5, fiat = display))
+        assertEquals("$0,00", formatFiat(amountUsd = 0.0, fiat = display))
+    }
+
+    @Test
     fun `formatCrypto preserves values shorter than 7 decimals`() {
         assertEquals("0.5", formatCrypto(BigDecimal("0.5")))
         assertEquals("12.345", formatCrypto(BigDecimal("12.345")))

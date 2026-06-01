@@ -5,12 +5,13 @@ import com.yasashny.fortera.core.ui.currency.FiatDisplay
 import java.math.BigDecimal
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
+import kotlin.math.abs
+import kotlin.math.floor
+import kotlin.math.log10
 
-private val FiatFormatter = DecimalFormat("#,##0.00").apply {
-    decimalFormatSymbols = DecimalFormatSymbols().apply {
-        groupingSeparator = ' '
-        decimalSeparator = ','
-    }
+private val FiatSymbols = DecimalFormatSymbols().apply {
+    groupingSeparator = ' '
+    decimalSeparator = ','
 }
 
 fun formatFiat(
@@ -20,7 +21,7 @@ fun formatFiat(
 ): String? {
     val rate = fiat.rateFromUsd ?: return null
     val converted = amountUsd * rate
-    val formattedNumber = FiatFormatter.format(converted)
+    val formattedNumber = fiatFormatter(fractionDigitsFor(converted)).format(converted)
     val body = when (fiat.currency.symbolPosition) {
         CurrencySymbolPosition.PREFIX -> "${fiat.currency.symbol}$formattedNumber"
         CurrencySymbolPosition.SUFFIX -> "$formattedNumber ${fiat.currency.symbol}"
@@ -36,3 +37,15 @@ fun formatCrypto(amount: BigDecimal): String {
 }
 
 fun formatCrypto(amount: Double): String = formatCrypto(BigDecimal.valueOf(amount))
+
+private fun fractionDigitsFor(value: Double): Int {
+    val magnitude = abs(value)
+    if (magnitude == 0.0 || magnitude >= 0.01) return 2
+    val leadingZeros = -floor(log10(magnitude)).toInt() - 1
+    return (leadingZeros + 4).coerceIn(2, 10)
+}
+
+private fun fiatFormatter(maxFractionDigits: Int): DecimalFormat =
+    DecimalFormat("#,##0.00", FiatSymbols).apply {
+        maximumFractionDigits = maxFractionDigits
+    }
