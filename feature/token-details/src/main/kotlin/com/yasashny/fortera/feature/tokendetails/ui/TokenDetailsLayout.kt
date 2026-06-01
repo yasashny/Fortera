@@ -128,6 +128,12 @@ internal fun TokenDetailsLayout(
     ) { paddingValues ->
         var hoveredPrice by remember { mutableStateOf<Double?>(null) }
         val basePrice = state.priceHistory.firstOrNull()?.priceUsd
+        val lastPrice = state.priceHistory.lastOrNull()?.priceUsd
+        val periodChange = if (basePrice != null && lastPrice != null && basePrice > 0.0) {
+            (lastPrice - basePrice) / basePrice * 100.0
+        } else {
+            state.changePercent24h
+        }
 
         Column(
             modifier = Modifier
@@ -138,7 +144,7 @@ internal fun TokenDetailsLayout(
             val shownChange = if (hoveredPrice != null && basePrice != null && basePrice > 0.0) {
                 (hoveredPrice!! - basePrice) / basePrice * 100.0
             } else {
-                state.changePercent24h
+                periodChange
             }
             PriceHero(
                 priceUsd = shownPrice,
@@ -150,7 +156,7 @@ internal fun TokenDetailsLayout(
 
             PriceChart(
                 priceHistory = state.priceHistory,
-                changePercent = state.changePercent24h,
+                changePercent = periodChange,
                 isLoading = state.isLoading || state.isChartLoading,
                 onHoverChange = { hoveredPrice = it },
                 modifier = Modifier
@@ -614,14 +620,16 @@ private fun PriceChart(
                     onSeriesCreated = { series ->
                         seriesRef[0] = series
                         series.setData(chartData)
+                        api.timeScale.fitContent()
                     }
                 )
             }
         },
-        update = { _ ->
+        update = { view ->
             seriesRef[0]?.let { series ->
                 series.applyOptions(seriesOptions())
                 series.setData(chartData)
+                view.api.timeScale.fitContent()
             }
         },
         modifier = modifier,
